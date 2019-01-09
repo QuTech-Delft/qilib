@@ -1,0 +1,88 @@
+@startuml
+
+box "control pc"
+  participant instruments
+  participant scan2D
+  participant DataSet1
+  participant MongoDataSetIO1
+end box
+
+database db
+
+box "operator pc"
+  participant MongoDataSetIO2
+  participant DataSet2
+  participant LivePlot
+end box
+
+activate db
+
+
+activate scan2D
+activate instruments
+scan2D -> MongoDataSetIO1 : ~__init__(None)
+activate MongoDataSetIO1
+MongoDataSetIO1 -> scan2D : object
+scan2D -> DataSet1 : ~__init__(io=MongoDataSetIO1,name="foo")
+loop for x_index, x in scan range
+  scan2D -> scan2D : create array a
+  scan2D -> instruments : set x
+  loop for y_index, y in scan range
+    scan2D -> instruments : set y
+    scan2D -> instruments : measure m
+    instruments -> scan2D : m
+    scan2D -> scan2D : a.append(m)
+  end
+  activate DataSet1
+  scan2D -> DataSet1 : store(x, a)
+  DataSet1 -> MongoDataSetIO1 : event: x, a
+  MongoDataSetIO1 -> db : update(documentid, { 'x': a })
+end
+scan2D -> DataSet1 : finalize()
+DataSet1 -> MongoDataSetIO1 : finalize()
+MongoDataSetIO1 -> db : event: finalize
+MongoDataSetIO1 -> db : get all events
+db -> MongoDataSetIO1 : events
+MongoDataSetIO1 -> MongoDataSetIO1 : compress events
+MongoDataSetIO1 -> db : overwrite events
+MongoDataSetIO1 -> DataSet1
+deactivate MongoDataSetIO1
+DataSet1 -> scan2D
+deactivate DataSet1
+deactivate instruments
+deactivate scan2D
+
+activate LivePlot
+LivePlot -> MongoDataSetIO2 : ~__init__(name="foo")
+LivePlot -> DataSet2 : create from id
+note left
+  The loop below on the operator pc runs in parallel with the
+  loop running on the control pc, but plantuml can't render
+  parallel loops unfortunately.
+end note
+activate DataSet2
+DataSet2 -> MongoDataSetIO2 : create IO from id
+activate MongoDataSetIO2
+DataSet2 -> MongoDataSetIO2 : load()
+MongoDataSetIO2 -> db : findOne(id)
+MongoDataSetIO2 -> db : get change stream cursor
+db -> MongoDataSetIO2 : cursor
+db -> MongoDataSetIO2 : metadata, array names, ..
+MongoDataSetIO2 -> DataSet2 : metadata, array names, ..
+LivePlot -> LivePlot : initialize plot
+DataSet2 -> LivePlot : created DataSet
+loop !finalized
+  LivePlot -> DataSet2 : sync_from_storage()
+  DataSet2 -> MongoDataSetIO2 : read()
+  MongoDataSetIO2 -> db : cursor.next()
+  db -> MongoDataSetIO2 : event: x,a
+  MongoDataSetIO2 -> DataSet2 : change_set
+  DataSet2 -> DataSet2 : update DataArrays
+  DataSet2 -> LivePlot : change_set
+  LivePlot -> LivePlot : update plot
+end
+deactivate LivePlot
+
+deactivate db
+
+@enduml

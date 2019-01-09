@@ -1,0 +1,68 @@
+@startuml
+
+class DataArray {
+    name : String
+    label : String
+    unit : String
+    data : numpy.ndarray
+    is_setpoint : Boolean
+    set_arrays : DataArray[]
+    __array_interface__: dict
+    __str__(): String
+}
+
+class DataSet {
+    __init__(storage: DataSetIO)
+    name: String
+    timestamp: DateTime
+    user_data: PythonJsonStructure
+    data_arrays: dict
+    default_array_name: String
+    finalize()
+    add_array()
+    add_data(index_spec, data)
+    sync_from_storage()
+    save_to_storage()
+}
+
+DataSet o-- DataArray
+
+interface DataSetIO {
+    read(timeout: Float) : ChangeSet[]
+    write(changes: ChangeSet[])
+    {static} load() : DataSet
+    finalize()
+}
+
+DataSet --> DataSetIO
+
+class MongoDataSetIO {
+  __init__(document_id: String)
+}
+
+class FileDataSetIO {
+  __init__(filename: String, formatter: Formatter)
+}
+
+class HDF5DataSetIO {
+  __init__(filename: String)
+}
+
+class MemoryDataSetIO {
+  __init__()
+}
+
+MongoDataSetIO --|> DataSetIO
+FileDataSetIO --|> DataSetIO
+HDF5DataSetIO --|> DataSetIO
+MemoryDataSetIO --|> DataSetIO
+
+Formatter --> FileDataSetIO
+
+class PathProvider {
+}
+
+FileDataSetIO -up-> PathProvider
+HDF5DataSetIO -up-> PathProvider
+
+@enduml
