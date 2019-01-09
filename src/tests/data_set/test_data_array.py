@@ -2,7 +2,7 @@ import operator
 import unittest
 
 import numpy as np
-from qilib.dataset import DataArray
+from qilib.data_set import DataArray
 
 
 class TestDataArray(unittest.TestCase):

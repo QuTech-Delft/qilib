@@ -6,7 +6,7 @@ setup(name='qilib',
       version='0.0.1',
       python_requires='>=3.6',
       package_dir={'': 'src'},
-      packages=['qilib', 'qilib.dataset', 'qilib.utils'],
+      packages=['qilib', 'qilib.data_set', 'qilib.utils'],
       classifiers=[
           'Development Status :: 3 - Alpha',
           'Programming Language :: Python :: 3',
