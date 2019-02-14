@@ -26,6 +26,7 @@ from qilib.data_set import DataArray
 
 class DataSet:
     """ A DataSet is an object that encompasses DataArrays.
+
     A DataArray can have another DataArray (or multiple) as setpoint(s).
     A DataSet can have multiple measurement arrays sharing the same setpoints.
     It is an error to have multiple measurement arrays with different setpoints.
@@ -89,6 +90,7 @@ class DataSet:
 
     def add_data(self, index_spec, data):
         """ Update an underlying DataArray.
+
         Args:
             index_spec (int): Setpoints, can be an int or tuple of ints.
             data (dict): Key is the name of the array and the dict value is the data.
@@ -190,4 +192,3 @@ class DataSet:
         for row in table:
             formatted_string += row_template.format(info=row, lens=column_lengths)
         return formatted_string
-
