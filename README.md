@@ -6,6 +6,8 @@ Utility classes for Quantum Inspire.
 
 Install with pip:
 ```
+$ python3 -m venv env
+$ . ./env/bin/activate
 (env) $ pip install .
 ```
 
