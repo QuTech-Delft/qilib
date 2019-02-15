@@ -1,5 +1,3 @@
-import asyncio
-
 from qilib.data_set import DataSetIO
 
 
@@ -46,28 +44,16 @@ class MemoryDataSetIO(DataSetIO):
             self.__task = None
             self.__sync_storage()
             return
-
-        if timeout > 0:
-            self.__task = asyncio.ensure_future(self.__sync_storage())
-            future = asyncio.wait_for(self.__task, timeout)
-            loop = asyncio.get_event_loop()
-            loop.run_until_complete(future)
-            return
-
-        # TODO run async...
+        raise NotImplementedError('## TODO ##: Add run with non-blocking and with timeout.')
 
     def __sync_storage(self):
         while self.__user_data_storage:
             field_name, value = self.__user_data_storage.pop()
             self._data_set.user_data[field_name] = value
-            if self.__task and (self.__task.cancelled() or self.__task.done()):
-                return
 
         while self.__data_array_storage:
             data_array = self.__data_array_storage.pop()
             self._data_set.add_array(data_array)
-            if self.__task and (self.__task.cancelled() or self.__task.done()):
-                return
 
     def sync_data_to_storage(self, data_array, index_spec):
         """ Registers a data array update.
