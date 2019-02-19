@@ -1,6 +1,5 @@
 from setuptools import setup
 
-
 setup(name='qilib',
       description='',
       version='0.0.1',
