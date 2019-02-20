@@ -1,3 +1,5 @@
+import queue
+
 from qilib.data_set import DataSetIO
 
 
@@ -5,11 +7,11 @@ class MemoryDataSetIO(DataSetIO):
 
     def __init__(self):
         """ Allows synchronization between different instances of a DataSet in the same thread."""
+        self.__user_data_storage = queue.Queue()
+        self.__data_array_storage = queue.Queue()
         self._data_set = None
         self._is_finalized = False
-        self.__task = None
-        self.__user_data_storage = []
-        self.__data_array_storage = []
+
 
     def bind_data_set(self, data_set):
         """ Binds the DataSet to the MemoryDataSetIO.
@@ -41,18 +43,17 @@ class MemoryDataSetIO(DataSetIO):
         """
         self.__is_bounded()
         if timeout < 0:
-            self.__task = None
             self.__sync_storage()
             return
         raise NotImplementedError('## TODO ##: Add run with non-blocking and with timeout.')
 
     def __sync_storage(self):
-        while self.__user_data_storage:
-            field_name, value = self.__user_data_storage.pop()
+        while not self.__user_data_storage.empty():
+            field_name, value = self.__user_data_storage.get()
             self._data_set.user_data[field_name] = value
 
-        while self.__data_array_storage:
-            data_array = self.__data_array_storage.pop()
+        while not self.__data_array_storage.empty():
+            data_array = self.__data_array_storage.get()
             self._data_set.add_array(data_array)
 
     def sync_data_to_storage(self, data_array, index_spec):
@@ -67,11 +68,15 @@ class MemoryDataSetIO(DataSetIO):
         """
         self.__is_bounded()
         self.__is_not_finalized()
-        length_storage = len(self.__data_array_storage)
-        index = next((i for i in range(length_storage) if self.__data_array_storage[i].name == data_array.name), None)
+        data_arrays_storage = list(self.__data_array_storage.queue)
+        length_storage = len(data_arrays_storage)
+
+        index = next((i for i in range(length_storage) if data_arrays_storage[i].name == data_array.name), None)
         if index is None:
             raise ValueError('The data array name if not present and cannot be updated!')
-        self.__data_array_storage[index][index_spec] = data_array[index_spec]
+
+        data_arrays_storage[index][index_spec] = data_array[index_spec]
+        self.__data_array_storage.deque = queue.deque(data_arrays_storage)
 
     def sync_metadata_to_storage(self, field_name, value):
         """ Registers a change to the user metadata field.
@@ -82,7 +87,7 @@ class MemoryDataSetIO(DataSetIO):
         """
         self.__is_bounded()
         self.__is_not_finalized()
-        self.__user_data_storage.append((field_name, value))
+        self.__user_data_storage.put((field_name, value))
 
     def sync_add_data_array_to_storage(self, data_array):
         """ Registers a new data array event for syncing to the different dataset instance.
@@ -92,7 +97,7 @@ class MemoryDataSetIO(DataSetIO):
         """
         self.__is_bounded()
         self.__is_not_finalized()
-        self.__data_array_storage.append(data_array)
+        self.__data_array_storage.put(data_array)
 
     @staticmethod
     def load():
