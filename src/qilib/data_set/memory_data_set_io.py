@@ -1,3 +1,23 @@
+"""Quantum Inspire library
+
+Copyright 2019 QuTech Delft
+
+qilib is available under the [MIT open-source license](https://opensource.org/licenses/MIT):
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit
+persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
+Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+"""
+
 import queue
 
 from qilib.data_set import DataSetIO
@@ -11,7 +31,6 @@ class MemoryDataSetIO(DataSetIO):
         self.__data_array_storage = queue.Queue()
         self._data_set = None
         self._is_finalized = False
-
 
     def bind_data_set(self, data_set):
         """ Binds the DataSet to the MemoryDataSetIO.
@@ -38,23 +57,32 @@ class MemoryDataSetIO(DataSetIO):
         """ Poll the MemoryDataSetIO for changes and apply any to the in-memory DataSet representation.
 
         Args:
-            timeout (float): Stop syncing after certain amount of time. The timeout can be
-                             -1 (blocking), 0 (non-blocking), or >0 (wait at most that many seconds).
+            timeout (float): Stop syncing if collecting an item takes more then a the timeout time.
+                             The timeout can be -1 (blocking), 0 (non-blocking), or >0 (wait at most that many seconds).
         """
         self.__is_bounded()
         if timeout < 0:
-            self.__sync_storage()
+            self.__sync_storage(blocking=True, timeout=None)
             return
-        raise NotImplementedError('## TODO ##: Add run with non-blocking and with timeout.')
+        if timeout == 0:
+            self.__sync_storage(blocking=False, timeout=None)
+            return
+        self.__sync_storage(blocking=False, timeout=timeout)
 
-    def __sync_storage(self):
+    def __sync_storage(self, blocking=True, timeout=None):
         while not self.__user_data_storage.empty():
-            field_name, value = self.__user_data_storage.get()
-            self._data_set.user_data[field_name] = value
+            try:
+                field_name, value = self.__user_data_storage.get(blocking, timeout)
+                self._data_set.user_data[field_name] = value
+            except queue.Empty:
+                return
 
         while not self.__data_array_storage.empty():
-            data_array = self.__data_array_storage.get()
-            self._data_set.add_array(data_array)
+            try:
+                data_array = self.__data_array_storage.get(blocking, timeout)
+                self._data_set.add_array(data_array)
+            except queue.Empty:
+                return
 
     def sync_data_to_storage(self, data_array, index_spec):
         """ Registers a data array update.

@@ -1,4 +1,4 @@
-""" Quantum Inspire library
+"""Quantum Inspire library
 
 Copyright 2019 QuTech Delft
 
