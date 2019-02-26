@@ -23,7 +23,7 @@ from setuptools import setup
 
 setup(name='qilib',
       description='',
-      version='0.0.1',
+      version='0.1.0',
       python_requires='>=3.6',
       package_dir={'': 'src'},
       packages=['qilib', 'qilib.data_set', 'qilib.utils'],
