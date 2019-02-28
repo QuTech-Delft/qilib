@@ -102,7 +102,7 @@ class TestDataArray(unittest.TestCase):
                       preset_data=np.array(x_points))
         with self.assertRaises(ValueError) as error:
             DataArray(name='y', label='y-axis', unit='mV', is_setpoint=True,
-                      set_arrays=(x,), preset_data=np.tile(np.array(y_points), [x.size + 1, 1]))
+                      set_arrays=[x,], preset_data=np.tile(np.array(y_points), [x.size + 1, 1]))
         self.assertEqual(("Dimensions of 'set_arrays' do not match.",), error.exception.args)
 
     def test_2d_set_array_with_set_array(self):
@@ -118,7 +118,7 @@ class TestDataArray(unittest.TestCase):
         self.assertListEqual(list(x_points), list(x))
 
         y = DataArray(name='y', label='y-axis', unit='mV', is_setpoint=True,
-                      set_arrays=(x,), preset_data=np.tile(np.array(y_points), [x.size, 1]))
+                      set_arrays=[x,], preset_data=np.tile(np.array(y_points), [x.size, 1]))
         self.assertEqual('y', y.name)
         self.assertEqual('y-axis', y.label)
         self.assertEqual('mV', y.unit)
@@ -141,7 +141,7 @@ class TestDataArray(unittest.TestCase):
         x = DataArray(name='x', label='x-axis', unit='mV', is_setpoint=True,
                       preset_data=np.array(x_points))
         y = DataArray(name='y', label='y-axis', unit='mV', is_setpoint=True,
-                      set_arrays=(x,), preset_data=np.tile(np.array(y_points), [x.size, 1]))
+                      set_arrays=[x,], preset_data=np.tile(np.array(y_points), [x.size, 1]))
         z = DataArray(name='z', label='z-axis', unit='ma', set_arrays=[y, x],
                       preset_data=np.NaN * np.ones((x_points.size, y_points.size)))
         self.assertEqual('z', z.name)

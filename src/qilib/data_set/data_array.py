@@ -17,7 +17,9 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
+from typing import Optional, Tuple, List, Union, Any, Set
 
+import numpy
 import numpy as np
 
 
@@ -31,99 +33,101 @@ class DataArray:
     raise an error).
     """
 
-    def __init__(self, name, label, unit='', is_setpoint=False, preset_data=None, set_arrays=None, shape=None):
+    def __init__(self, name: str, label: str, unit: str = '', is_setpoint: bool = False,
+                 preset_data: Optional[numpy.ndarray] = None, set_arrays: Optional[List['DataArray']] = None,
+                 shape: Optional[Tuple[int, ...]] = None) -> None:
         """
         Args:
-            name (str):  Name for the data array
-            label (str): Label, e.g. x-axis if it is a setpoint.
-            unit (str): Unit for the measurement, or setpoint data.
-            is_setpoint (bool): If the DataArray is a setpoint.
-            preset_data (numpy.ndarray): Initialize the DataArray with predefined data. Note that a copy of the numpy
+            name:  Name for the data array
+            label: Label, e.g. x-axis if it is a setpoint.
+            unit: Unit for the measurement, or setpoint data.
+            is_setpoint: If the DataArray is a setpoint.
+            preset_data: Initialize the DataArray with predefined data. Note that a copy of the numpy
                 array is stored in data, not the actual array.
-            set_arrays (DataArray[]): a list of setpoint arrays.
-            shape (tuple): Initialize with a shape rather than predefined data.
+            set_arrays: a list of setpoint arrays.
+            shape: Initialize with a shape rather than predefined data.
         """
 
-        self._name = name
-        self._label = label
-        self._unit = unit
-        self._is_setpoint = is_setpoint
+        self._name: str = name
+        self._label: str = label
+        self._unit: str = unit
+        self._is_setpoint: bool = is_setpoint
         if preset_data is not None:
-            self._data = np.array(preset_data).copy()
+            self._data: numpy.ndarray = np.array(preset_data).copy()
         elif shape is not None:
-            self._data = np.ndarray(shape) * np.NAN
+            self._data: numpy.ndarray = np.ndarray(shape) * np.NAN
         else:
             raise TypeError("Required arguments 'shape' or 'preset_data' not found")
-        self._set_arrays = set_arrays if set_arrays is not None else []
+        self._set_arrays: List['DataArray'] = set_arrays if set_arrays is not None else []
         if len(self._set_arrays) > 0:
             self._verify_array_dimensions()
 
-    def __add__(self, other):
+    def __add__(self, other: Union[float, int, 'DataArray', numpy.ndarray]) -> numpy.ndarray:
         return self._data.__add__(other)
 
-    def __mul__(self, other):
+    def __mul__(self, other: Union[float, int, 'DataArray', numpy.ndarray]) -> numpy.ndarray:
         return self._data.__mul__(other)
 
-    def __matmul__(self, other):
+    def __matmul__(self, other: Union[List[Union[float, int]], 'DataArray', numpy.ndarray]) -> numpy.int64:
         return self._data.__matmul__(other)
 
-    def __pow__(self, *args, **kwargs):
-        return self._data.__pow__(*args, **kwargs)
+    def __pow__(self, other: Union[float, int]) -> numpy.ndarray:
+        return self._data.__pow__(other)
 
-    def __sub__(self, other):
+    def __sub__(self, other: Union[float, int, 'DataArray', numpy.ndarray]) -> numpy.ndarray:
         return self._data.__sub__(other)
 
-    def __mod__(self, other):
+    def __mod__(self, other: Union[float, int, 'DataArray', numpy.ndarray]) -> numpy.ndarray:
         return self._data.__mod__(other)
 
-    def __floordiv__(self, other):
+    def __floordiv__(self, other: Union[float, int, 'DataArray', numpy.ndarray]) -> numpy.ndarray:
         return self._data.__floordiv__(other)
 
-    def __lshift__(self, other):
+    def __lshift__(self, other: Union[int, 'DataArray', numpy.ndarray]) -> numpy.ndarray:
         return self._data.__lshift__(other)
 
-    def __rshift__(self, other):
+    def __rshift__(self, other: Union[int, 'DataArray', numpy.ndarray]) -> numpy.ndarray:
         return self._data.__rshift__(other)
 
-    def __and__(self, other):
+    def __and__(self, other: Union[bool, int, 'DataArray', numpy.ndarray]) -> numpy.ndarray:
         return self._data.__and__(other)
 
-    def __or__(self, other):
+    def __or__(self, other: Union[bool, int, 'DataArray', numpy.ndarray]) -> numpy.ndarray:
         return self._data.__or__(other)
 
-    def __xor__(self, other):
+    def __xor__(self, other: Union[bool, int, 'DataArray', numpy.ndarray]) -> numpy.ndarray:
         return self._data.__xor__(other)
 
-    def __truediv__(self, other):
+    def __truediv__(self, other: Union[float, int, 'DataArray', numpy.ndarray]) -> numpy.ndarray:
         return self._data.__truediv__(other)
 
-    def __getattr__(self, name):
+    def __getattr__(self, name: str) -> Any:
         if hasattr(np.ndarray, name):
             return getattr(self._data, name)
         raise AttributeError("DataArray has no attribute '{}'".format(name))
 
-    def __dir__(self):
+    def __dir__(self) -> Set[str]:
         data_dir = dir(self._data)
-        data_array_dir = super(DataArray, self).__dir__()
+        data_array_dir = list(super(DataArray, self).__dir__())
         return set(data_dir + data_array_dir)
 
-    def __str__(self):
+    def __str__(self) -> str:
         array_names = [array.name for array in self.set_arrays] if self.set_arrays is not None else []
         print_string = "{} {}: {}\ndata: {}\nset_arrays:{}".format(self.__class__.__name__, self.shape, self.name,
                                                                    self._data, array_names)
         return print_string
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "DataArray(id=%r, name=%r, label=%r, unit=%r, is_setpoint=%r, data=%r, set_arrays=%r)" % (
             id(self), self._name, self._label, self._unit, self._is_setpoint, self._data, self._set_arrays)
 
-    def __getitem__(self, index):
+    def __getitem__(self, index: int) -> Any:
         return self._data[index]
 
-    def __setitem__(self, index, data):
+    def __setitem__(self, index: int, data: Any) -> None:
         self._data[index] = data
 
-    def _verify_array_dimensions(self):
+    def _verify_array_dimensions(self) -> None:
         shapes = [array.shape for array in self._set_arrays]
         shapes.sort(key=lambda s: len(s))
         if self.is_setpoint:
@@ -134,40 +138,40 @@ class DataArray:
         DataArray._check_dimensions(shapes)
 
     @staticmethod
-    def _check_dimensions(shapes):
+    def _check_dimensions(shapes: List[Tuple[int]]) -> None:
         for i in range(len(shapes)):
             dim = shapes.pop(0)
             if not all(shape[i] == dim[i] for shape in shapes):
                 raise ValueError("Dimensions of 'set_arrays' do not match.")
 
     @property
-    def name(self):
+    def name(self) -> str:
         return self._name
 
     @name.setter
-    def name(self, name):
+    def name(self, name: str) -> None:
         self._name = name
 
     @property
-    def unit(self):
+    def unit(self) -> str:
         return self._unit
 
     @unit.setter
-    def unit(self, unit):
+    def unit(self, unit: str) -> None:
         self._unit = unit
 
     @property
-    def label(self):
+    def label(self) -> str:
         return self._label
 
     @label.setter
-    def label(self, label):
+    def label(self, label: str) -> None:
         self._label = label
 
     @property
-    def is_setpoint(self):
+    def is_setpoint(self) -> bool:
         return self._is_setpoint
 
     @property
-    def set_arrays(self):
+    def set_arrays(self) -> List['DataArray'] :
         return self._set_arrays
