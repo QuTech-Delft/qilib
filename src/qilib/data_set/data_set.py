@@ -88,16 +88,16 @@ class DataSet:
         setattr(self, array.name, array)
         self._default_array_name = self._default_array_name or array.name
 
-    def add_data(self, index_spec, data):
+    def add_data(self, index_or_slice, data):
         """ Update an underlying DataArray.
 
         Args:
-            index_spec (int): Setpoints, can be an int or tuple of ints.
+            index_or_slice (int, tuple[int]): Setpoints, can be an int or tuple of integers.
             data (dict): Key is the name of the array and the dict value is the data.
         """
 
         for array_name, data_value in data.items():
-            self._data_arrays[array_name][index_spec] = data_value
+            self._data_arrays[array_name][index_or_slice] = data_value
 
     def sync_from_storage(self):
         """ Not implemented yet. """

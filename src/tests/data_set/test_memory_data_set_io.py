@@ -35,14 +35,14 @@ class TestDataSetIO(TestCase):
         dataset = MagicMock()
         other_dataset = MagicMock()
         memory_io.bind_data_set(dataset)
-        with self.assertRaisesRegex(AttributeError, 'Dataset already bound!'):
+        with self.assertRaisesRegex(AttributeError, 'DataSet already bound!'):
             memory_io.bind_data_set(other_dataset)
 
     def test_not_bounded_other_functions(self):
         memory_io = MemoryDataSetIO()
-        error_args = (ValueError, 'No dataset bound to MemoryDataSetIO!')
+        error_args = (ValueError, 'No DataSet bound to MemoryDataSetIO!')
         self.assertRaisesRegex(*error_args, memory_io.sync_from_storage, timeout=1234)
-        self.assertRaisesRegex(*error_args, memory_io.sync_data_to_storage, data_array=None, index_spec=1234)
+        self.assertRaisesRegex(*error_args, memory_io.sync_data_to_storage, data_array=None, index_or_slice=1234)
         self.assertRaisesRegex(*error_args, memory_io.sync_metadata_to_storage, field_name='test', value='abc')
         self.assertRaisesRegex(*error_args, memory_io.sync_add_data_array_to_storage, data_array=None)
         self.assertRaisesRegex(*error_args, memory_io.finalize)
@@ -76,12 +76,12 @@ class TestDataSetIO(TestCase):
         other_array = DataArray('other_array', 'label', shape=(5, 5))
         memory_io.sync_add_data_array_to_storage(some_array)
 
-        error_args = (ValueError, 'The data array name if not present and cannot be updated!')
-        self.assertRaisesRegex(*error_args, memory_io.sync_data_to_storage, data_array=other_array, index_spec=(4, 1))
+        error_args = (ValueError, 'The DataArray is not present and cannot be updated!')
+        self.assertRaisesRegex(*error_args, memory_io.sync_data_to_storage, data_array=other_array, index_or_slice=(4, 1))
 
     def test_sync_metadata_to_storage_all_present(self):
-        user_data = PythonJsonStructure(item_0=0, item_1=1)
-        data_set = DataSet(user_data=user_data)
+        initial_user_data = PythonJsonStructure(item_0=0, item_1=1)
+        data_set = DataSet(user_data=initial_user_data)
 
         memory_io = MemoryDataSetIO()
         memory_io.bind_data_set(data_set)
@@ -95,12 +95,12 @@ class TestDataSetIO(TestCase):
         memory_io.sync_from_storage(timeout=-1)
         actual_user_data = memory_io.data_set.user_data
 
-        self.assertTrue(user_data.items() <= actual_user_data.items())
+        self.assertTrue(initial_user_data.items() <= actual_user_data.items())
         self.assertTrue(other_user_data.items() <= actual_user_data.items())
 
     def test_sync_metadata_to_storage_is_blocking(self):
-        user_data = PythonJsonStructure(item_0=0, item_1=1)
-        data_set = DataSet(user_data=user_data)
+        initial_user_data = PythonJsonStructure(item_0=0, item_1=1)
+        data_set = DataSet(user_data=initial_user_data)
 
         memory_io = MemoryDataSetIO()
         memory_io.bind_data_set(data_set)
@@ -114,8 +114,8 @@ class TestDataSetIO(TestCase):
         self.assertDictEqual(expected, memory_io.data_set.user_data)
 
     def test_sync_metadata_to_storage_non_blocking(self):
-        user_data = PythonJsonStructure(item_0=0, item_1=1)
-        data_set = DataSet(user_data=user_data)
+        initial_user_data = PythonJsonStructure(item_0=0, item_1=1)
+        data_set = DataSet(user_data=initial_user_data)
 
         memory_io = MemoryDataSetIO()
         memory_io.bind_data_set(data_set)
@@ -130,12 +130,12 @@ class TestDataSetIO(TestCase):
         memory_io.sync_from_storage(timeout)
         actual_user_data = memory_io.data_set.user_data
 
-        self.assertTrue(user_data.items() <= actual_user_data.items())
+        self.assertTrue(initial_user_data.items() <= actual_user_data.items())
         self.assertTrue(other_user_data.items() <= actual_user_data.items())
 
     def test_sync_metadata_to_storage_with_timeout(self):
-        user_data = PythonJsonStructure(item_0=0, item_1=1)
-        data_set = DataSet(user_data=user_data)
+        initial_user_data = PythonJsonStructure(item_0=0, item_1=1)
+        data_set = DataSet(user_data=initial_user_data)
 
         memory_io = MemoryDataSetIO()
         memory_io.bind_data_set(data_set)
@@ -150,17 +150,14 @@ class TestDataSetIO(TestCase):
         memory_io.sync_from_storage(timeout)
         actual_user_data = memory_io.data_set.user_data
 
-        self.assertTrue(user_data.items() <= actual_user_data.items())
+        self.assertTrue(initial_user_data.items() <= actual_user_data.items())
         self.assertTrue(other_user_data.items() <= actual_user_data.items())
 
-    def test_sync_metadata_to_storage_raises_empty_error_data(self):
+    def test_sync_data_arrays_to_storage_is_empty_not_updated(self):
         with patch('qilib.data_set.memory_data_set_io.queue.Queue') as queue_mock:
             data_set = DataSet()
-
-            mock = MagicMock()
-            mock.get.side_effect = queue.Empty
-            mock.empty.side_effect = [True, False]
-            queue_mock.return_value = mock
+            queue_mock.return_value.get.side_effect = queue.Empty
+            queue_mock.return_value.empty.side_effect = [True, False]
 
             memory_io = MemoryDataSetIO()
             memory_io.bind_data_set(data_set)
@@ -170,18 +167,15 @@ class TestDataSetIO(TestCase):
             memory_io.sync_add_data_array_to_storage(some_array)
 
             memory_io.sync_from_storage(timeout=-1)
-            self.assertIsNone(memory_io.data_set.user_data)
-            self.assertTrue(len(memory_io.data_set.data_arrays) == 0)
+            self.assertEqual(data_set, memory_io.data_set)
 
-    def test_sync_metadata_to_storage_raises_empty_error_user(self):
+    def test_sync_metadata_to_storage_is_empty_not_updated(self):
         with patch('qilib.data_set.memory_data_set_io.queue.Queue') as queue_mock:
             user_data = PythonJsonStructure(item_0=0, item_1=1)
             data_set = DataSet(user_data=user_data)
 
-            mock = MagicMock()
-            mock.get.side_effect = queue.Empty
-            mock.empty.return_value = False
-            queue_mock.return_value = mock
+            queue_mock.return_value.get.side_effect = queue.Empty
+            queue_mock.return_value.empty.return_value = False
 
             memory_io = MemoryDataSetIO()
             memory_io.bind_data_set(data_set)
@@ -191,8 +185,7 @@ class TestDataSetIO(TestCase):
             memory_io.sync_metadata_to_storage(user_item, 2)
 
             memory_io.sync_from_storage(timeout=-1)
-            self.assertTrue(user_item not in memory_io.data_set.user_data.keys())
-            self.assertTrue(len(memory_io.data_set.data_arrays) == 0)
+            self.assertEqual(data_set, memory_io.data_set)
 
     def test_sync_data_array_to_storage_is_added(self):
         array_name = 'ItsAnArray'
@@ -241,7 +234,7 @@ class TestDataSetIO(TestCase):
         memory_io.bind_data_set(data_set=MagicMock())
         memory_io.finalize()
         error_args = (AttributeError, 'MemoryDataSetIO already finalized!')
-        self.assertRaisesRegex(*error_args, memory_io.sync_data_to_storage, data_array=None, index_spec=1234)
+        self.assertRaisesRegex(*error_args, memory_io.sync_data_to_storage, data_array=None, index_or_slice=1234)
         self.assertRaisesRegex(*error_args, memory_io.sync_metadata_to_storage, field_name='abc', value=123)
         self.assertRaisesRegex(*error_args, memory_io.sync_add_data_array_to_storage, data_array=None)
 

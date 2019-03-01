@@ -22,13 +22,18 @@ from abc import ABC, abstractmethod, abstractstaticmethod
 
 
 class DataSetIO(ABC):
+    """ An interface that contains DataArrays and metadata of measurements.
+    
+    The DataSetIO has functionality to pass the data to plotting tools or storage backends.
+    The interface closely matches that of the legacy QCoDeS dataset, yet with more explicit method names.
+    """
 
     @abstractmethod
     def bind_data_set(self, data_set):
         """ Binds the DataSet to the DataSetIO. Binding can be done only once on the same DataSetIO.
 
         Args:
-            data_set (DataSet): A dataset with data.
+            data_set (DataSet): The object that encompasses DataArrays.
         """
 
     @abstractmethod
@@ -51,22 +56,23 @@ class DataSetIO(ABC):
         """
 
     @abstractmethod
-    def sync_data_to_storage(self, data_array, index_spec):
-        """ Registers a data array update to the DataSetIO.
+    def sync_data_to_storage(self, data_array, index_or_slice):
+        """ Registers a DataArray update to the DataSetIO.
 
-            data_array (DataArray): An data array with data.
-            index_spec (int, tuple[int]): The indices of the dataset to update.
+            data_array (DataArray): A container for measurement data and setpoint arrays.
+            index_or_slice (int, tuple[int]): The indices of the DataSet to update.
         """
 
     @abstractmethod
     def sync_add_data_array_to_storage(self, data_array):
-        """ Registers a new data array event.
+        """ Registers a new DataArray event.
 
         Args:
-            data_array (DataArray): An data array with data.
+            data_array (DataArray): A container for measurement data and setpoint arrays.
         """
 
-    @abstractstaticmethod
+    @staticmethod
+    @abstractmethod
     def load():
         """ Opens an existing DataSet from the underlying storage."""
 
