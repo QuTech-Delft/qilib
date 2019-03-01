@@ -71,7 +71,7 @@ class DataSet:
             table.append([array.name, array.label, array.unit, str(array.shape), str(array.is_setpoint)])
         return heading + self._format_str(table)
 
-    def add_array(self, array):
+    def add_array(self, array: DataArray) -> None:
         """
         Args:
             array (DataArray): Array to be added to the experiment.

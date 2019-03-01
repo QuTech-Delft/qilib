@@ -19,6 +19,9 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 """
 
 from abc import ABC, abstractmethod, abstractstaticmethod
+from typing import Any, Tuple, Union
+
+from qilib.data_set import DataArray, DataSet
 
 
 class DataSetIO(ABC):
@@ -29,55 +32,55 @@ class DataSetIO(ABC):
     """
 
     @abstractmethod
-    def bind_data_set(self, data_set):
+    def bind_data_set(self, data_set: DataSet) -> None:
         """ Binds the DataSet to the DataSetIO. Binding can be done only once on the same DataSetIO.
 
         Args:
-            data_set (DataSet): The object that encompasses DataArrays.
+            data_set: The object that encompasses DataArrays.
         """
 
     @abstractmethod
-    def sync_from_storage(self, timeout):
+    def sync_from_storage(self, timeout: float) -> None:
         """ Reads changes from the underlying storage backend and applies them to the bound DataSet.
 
         Args:
-            timeout (float): Stop syncing after certain amount of time.
+            timeout: Stop syncing after certain amount of time.
         """
 
     @abstractmethod
-    def sync_metadata_to_storage(self, field_name, value):
+    def sync_metadata_to_storage(self, field_name: str, value: Any) -> None:
         """ Registers a change to a metadata field.
 
         This function creates a new field if the field name does not exists.
 
         Args:
-            field_name (string): The metadata field name.
-            value (Any): The metadata value to change.
+            field_name: The metadata field name.
+            value: The metadata value to change.
         """
 
     @abstractmethod
-    def sync_data_to_storage(self, data_array, index_or_slice):
+    def sync_data_to_storage(self, data_array: DataArray, index_or_slice: int) -> None:
         """ Registers a DataArray update to the DataSetIO.
 
-            data_array (DataArray): A container for measurement data and setpoint arrays.
-            index_or_slice (int, tuple[int]): The indices of the DataSet to update.
+            data_array: A container for measurement data and setpoint arrays.
+            index_or_slice: The indices of the DataSet to update.
         """
 
     @abstractmethod
-    def sync_add_data_array_to_storage(self, data_array):
+    def sync_add_data_array_to_storage(self, data_array: DataArray) -> None:
         """ Registers a new DataArray event.
 
         Args:
-            data_array (DataArray): A container for measurement data and setpoint arrays.
+            data_array: A container for measurement data and setpoint arrays.
         """
 
     @staticmethod
     @abstractmethod
-    def load():
+    def load() -> None:
         """ Opens an existing DataSet from the underlying storage."""
 
     @abstractmethod
-    def finalize(self):
+    def finalize(self) -> None:
         """ Sets the data IO to read-only.
 
             No more data will be written after applying this function and triggers the closing
