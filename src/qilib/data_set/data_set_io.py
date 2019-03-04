@@ -18,17 +18,17 @@ COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER I
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 
-from abc import ABC, abstractmethod, abstractstaticmethod
-from typing import Any, Tuple, Union
+from abc import ABC, abstractmethod
+from typing import Any
 
 from qilib.data_set import DataArray, DataSet
 
 
 class DataSetIO(ABC):
     """ An interface that contains DataArrays and metadata of measurements.
-    
+
     The DataSetIO has functionality to pass the data to plotting tools or storage backends.
-    The interface closely matches that of the legacy QCoDeS dataset, yet with more explicit method names.
+    The interface closely matches that of the legacy QCoDeS DataSet, yet with more explicit method names.
     """
 
     @abstractmethod

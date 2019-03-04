@@ -20,7 +20,7 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 
 import queue
 from collections import deque
-from typing import Any, Tuple, Union, Optional
+from typing import Any, Optional
 
 from qilib.data_set import DataSetIO, DataArray, DataSet
 
@@ -30,7 +30,7 @@ class MemoryDataSetIO(DataSetIO):
 
     def __init__(self) -> None:
         """ The MemoryDataSetIO contains DataArrays and metadata of measurements.
-        
+
             The interface is used for synchronization between different instances of a DataSet in the same thread.
             The functionality is made for implementing live plotting of a DataSet.
         """
@@ -143,7 +143,7 @@ class MemoryDataSetIO(DataSetIO):
         raise NotImplementedError('The load function cannot be used with the MemoryDataSetIO!')
 
     def finalize(self) -> None:
-        """ Sets the MemoryDatasetIO to read-only."""
+        """ Sets the MemoryDataSetIO to read-only."""
         self.__is_bounded()
         self.__is_not_finalized()
         self._is_finalized = True
