@@ -34,10 +34,10 @@ class MemoryDataSetIO(DataSetIO):
             The interface is used for synchronization between different instances of a DataSet in the same thread.
             The functionality is made for implementing live plotting of a DataSet.
         """
-        self.__user_data_storage: Any = queue.Queue()
-        self.__data_array_storage: Any = queue.Queue()
+        self.__user_data_storage = queue.Queue()
+        self.__data_array_storage = queue.Queue()
         self._is_finalized = False
-        self._data_set: DataSet
+        self._data_set = None
 
     def bind_data_set(self, data_set: DataSet) -> None:
         """ Binds the DataSet to the MemoryDataSetIO.
@@ -47,12 +47,12 @@ class MemoryDataSetIO(DataSetIO):
         Args:
             data_set: The object that encompasses DataArrays.
         """
-        if hasattr(self, '_data_set'):
+        if self._data_set:
             raise AttributeError('DataSet already bound!')
         self._data_set = data_set
 
     def __is_bounded(self) -> None:
-        if not hasattr(self, '_data_set'):
+        if not self._data_set:
             raise ValueError('No DataSet bound to MemoryDataSetIO!')
 
     @property

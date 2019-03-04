@@ -95,8 +95,8 @@ class TestDataSetIO(TestCase):
         memory_io.sync_from_storage(timeout=-1)
         actual_user_data = memory_io.data_set.user_data
 
-        self.assertTrue(initial_user_data.items() <= actual_user_data.items())
-        self.assertTrue(other_user_data.items() <= actual_user_data.items())
+        expected_user_data = PythonJsonStructure(initial_user_data, other_user_data)
+        self.assertDictEqual(expected_user_data, actual_user_data)
 
     def test_sync_metadata_to_storage_is_blocking(self):
         initial_user_data = PythonJsonStructure(item_0=0, item_1=1)
@@ -130,8 +130,8 @@ class TestDataSetIO(TestCase):
         memory_io.sync_from_storage(timeout)
         actual_user_data = memory_io.data_set.user_data
 
-        self.assertTrue(initial_user_data.items() <= actual_user_data.items())
-        self.assertTrue(other_user_data.items() <= actual_user_data.items())
+        expected_user_data = PythonJsonStructure(initial_user_data, other_user_data)
+        self.assertDictEqual(expected_user_data, actual_user_data)
 
     def test_sync_metadata_to_storage_with_timeout(self):
         initial_user_data = PythonJsonStructure(item_0=0, item_1=1)
@@ -150,8 +150,8 @@ class TestDataSetIO(TestCase):
         memory_io.sync_from_storage(timeout)
         actual_user_data = memory_io.data_set.user_data
 
-        self.assertTrue(initial_user_data.items() <= actual_user_data.items())
-        self.assertTrue(other_user_data.items() <= actual_user_data.items())
+        expected_user_data = PythonJsonStructure(initial_user_data, other_user_data)
+        self.assertDictEqual(expected_user_data, actual_user_data)
 
     def test_sync_data_arrays_to_storage_is_empty_not_updated(self):
         with patch('qilib.data_set.memory_data_set_io.queue.Queue') as queue_mock:
