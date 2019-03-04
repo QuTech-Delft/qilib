@@ -26,6 +26,7 @@ from qilib.data_set import DataArray
 
 class DataSet:
     """ A DataSet is an object that encompasses DataArrays.
+
     A DataArray can have another DataArray (or multiple) as setpoint(s).
     A DataSet can have multiple measurement arrays sharing the same setpoints.
     It is an error to have multiple measurement arrays with different setpoints.
@@ -70,7 +71,7 @@ class DataSet:
             table.append([array.name, array.label, array.unit, str(array.shape), str(array.is_setpoint)])
         return heading + self._format_str(table)
 
-    def add_array(self, array):
+    def add_array(self, array: DataArray) -> None:
         """
         Args:
             array (DataArray): Array to be added to the experiment.
@@ -87,15 +88,16 @@ class DataSet:
         setattr(self, array.name, array)
         self._default_array_name = self._default_array_name or array.name
 
-    def add_data(self, index_spec, data):
+    def add_data(self, index_or_slice, data):
         """ Update an underlying DataArray.
+
         Args:
-            index_spec (int): Setpoints, can be an int or tuple of ints.
+            index_or_slice (int, tuple[int]): Setpoints, can be an int or tuple of integers.
             data (dict): Key is the name of the array and the dict value is the data.
         """
 
         for array_name, data_value in data.items():
-            self._data_arrays[array_name][index_spec] = data_value
+            self._data_arrays[array_name][index_or_slice] = data_value
 
     def sync_from_storage(self):
         """ Not implemented yet. """
@@ -190,4 +192,3 @@ class DataSet:
         for row in table:
             formatted_string += row_template.format(info=row, lens=column_lengths)
         return formatted_string
-
