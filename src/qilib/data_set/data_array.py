@@ -17,6 +17,7 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
+from copy import deepcopy
 from typing import Optional, Tuple, List, Union, Any, Set
 
 import numpy
@@ -126,6 +127,22 @@ class DataArray:
 
     def __setitem__(self, index: int, data: Any) -> None:
         self._data[index] = data
+
+    def __copy__(self):
+        data_array_copy = type(self)(name=self._name, label=self._label, shape=self.shape)
+        data_array_copy.__dict__.update(self.__dict__)
+        return data_array_copy
+
+    def __deepcopy__(self, memo):
+        data_array_copy = type(self)(name=self._name, label=self._label, shape = self.shape)
+        data_array_copy.__dict__.update(self.__dict__)
+        data_array_copy._data = deepcopy(self._data, memo)
+        data_array_copy._set_arrays = deepcopy(self._set_arrays, memo)
+
+        return data_array_copy
+
+    def __len__(self):
+        return len(self._data)
 
     def _verify_array_dimensions(self) -> None:
         shapes = [array.shape for array in self._set_arrays]

@@ -20,8 +20,11 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 
 import collections
 from datetime import datetime
+from typing import Any, Union, List, Tuple
 
 from qilib.data_set import DataArray
+from qilib.data_set.type_aliasses import DataArrays
+from qilib.utils import PythonJsonStructure
 
 
 class DataSet:
@@ -32,15 +35,18 @@ class DataSet:
     It is an error to have multiple measurement arrays with different setpoints.
     """
 
-    def __init__(self, storage=None, name='', time_stamp=None, user_data=None, data_arrays=None, set_arrays=None):
+    def __init__(self, storage_writer: Any = None, storage_reader: Any = None, name: str = '',
+                 time_stamp: datetime = None,
+                 user_data: PythonJsonStructure = None, data_arrays: DataArrays = None, set_arrays: DataArrays = None,
+                 consumer: bool = False):
         """
         Args:
-            storage (DataSetIO): Object providing a storage backend.
-            name (str): Name for the DataSet.
-            time_stamp (DateTime): Time of the measurement. datetime.now is used if not provided.
-            user_data (PythonJsonStructure): User meta-data. E.g. instrument snapshot.
-            data_arrays (dict): DataArrays used in the experiment/
-            set_arrays (DataArray): None or more setpoint arrays.
+            storage_writer: Object providing a storage backend.
+            name: Name for the DataSet.
+            time_stamp: Time of the measurement. datetime.now is used if not provided.
+            user_data: User meta-data. E.g. instrument snapshot.
+            data_arrays: DataArrays used in the experiment/
+            set_arrays: None or more setpoint arrays.
 
         Raises:
             TypeError: If data_arrays are not of type DataArray.
@@ -48,19 +54,27 @@ class DataSet:
                 are provided with various set_arrays.
         """
 
-        self._storage = storage
+        self._storage_writer = storage_writer if storage_writer is not None else []
+        if not isinstance(self._storage_writer, collections.Sequence):
+            self._storage_writer = [self._storage_writer]
+        self._storage_reader = storage_reader
+        if self._storage_reader is not None:
+            self._storage_reader.bind_data_set(self)
         self._name = name
         self._time_stamp = datetime.now() if time_stamp is None else time_stamp
         self._user_data = user_data
         self._add_set_arrays(set_arrays)
         self._data_arrays = {}
         self._default_array_name = ""
+        self._consumer = consumer
         if data_arrays is not None:
             self._add_data_arrays(data_arrays)
 
     def __repr__(self):
-        return "DataSet(id=%r, name=%r, storage=%r, time_stamp=%r, user_data=%r, data_arrays=%r, set_arrays=%r)" % (
-            id(self), self._name, self._storage, self._time_stamp, self._user_data, self._data_arrays, self._set_arrays)
+        return "DataSet(id=%r, name=%r, storage_writer=%r, storage_reader=%r, time_stamp=%r, user_data=%r, " \
+               "data_arrays=%r, set_arrays=%r)" % (
+                   id(self), self._name, self._storage_writer, self._storage_reader, self._time_stamp, self._user_data,
+                   self._data_arrays, self._set_arrays)
 
     def __str__(self):
         heading = "{}: {}".format(self.__class__.__name__, self._name)
@@ -87,6 +101,8 @@ class DataSet:
         self._data_arrays[array.name] = array
         setattr(self, array.name, array)
         self._default_array_name = self._default_array_name or array.name
+        for storage in self._storage_writer:
+            storage.sync_add_data_array_to_storage(array)
 
     def add_data(self, index_or_slice, data):
         """ Update an underlying DataArray.
@@ -98,22 +114,37 @@ class DataSet:
 
         for array_name, data_value in data.items():
             self._data_arrays[array_name][index_or_slice] = data_value
+        for storage in self._storage_writer:
+            storage.sync_data_to_storage(index_or_slice, data)
 
-    def sync_from_storage(self):
-        """ Not implemented yet. """
-        raise NotImplementedError("sync_from_storage has not been implemented.")
+    def sync_from_storage(self, timeout: int) -> None:
+        """ Poll the DataSetIO for changes and apply any to the in-memory representation.
+            Timeout can be:
+                -1 (blocking),
+                 0 (non-blocking)
+                >0 (wait at most that many seconds)
+
+        Args:
+            timeout: Time to wait in seconds.
+
+        Raises:
+            Some Error!
+        """
+        if self._storage_reader is not None:
+            self._storage_reader.sync_from_storage(timeout)
 
     def save_to_storage(self):
         """ Not implemented yet. """
         raise NotImplementedError("save_to_storage has not been implemented.")
 
-    def finalize(self):
-        """ Not implemented yet. """
-        raise NotImplementedError("finalize has not been implemented.")
+    def finalize(self) -> None:
+        """ Indicates to DataSetIOWriters that no more data will be written."""
+        for storage in self._storage_writer:
+            storage.finalize()
 
     @property
     def storage(self):
-        return self._storage
+        return self._storage_writer
 
     @property
     def name(self):

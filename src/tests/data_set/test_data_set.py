@@ -20,9 +20,12 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 
 import datetime
 from unittest import TestCase
+from unittest.mock import MagicMock
 
 import numpy as np
-from qilib.data_set import DataSet, DataArray
+from qilib.data_set import DataSet, DataArray, MemoryDataSetIO
+from qilib.data_set.memory_data_set_io_factory import MemoryDataSetIOFactory
+from qilib.data_set.memory_data_set_io_writer import MemoryDataSetIOWriter
 
 
 class TestDataSet(TestCase):
@@ -38,16 +41,16 @@ class TestDataSet(TestCase):
                                     preset_data=np.NaN * np.ones((self.x_points.size, self.y_points.size)))
 
     def test_constructor(self):
-        storage = 'Fake'
+        storage = MagicMock(spec=MemoryDataSetIOWriter)
         name = 'ItsAName'
         array_name = 'ItsAnArray'
         time_stamp = datetime.datetime(2018, 12, 24, 18, 0)
         user_data = {'some': 'data'}
         set_arrays = DataArray('setpoints', 'X', is_setpoint=True, preset_data=np.array([1, 2, 3, 4, 5]))
         data_arrays = DataArray(array_name, 'results', shape=(5,), set_arrays=[set_arrays])
-        data_set = DataSet(storage=storage, name=name, time_stamp=time_stamp, user_data=user_data,
+        data_set = DataSet(storage_writer=storage, name=name, time_stamp=time_stamp, user_data=user_data,
                            data_arrays=data_arrays, set_arrays=set_arrays)
-        self.assertEqual(storage, data_set.storage)
+        self.assertEqual([storage], data_set.storage)
         self.assertEqual(name, data_set.name)
         self.assertEqual(time_stamp, data_set.time_stamp)
         self.assertDictEqual(user_data, data_set.user_data)
@@ -55,20 +58,20 @@ class TestDataSet(TestCase):
         self.assertEqual(array_name, data_set.default_array_name)
 
     def test_constructor_multiple_set_arrays(self):
-        storage = 'Fake'
+        storage = MagicMock(spec=MemoryDataSetIOWriter)
         name = 'ItsAName'
         array_name = self.data_array.name
         user_data = {'some': 'data'}
-        data_set = DataSet(storage=storage, name=name, user_data=user_data,
+        data_set = DataSet(storage_writer=storage, name=name, user_data=user_data,
                            data_arrays=self.data_array, set_arrays=[self.set_y, self.set_x])
-        self.assertEqual(storage, data_set.storage)
+        self.assertEqual([storage], data_set.storage)
         self.assertEqual(name, data_set.name)
         self.assertDictEqual(user_data, data_set.user_data)
         self.assertEqual(self.data_array, data_set.data_arrays[array_name])
         self.assertEqual(array_name, data_set.default_array_name)
 
     def test_constructor_multiple_data_arrays(self):
-        storage = 'Fake'
+        storage = MagicMock(spec=MemoryDataSetIOWriter)
         name = 'ItsAName'
         array_name = 'ItsAnArray'
         user_data = {'some': 'data'}
@@ -84,9 +87,9 @@ class TestDataSet(TestCase):
         other_z = DataArray(name='other_array', label='z-axis', unit='ma', set_arrays=[y, x],
                             preset_data=np.NaN * np.ones((x_points.size, y_points.size)))
 
-        data_set = DataSet(storage=storage, name=name, user_data=user_data,
+        data_set = DataSet(storage_writer=storage, name=name, user_data=user_data,
                            data_arrays=[z, other_z], set_arrays=[y, x])
-        self.assertEqual(storage, data_set.storage)
+        self.assertEqual([storage], data_set.storage)
         self.assertEqual(name, data_set.name)
         self.assertDictEqual(user_data, data_set.user_data)
         self.assertEqual(z, data_set.data_arrays[array_name])
@@ -99,8 +102,9 @@ class TestDataSet(TestCase):
     def test__repr__(self):
         data_set = DataSet(name='some_name', time_stamp=datetime.datetime(2000, 1, 1), user_data={'user': 'data'},
                            set_arrays=[])
-        expect = "DataSet(id={}, name='{}', storage=None, time_stamp={}, user_data={}, data_arrays={}, set_arrays={})" \
-            .format(id(data_set), 'some_name', 'datetime.datetime(2000, 1, 1, 0, 0)', {'user': 'data'}, {}, [])
+        expect = "DataSet(id={}, name='{}', storage_writer=[], storage_reader=None, time_stamp={}, user_data={}, " \
+                 "data_arrays={}, set_arrays={})".format(
+            id(data_set), 'some_name', 'datetime.datetime(2000, 1, 1, 0, 0)', {'user': 'data'}, {}, [])
         self.assertEqual(expect, repr(data_set))
 
     def test_add_array(self):
@@ -180,22 +184,18 @@ class TestDataSet(TestCase):
         self.assertDictEqual({'Data': 'stuff'}, data_set.user_data)
         self.assertEqual("TheDefault", data_set.default_array_name)
 
-    def test_sync_from_storage(self):
-        data_set = DataSet()
-        self.assertRaisesRegex(NotImplementedError, "sync_from_storage has not been implemented.",
-                               data_set.sync_from_storage)
-
     def test_save_to_storage(self):
         data_set = DataSet()
         self.assertRaisesRegex(NotImplementedError, "save_to_storage has not been implemented.",
                                data_set.save_to_storage)
 
     def test_finalize(self):
-        data_set = DataSet()
-        self.assertRaisesRegex(NotImplementedError, "finalize has not been implemented.", data_set.finalize)
+        storage_writer = MagicMock(spec=MemoryDataSetIOWriter)
+        data_set = DataSet(storage_writer=storage_writer)
+        data_set.finalize()
+        storage_writer.finalize.assert_called_once_with()
 
     def test_string(self):
-        storage = 'Fake'
         name = 'ItsAName'
         array_name = 'ItsAnArray'
         user_data = {'some': 'data'}
@@ -211,7 +211,7 @@ class TestDataSet(TestCase):
         other_z = DataArray(name='other_array', label='z-axis', unit='ma', set_arrays=[y, x],
                             preset_data=np.NaN * np.ones((x_points.size, y_points.size)))
 
-        data_set = DataSet(storage=storage, name=name, user_data=user_data,
+        data_set = DataSet(name=name, user_data=user_data,
                            data_arrays=[z, other_z], set_arrays=[y, x])
 
         expected = "DataSet: ItsAName\n  name        | label  | unit | shape   | setpoint\n  ItsAnArray  | z-axis | " \
@@ -219,3 +219,38 @@ class TestDataSet(TestCase):
                    " mV   | (10, 5) | True\n  x           | x-axis | mV   | (10,)   | True"
         actual = str(data_set)
         self.assertEqual(expected, actual)
+
+    def test_integrate_with_data_set_io_add_array(self):
+        io_reader, io_writer = MemoryDataSetIOFactory.get_reader_writer_pair()
+        data_set_consumer = DataSet(storage_reader=io_reader)
+        some_array = DataArray('some_array', 'label', shape=(5, 5))
+        data_set_producer = DataSet(storage_writer=io_writer)
+        data_set_producer.add_array(some_array)
+
+        data_set_consumer.sync_from_storage(-1)
+        self.assertTrue(hasattr(data_set_consumer, 'some_array'))
+        self.assertEqual('some_array', data_set_consumer.some_array.name)
+        self.assertEqual((5, 5), data_set_consumer.some_array.shape)
+        self.assertIsNot(some_array, data_set_consumer.some_array)
+
+    def test_integrate_with_data_set_io_add_data(self):
+        io_reader, io_writer = MemoryDataSetIOFactory.get_reader_writer_pair()
+        data_set_consumer = DataSet(storage_reader=io_reader)
+        some_array = DataArray('some_array', 'label', shape=(5, 5))
+        data_set_producer = DataSet(storage_writer=io_writer, data_arrays=some_array)
+        data_set_producer.add_data((0, 0), {'some_array': 42})
+        data_set_producer.add_data((1, 1), {'some_array': 25})
+
+        data_set_consumer.sync_from_storage(-1)
+        self.assertTrue(hasattr(data_set_consumer, 'some_array'))
+        self.assertIsNot(some_array, data_set_consumer.some_array)
+        self.assertEqual(42, data_set_consumer.some_array[0][0])
+        self.assertEqual(25, data_set_consumer.some_array[1][1])
+
+    def test_sync_from_storage(self):
+        io_reader, io_writer = MemoryDataSetIOFactory.get_reader_writer_pair()
+        data_set_consumer = DataSet(storage_reader=io_reader, name='consumer', consumer=True)
+        some_array = DataArray('some_array', 'label', shape=(5, 1))
+        io_writer.sync_add_data_array_to_storage(some_array)
+        data_set_consumer.sync_from_storage(-1)
+        self.assertTrue(hasattr(data_set_consumer, 'some_array'))
