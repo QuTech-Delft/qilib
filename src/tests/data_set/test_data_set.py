@@ -23,7 +23,8 @@ from unittest import TestCase
 from unittest.mock import MagicMock
 
 import numpy as np
-from qilib.data_set import DataSet, DataArray, MemoryDataSetIO
+
+from qilib.data_set import DataSet, DataArray
 from qilib.data_set.memory_data_set_io_factory import MemoryDataSetIOFactory
 from qilib.data_set.memory_data_set_io_writer import MemoryDataSetIOWriter
 

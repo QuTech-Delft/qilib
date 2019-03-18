@@ -17,6 +17,7 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
+from queue import Empty
 
 from qilib.data_set import DataSet
 from qilib.data_set.data_set_io_reader import DataSetIOReader
@@ -34,11 +35,8 @@ class MemoryDataSetIOReader(DataSetIOReader):
         Args:
             storage_queue: Fifo shared with a MemoryDataSetIOWriter.
         """
+        super().__init__()
         self._storage_queue = storage_queue
-        self._data_set = None
-
-    def bind_data_set(self, data_set: DataSet) -> None:
-        self._data_set = data_set
 
     def sync_from_storage(self, timeout: float) -> None:
         """ Poll the MemoryStorageQueue for changes and apply any to the bound data_set.
@@ -46,17 +44,27 @@ class MemoryDataSetIOReader(DataSetIOReader):
           Args:
               timeout: Stop syncing if collecting an item takes more then a the timeout time.
                        The timeout can be -1 (blocking), 0 (non-blocking), or >0 (wait at most that many seconds).
-          """
-        blocking = timeout < 0
-        data_type, storage_data = self._storage_queue.get(blocking, timeout if timeout > 0 else None)
-        if data_type == self._storage_queue.ARRAY:
-            self._data_set.add_array(storage_data)
-        elif data_type == self._storage_queue.DATA:
-            self._data_set.add_data(*storage_data)
-        elif data_type == self._storage_queue.META_DATA:
-            setattr(self._data_set, *storage_data)
-        if not self._storage_queue.empty():
-            self.sync_from_storage(timeout)
+
+          Raises:
+                TimeoutError: If timeout is reached while the storage queue is still empty
+        """
+
+        empty_queue = False
+        blocking = timeout != 0
+        while not empty_queue:
+            try:
+                data_type, storage_data = self._storage_queue.get(blocking, timeout if timeout > 0 else None)
+            except Empty as e:
+                raise TimeoutError from e
+
+            if data_type == self._storage_queue.ARRAY:
+                self._data_set.add_array(storage_data)
+            elif data_type == self._storage_queue.DATA:
+                self._data_set.add_data(*storage_data)
+            elif data_type == self._storage_queue.META_DATA:
+                setattr(self._data_set, *storage_data)
+
+            empty_queue = self._storage_queue.empty()
 
     @staticmethod
     def load() -> DataSet:

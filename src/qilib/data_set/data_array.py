@@ -18,7 +18,7 @@ COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER I
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 from copy import deepcopy
-from typing import Optional, Tuple, List, Union, Any, Set
+from typing import Optional, Tuple, List, Union, Any, Set, Dict
 
 import numpy
 import numpy as np
@@ -122,26 +122,26 @@ class DataArray:
         return "DataArray(id=%r, name=%r, label=%r, unit=%r, is_setpoint=%r, data=%r, set_arrays=%r)" % (
             id(self), self._name, self._label, self._unit, self._is_setpoint, self._data, self._set_arrays)
 
-    def __getitem__(self, index: int) -> Any:
+    def __getitem__(self, index: Union[Tuple[int], int]) -> Any:
         return self._data[index]
 
-    def __setitem__(self, index: int, data: Any) -> None:
+    def __setitem__(self, index: Union[Tuple[int], int], data: Any) -> None:
         self._data[index] = data
 
-    def __copy__(self):
+    def __copy__(self) -> 'DataArray':
         data_array_copy = type(self)(name=self._name, label=self._label, shape=self.shape)
         data_array_copy.__dict__.update(self.__dict__)
         return data_array_copy
 
-    def __deepcopy__(self, memo):
-        data_array_copy = type(self)(name=self._name, label=self._label, shape = self.shape)
+    def __deepcopy__(self, memo: Dict[int, Any]) -> 'DataArray':
+        data_array_copy = type(self)(name=self._name, label=self._label, shape=self.shape)
         data_array_copy.__dict__.update(self.__dict__)
         data_array_copy._data = deepcopy(self._data, memo)
         data_array_copy._set_arrays = deepcopy(self._set_arrays, memo)
 
         return data_array_copy
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._data)
 
     def _verify_array_dimensions(self) -> None:
@@ -190,5 +190,5 @@ class DataArray:
         return self._is_setpoint
 
     @property
-    def set_arrays(self) -> List['DataArray'] :
+    def set_arrays(self) -> List['DataArray']:
         return self._set_arrays

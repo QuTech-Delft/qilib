@@ -45,5 +45,5 @@ class MemoryDataSetIOWriter(DataSetIOWriter):
     def sync_add_data_array_to_storage(self, data_array: DataArray) -> None:
         self._storage_queue.add_array(deepcopy(data_array))
 
-    def finalize(self):
+    def finalize(self) -> None:
         raise NotImplementedError('The finalize function cannot be used with the MemoryDataSetIOWriter!')
