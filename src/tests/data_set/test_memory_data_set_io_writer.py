@@ -36,3 +36,8 @@ class TestMemoryDataSetIOWriter(unittest.TestCase):
         self.assertEqual(array.name, storage_array.name)
         self.assertEqual(array.shape, storage_array.shape)
         self.assertEqual(array.label, storage_array.label)
+
+    def test_finalize_is_not_implemented(self):
+        error_args = (NotImplementedError, 'The finalize function cannot be used with the MemoryDataSetIOWriter!')
+        self.assertRaisesRegex(*error_args, self.data_set_io_writer.finalize)
+

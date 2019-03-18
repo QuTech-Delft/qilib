@@ -22,3 +22,7 @@ class TestMemoryDataSetIOReader(unittest.TestCase):
         self.assertEqual('bob', data_set.name)
         data_set.add_data.assert_called_once_with(4, {'z': [42]})
         data_set.add_array.assert_called_once_with([1, 2, 3])
+
+    def test_load_is_not_implemented(self):
+        error_args = (NotImplementedError, 'The load function cannot be used with the MemoryDataSetIOReader!')
+        self.assertRaisesRegex(*error_args, MemoryDataSetIOReader.load)
