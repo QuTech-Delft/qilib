@@ -35,7 +35,7 @@ class DataArray:
     """
 
     def __init__(self, name: str, label: str, unit: str = '', is_setpoint: bool = False,
-                 preset_data: Optional[numpy.ndarray] = None, set_arrays: Optional[List['DataArray']] = None,
+                 preset_data: Optional[numpy.ndarray] = None, set_arrays: Optional[Union[List['DataArray'], Tuple['DataArray', ...], 'DataArray']] = None,
                  shape: Optional[Tuple[int, ...]] = None) -> None:
         """
         Args:
@@ -59,7 +59,7 @@ class DataArray:
             self._data: numpy.ndarray = np.ndarray(shape) * np.NAN
         else:
             raise TypeError("Required arguments 'shape' or 'preset_data' not found")
-        self._set_arrays: List['DataArray'] = set_arrays if set_arrays is not None else []
+        self._set_arrays = set_arrays if set_arrays is not None else []
         if len(self._set_arrays) > 0:
             self._verify_array_dimensions()
 
@@ -122,10 +122,10 @@ class DataArray:
         return "DataArray(id=%r, name=%r, label=%r, unit=%r, is_setpoint=%r, data=%r, set_arrays=%r)" % (
             id(self), self._name, self._label, self._unit, self._is_setpoint, self._data, self._set_arrays)
 
-    def __getitem__(self, index: Union[Tuple[int], int]) -> Any:
+    def __getitem__(self, index: Union[Tuple[int, ...], int]) -> Any:
         return self._data[index]
 
-    def __setitem__(self, index: Union[Tuple[int], int], data: Any) -> None:
+    def __setitem__(self, index: Union[Tuple[int, ...], int], data: Any) -> None:
         self._data[index] = data
 
     def __copy__(self) -> 'DataArray':
@@ -190,5 +190,5 @@ class DataArray:
         return self._is_setpoint
 
     @property
-    def set_arrays(self) -> List['DataArray']:
+    def set_arrays(self) -> Union[List['DataArray'], Tuple['DataArray', ...], 'DataArray']:
         return self._set_arrays

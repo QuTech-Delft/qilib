@@ -54,7 +54,7 @@ class DataSet:
                 are provided with various set_arrays.
         """
 
-        self._set_arrays: List[DataArray]
+        self._set_arrays: DataArrays
         self._storage_writer = storage_writer if storage_writer is not None else []
         if not isinstance(self._storage_writer, collections.Sequence):
             self._storage_writer = [self._storage_writer]
@@ -105,7 +105,7 @@ class DataSet:
         for storage in self._storage_writer:
             storage.sync_add_data_array_to_storage(array)
 
-    def add_data(self, index_or_slice: Union[Tuple[int], int], data: Dict[str, Union[List[Any], Any]]) -> None:
+    def add_data(self, index_or_slice: Union[Tuple[int, ...], int], data: Dict[str, Union[List[Any], Any]]) -> None:
         """ Update an underlying DataArray.
 
         Args:
@@ -154,6 +154,7 @@ class DataSet:
 
     @name.setter
     def name(self, name: str) -> None:
+        self._add_metadata_to_storage('name', name)
         self._name = name
 
     @property
@@ -167,6 +168,7 @@ class DataSet:
     @time_stamp.setter
     def time_stamp(self, time_stamp: datetime) -> None:
         self._time_stamp = time_stamp
+        self._add_metadata_to_storage('time_stamp', time_stamp)
 
     @property
     def user_data(self) -> Union[None, PythonJsonStructure]:
@@ -175,6 +177,7 @@ class DataSet:
     @user_data.setter
     def user_data(self, user_data: PythonJsonStructure) -> None:
         self._user_data = user_data
+        self._add_metadata_to_storage('user_data', user_data)
 
     @property
     def default_array_name(self) -> str:
@@ -183,8 +186,9 @@ class DataSet:
     @default_array_name.setter
     def default_array_name(self, default_array_name: str) -> None:
         self._default_array_name = default_array_name
+        self._add_metadata_to_storage('default_array_name', default_array_name)
 
-    def _verify_set_points(self, set_arrays: List[DataArray]) -> None:
+    def _verify_set_points(self, set_arrays: DataArrays) -> None:
         self._set_arrays = self._set_arrays or set_arrays
         if self._set_arrays != set_arrays:
             raise ValueError('Set point arrays do not match.')
@@ -206,7 +210,7 @@ class DataSet:
         else:
             raise TypeError("'data_arrays' have to be of type 'DataArray', not {}".format(type(data_arrays)))
 
-    def _add_set_arrays(self, set_arrays: DataArrays) -> None:
+    def _add_set_arrays(self, set_arrays: Union[DataArrays, None]) -> None:
         if isinstance(set_arrays, collections.Sequence):
             self._set_arrays = set_arrays
         elif set_arrays is None:
@@ -225,3 +229,7 @@ class DataSet:
         for row in table:
             formatted_string += row_template.format(info=row, lens=column_lengths)
         return formatted_string
+
+    def _add_metadata_to_storage(self, field_name: str, value: Any) -> None:
+        for storage in self._storage_writer:
+            storage.sync_metadata_to_storage(field_name, value)

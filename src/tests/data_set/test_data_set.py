@@ -27,6 +27,7 @@ import numpy as np
 from qilib.data_set import DataSet, DataArray
 from qilib.data_set.memory_data_set_io_factory import MemoryDataSetIOFactory
 from qilib.data_set.memory_data_set_io_writer import MemoryDataSetIOWriter
+from qilib.utils import PythonJsonStructure
 
 
 class TestDataSet(TestCase):
@@ -255,3 +256,25 @@ class TestDataSet(TestCase):
         io_writer.sync_add_data_array_to_storage(some_array)
         data_set_consumer.sync_from_storage(-1)
         self.assertTrue(hasattr(data_set_consumer, 'some_array'))
+
+    def test_metadata_triggers_update(self):
+        name = 'Bobo'
+        user_data = PythonJsonStructure(data='plata', snapshot=False)
+        timestamp = datetime.datetime(2019, 12, 24)
+        default_array_name = 'ThatsAGoodName'
+
+        io_reader, io_writer = MemoryDataSetIOFactory.get_reader_writer_pair()
+        data_set_consumer = DataSet(storage_reader=io_reader)
+        data_set_producer = DataSet(storage_writer=io_writer)
+
+        data_set_producer.name = name
+        data_set_producer.user_data = user_data
+        data_set_producer.time_stamp = timestamp
+        data_set_producer.default_array_name = default_array_name
+
+        data_set_consumer.sync_from_storage(-1)
+
+        self.assertEqual(name, data_set_consumer.name)
+        self.assertDictEqual(user_data, data_set_consumer.user_data)
+        self.assertEqual(timestamp, data_set_consumer.time_stamp)
+        self.assertEqual(default_array_name, data_set_consumer.default_array_name)
