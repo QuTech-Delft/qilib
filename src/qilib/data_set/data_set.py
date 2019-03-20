@@ -23,7 +23,7 @@ from datetime import datetime
 from typing import Any, Union, Tuple, List, Dict, Optional
 
 from qilib.data_set import DataArray
-from qilib.data_set.type_aliasses import DataArrays
+from qilib.data_set.type_aliases import DataArrays
 from qilib.utils import PythonJsonStructure
 
 

@@ -23,6 +23,8 @@ from typing import Optional, Tuple, List, Union, Any, Set, Dict
 import numpy
 import numpy as np
 
+from qilib.data_set.type_aliases import DataArrays
+
 
 class DataArray:
     """ A container for measurement data and setpoint arrays.
@@ -35,7 +37,7 @@ class DataArray:
     """
 
     def __init__(self, name: str, label: str, unit: str = '', is_setpoint: bool = False,
-                 preset_data: Optional[numpy.ndarray] = None, set_arrays: Optional[Union[List['DataArray'], Tuple['DataArray', ...], 'DataArray']] = None,
+                 preset_data: Optional[numpy.ndarray] = None, set_arrays: Optional[DataArrays] = None,
                  shape: Optional[Tuple[int, ...]] = None) -> None:
         """
         Args:
