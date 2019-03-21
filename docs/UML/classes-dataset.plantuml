@@ -12,7 +12,7 @@ class DataArray {
 }
 
 class DataSet {
-    __init__(storage: DataSetIO)
+    __init__(storage_writer: DataSetIOWriter, storage_reader: DataSetIOReader)
     name: String
     timestamp: DateTime
     user_data: PythonJsonStructure
@@ -27,42 +27,85 @@ class DataSet {
 
 DataSet o-- DataArray
 
-interface DataSetIO {
-    read(timeout: Float) : ChangeSet[]
-    write(changes: ChangeSet[])
-    {static} load() : DataSet
+interface DataSetIOWriter {
+    sync_data_to_storage(self, index_or_slice: Union[int, List[int]], data: Dict[str, Any])
+    sync_add_data_array_to_storage(self, data_array: DataArray)
+    sync_metadata_to_storage(self, field_name: str, value: Any)
     finalize()
 }
 
-DataSet --> DataSetIO
+interface DataSetIOReader {
+    bind_data_set(data_set: DataSet)
+    sync_from_storage(timeout: float)
+    {static} load() : DataSet
+}
 
-class MongoDataSetIO {
+DataSet --> DataSetIOWriter
+DataSet <--> DataSetIOReader
+
+class MongoDataSetIOReader {
   __init__(document_id: String)
 }
 
-class FileDataSetIO {
+class MongoDataSetIOWriter {
+  __init__(document_id: String)
+}
+
+class FileDataSetIOReader {
   __init__(filename: String, formatter: Formatter)
 }
 
-class HDF5DataSetIO {
+class FileDataSetIOWriter {
+  __init__(filename: String, formatter: Formatter)
+}
+
+class HDF5DataSetIOReader {
   __init__(filename: String)
 }
 
-class MemoryDataSetIO {
-  __init__()
+class HDF5DataSetIOWriter {
+  __init__(filename: String)
 }
 
-MongoDataSetIO --|> DataSetIO
-FileDataSetIO --|> DataSetIO
-HDF5DataSetIO --|> DataSetIO
-MemoryDataSetIO --|> DataSetIO
+class MemoryDataSetIOReader {
+  __init__(storage_queue: MemoryStorageQueue)
+}
 
-Formatter --> FileDataSetIO
+class MemoryDataSetIOWriter {
+  __init__(storage_queue: MemoryStorageQueue)
+}
+
+class MemoryStorageQueue {
+    add_data(self, index_or_slice: Union[int, List[int]], data: Dict[str, Any])
+    add_meta_data(self, *meta_data: Any)
+    add_array(self, array: DataArray)
+}
+
+class MemoryDataSetIOFactory {
+    {static} get_reader_writer_pair: MemoryDataSetIOReader, MemoryDataSetIOWriter
+}
+
+MemoryDataSetIOReader -down-> MemoryStorageQueue
+MemoryDataSetIOWriter -down-> MemoryStorageQueue
+
+MongoDataSetIOReader --|> DataSetIOReader
+MongoDataSetIOWriter --|> DataSetIOWriter
+FileDataSetIOReader --|> DataSetIOReader
+FileDataSetIOWriter --|> DataSetIOWriter
+HDF5DataSetIOReader --|> DataSetIOReader
+HDF5DataSetIOWriter --|> DataSetIOWriter
+MemoryDataSetIOReader -up-|> DataSetIOReader
+MemoryDataSetIOWriter -up-|> DataSetIOWriter
+
+MemoryDataSetIOFactory -down-> MemoryDataSetIOReader
+MemoryDataSetIOFactory -down-> MemoryDataSetIOWriter
+
+Formatter --> FileDataSetIOWriter
 
 class PathProvider {
 }
 
-FileDataSetIO -up-> PathProvider
-HDF5DataSetIO -up-> PathProvider
+FileDataSetIOReader -up-> PathProvider
+HDF5DataSetIOReader -up-> PathProvider
 
 @enduml

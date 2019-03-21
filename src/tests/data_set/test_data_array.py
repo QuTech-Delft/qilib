@@ -20,6 +20,7 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 
 import operator
 import unittest
+from copy import copy
 
 import numpy as np
 from qilib.data_set import DataArray
@@ -299,3 +300,13 @@ class TestDataArray(unittest.TestCase):
 
         np_data_array = np.array(data_np_array)
         self.assertListEqual(list(data_np_array), list(np_data_array))
+
+    def test_copy(self):
+        data_array = DataArray(name='x', label='x-axis', unit='mV', shape=(5, 5))
+        copied_array = copy(data_array)
+
+        self.assertEqual(len(data_array), len(copied_array))
+        self.assertEqual(data_array.label, copied_array.label)
+        self.assertEqual(data_array.name, copied_array.name)
+        self.assertEqual(data_array.unit, copied_array.unit)
+        self.assertIsNot(copied_array, data_array)

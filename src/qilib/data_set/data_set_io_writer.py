@@ -17,36 +17,13 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
-
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import Any, List, Union, Dict
 
-from qilib.data_set import DataArray, DataSet
+from qilib.data_set import DataArray
 
 
-class DataSetIO(ABC):
-    """ An interface that contains DataArrays and metadata of measurements.
-
-    The DataSetIO has functionality to pass the data to plotting tools or storage backends.
-    The interface closely matches that of the legacy QCoDeS DataSet, yet with more explicit method names.
-    """
-
-    @abstractmethod
-    def bind_data_set(self, data_set: DataSet) -> None:
-        """ Binds the DataSet to the DataSetIO. Binding can be done only once on the same DataSetIO.
-
-        Args:
-            data_set: The object that encompasses DataArrays.
-        """
-
-    @abstractmethod
-    def sync_from_storage(self, timeout: float) -> None:
-        """ Reads changes from the underlying storage backend and applies them to the bound DataSet.
-
-        Args:
-            timeout: Stop syncing after certain amount of time.
-        """
-
+class DataSetIOWriter(ABC):
     @abstractmethod
     def sync_metadata_to_storage(self, field_name: str, value: Any) -> None:
         """ Registers a change to a metadata field.
@@ -59,7 +36,7 @@ class DataSetIO(ABC):
         """
 
     @abstractmethod
-    def sync_data_to_storage(self, data_array: DataArray, index_or_slice: int) -> None:
+    def sync_data_to_storage(self, index_or_slice: Union[int, List[int]], data: Dict[str, Any]) -> None:
         """ Registers a DataArray update to the DataSetIO.
 
             data_array: A container for measurement data and setpoint arrays.
@@ -73,11 +50,6 @@ class DataSetIO(ABC):
         Args:
             data_array: A container for measurement data and setpoint arrays.
         """
-
-    @staticmethod
-    @abstractmethod
-    def load() -> None:
-        """ Opens an existing DataSet from the underlying storage."""
 
     @abstractmethod
     def finalize(self) -> None:
