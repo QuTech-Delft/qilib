@@ -33,4 +33,4 @@ setup(name='qilib',
           'Programming Language :: Python :: 3.6',
           'Programming Language :: Python :: 3.7'],
       license='Other/Proprietary License',
-      install_requires=['pytest>=3.3.1', 'coverage>=4.5.1', 'numpy', 'qcodes', 'serialize'])
+      install_requires=['pytest>=3.3.1', 'coverage>=4.5.1', 'numpy', 'serialize', 'zhinst'])
