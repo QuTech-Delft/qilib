@@ -10,7 +10,7 @@ Install with pip:
 ```
 $ python3 -m venv env
 $ . ./env/bin/activate
-(env) $ pip install .
+(env) $ pip install -r requirements.txt . 
 ```
 
 # Testing
