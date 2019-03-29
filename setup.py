@@ -20,13 +20,12 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 
 from setuptools import setup
 
-
 setup(name='qilib',
       description='',
       version='0.1.0',
       python_requires='>=3.6',
       package_dir={'': 'src'},
-      packages=['qilib',  'qilib.configuration_helper', 'qilib.configuration_helper.adapters',
+      packages=['qilib', 'qilib.configuration_helper', 'qilib.configuration_helper.adapters',
                 'qilib.data_set', 'qilib.utils'],
       classifiers=[
           'Development Status :: 3 - Alpha',
@@ -34,4 +33,6 @@ setup(name='qilib',
           'Programming Language :: Python :: 3.6',
           'Programming Language :: Python :: 3.7'],
       license='Other/Proprietary License',
-      install_requires=['pytest>=3.3.1', 'coverage>=4.5.1', 'spirack>=0.1.8', 'numpy', 'serialize', 'zhinst'])
+
+      install_requires=['pytest>=3.3.1', 'coverage>=4.5.1', 'spirack>=0.1.8', 'numpy', 'serialize', 'zhinst',
+                        'pymongo'])

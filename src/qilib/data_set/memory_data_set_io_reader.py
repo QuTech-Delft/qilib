@@ -57,11 +57,11 @@ class MemoryDataSetIOReader(DataSetIOReader):
             except Empty as e:
                 raise TimeoutError from e
 
-            if data_type == self._storage_queue.ARRAY:
+            if data_type == self.DATA_ARRAY:
                 self._data_set.add_array(storage_data)
-            elif data_type == self._storage_queue.DATA:
+            elif data_type == self.DATA:
                 self._data_set.add_data(*storage_data)
-            elif data_type == self._storage_queue.META_DATA:
+            elif data_type == self.METADATA:
                 setattr(self._data_set, *storage_data)
 
             empty_queue = self._storage_queue.empty()

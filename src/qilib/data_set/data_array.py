@@ -17,6 +17,7 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
+import collections
 from copy import deepcopy
 from typing import Optional, Tuple, List, Union, Any, Set, Dict
 
@@ -36,7 +37,7 @@ class DataArray:
 
     def __init__(self, name: str, label: str, unit: str = '', is_setpoint: bool = False,
                  preset_data: Optional[numpy.ndarray] = None,
-                 set_arrays: Optional[Union[List['DataArray'], Tuple['DataArray', ...], 'DataArray']] = None,
+                 set_arrays: Optional[Union[List['DataArray'], Tuple['DataArray', ...]]] = None,
                  shape: Optional[Tuple[int, ...]] = None) -> None:
         """
         Args:
@@ -191,5 +192,5 @@ class DataArray:
         return self._is_setpoint
 
     @property
-    def set_arrays(self) -> Union[List['DataArray'], Tuple['DataArray', ...], 'DataArray']:
+    def set_arrays(self) -> Union[List['DataArray'], Tuple['DataArray', ...]]:
         return self._set_arrays

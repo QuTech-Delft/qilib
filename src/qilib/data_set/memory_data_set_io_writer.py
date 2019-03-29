@@ -18,7 +18,7 @@ COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER I
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 from copy import deepcopy
-from typing import Any, Union, List, Dict
+from typing import Any, Union, Dict, Tuple
 
 from qilib.data_set import DataArray
 from qilib.data_set.data_set_io_writer import DataSetIOWriter
@@ -26,6 +26,8 @@ from qilib.utils.memory_storage_queue import MemoryStorageQueue
 
 
 class MemoryDataSetIOWriter(DataSetIOWriter):
+    """ Allow a DataSet to write changes to an in-memory data storage queue."""
+
     def __init__(self, storage_queue: MemoryStorageQueue) -> None:
         """ Construct a new instance of MemoryDataSetIOWriter.
             This should not be called directly but a Reader/Writer pair should be created with
@@ -34,12 +36,13 @@ class MemoryDataSetIOWriter(DataSetIOWriter):
         Args:
             storage_queue: Fifo shared with a MemoryDataSetIOWriter.
         """
+        super().__init__()
         self._storage_queue = storage_queue
 
     def sync_metadata_to_storage(self, field_name: str, value: Any) -> None:
         self._storage_queue.add_meta_data(field_name, value)
 
-    def sync_data_to_storage(self, index_or_slice: Union[int, List[int]], data: Dict[str, Any]) -> None:
+    def sync_data_to_storage(self, index_or_slice: Union[int, Tuple[int]], data: Dict[str, Any]) -> None:
         self._storage_queue.add_data(index_or_slice, data)
 
     def sync_add_data_array_to_storage(self, data_array: DataArray) -> None:

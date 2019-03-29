@@ -20,7 +20,7 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 
 import datetime
 from unittest import TestCase
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, call
 
 import numpy as np
 
@@ -188,8 +188,22 @@ class TestDataSet(TestCase):
 
     def test_save_to_storage(self):
         data_set = DataSet()
-        self.assertRaisesRegex(NotImplementedError, "save_to_storage has not been implemented.",
-                               data_set.save_to_storage)
+        data_set.name = 'TheName'
+        data_set.time_stamp = datetime.datetime(2018, 12, 24, 18)
+        data_set.user_data = {'Data': 'stuff'}
+        data_set.default_array_name = 'TheDefault'
+        data_set.add_array(self.data_array)
+
+        writer = MagicMock()
+        data_set.add_storage_writer(writer)
+        data_set.save_to_storage()
+
+        expected_calls = [call.sync_metadata_to_storage('name', 'TheName'),
+                          call.sync_metadata_to_storage('time_stamp', datetime.datetime(2018, 12, 24, 18)),
+                          call.sync_metadata_to_storage('user_data', {'Data': 'stuff'}),
+                          call.sync_metadata_to_storage('default_array_name', 'TheDefault')]
+        writer.assert_has_calls(expected_calls)
+        writer.sync_add_data_array_to_storage.assert_called()
 
     def test_finalize(self):
         storage_writer = MagicMock(spec=MemoryDataSetIOWriter)
@@ -251,7 +265,7 @@ class TestDataSet(TestCase):
 
     def test_sync_from_storage(self):
         io_reader, io_writer = MemoryDataSetIOFactory.get_reader_writer_pair()
-        data_set_consumer = DataSet(storage_reader=io_reader, name='consumer', consumer=True)
+        data_set_consumer = DataSet(storage_reader=io_reader, name='consumer')
         some_array = DataArray('some_array', 'label', shape=(5, 1))
         io_writer.sync_add_data_array_to_storage(some_array)
         data_set_consumer.sync_from_storage(-1)
