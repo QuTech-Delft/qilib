@@ -153,7 +153,7 @@ class DataSet:
             storage.finalize()
 
     def add_storage_writer(self, storage_writer: Any) -> None:
-        """ Adda new DataSetIOStorageWriter to the Dataset
+        """ Add a new DataSetIOStorageWriter to the Dataset
 
         Args:
             storage_writer: A new initialized storage writer.
