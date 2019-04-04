@@ -6,7 +6,7 @@ from qilib.utils import PythonJsonStructure
 from qilib.configuration_helper import InstrumentAdapter
 
 
-class M4iInstrumentAdapter(InstrumentAdapter):
+class UhfliInstrumentAdapter(InstrumentAdapter):
     def __init__(self, address: str) -> None:
         super().__init__(address)
         self._instrument: ZIUHFLI = ZIUHFLI(self.name, device_ID=address)
