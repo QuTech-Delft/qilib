@@ -27,20 +27,23 @@ from qilib.data_set.data_set_io_writer import DataSetIOWriter
 class MongoDataSetIOWriter(DataSetIOWriter):
     """ Allow a DataSet to store changes, and complete DataSet, to a mongodb."""
 
-    def __init__(self, name: Optional[str] = None, document_id: Optional[str] = None) -> None:
+    def __init__(self, name: Optional[str] = None, document_id: Optional[str] = None, database: str = 'qilib',
+                 collection: str = 'data_sets') -> None:
         """ Construct a new instance of MongoDataSetIOWriter. If name is provided, but not found in the database
             a new document is created with that name.
 
         Args:
             name: DataSet name.
             document_id: _id of the DataSet in the database.
+            database: Name of the database.
+            collection: Name of the collections.
 
         Raises:
             DocumentNotFoundError: If document_id is provided but not found in the database.
 
         """
         super().__init__()
-        self._mongo_data_set_io = MongoDataSetIO(name, document_id)
+        self._mongo_data_set_io = MongoDataSetIO(name, document_id, database=database, collection=collection)
 
     def sync_metadata_to_storage(self, field_name: str, value: Any) -> None:
         """ Update or add metadata field to database.

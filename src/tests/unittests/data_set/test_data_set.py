@@ -196,7 +196,6 @@ class TestDataSet(TestCase):
 
         writer = MagicMock()
         data_set.add_storage_writer(writer)
-        data_set.save_to_storage()
 
         expected_calls = [call.sync_metadata_to_storage('name', 'TheName'),
                           call.sync_metadata_to_storage('time_stamp', datetime.datetime(2018, 12, 24, 18)),
@@ -204,6 +203,13 @@ class TestDataSet(TestCase):
                           call.sync_metadata_to_storage('default_array_name', 'TheDefault')]
         writer.assert_has_calls(expected_calls)
         writer.sync_add_data_array_to_storage.assert_called()
+
+    def test_save_to_storage_raises_error(self):
+        data_set = DataSet(storage_reader=MagicMock())
+        writer = MagicMock()
+        error_args = ValueError, "It is not allowed to have both storage_reader and storage_writer."
+        self.assertRaisesRegex(*error_args, data_set.add_storage_writer, writer)
+        writer.assert_not_called()
 
     def test_finalize(self):
         storage_writer = MagicMock(spec=MemoryDataSetIOWriter)

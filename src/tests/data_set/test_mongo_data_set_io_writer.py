@@ -11,7 +11,7 @@ class TestMongoDataSetIOWriter(unittest.TestCase):
             name = 'test'
             document_id = '0x2A'
             writer = MongoDataSetIOWriter(name=name, document_id=document_id)
-            mongo_data_set_io.assert_called_once_with(name, document_id)
+            mongo_data_set_io.assert_called_once_with(name, document_id, collection='data_sets', database='qilib')
 
             field = 'label'
             value = 'measurement'
@@ -24,7 +24,7 @@ class TestMongoDataSetIOWriter(unittest.TestCase):
             name = 'test'
             document_id = '0x2A'
             writer = MongoDataSetIOWriter(name=name, document_id=document_id)
-            mongo_data_set_io.assert_called_once_with(name, document_id)
+            mongo_data_set_io.assert_called_once_with(name, document_id, collection='data_sets', database='qilib')
 
             index = 5
             data = {'some_array': 25}
@@ -37,7 +37,7 @@ class TestMongoDataSetIOWriter(unittest.TestCase):
             name = 'test'
             document_id = '0x2A'
             writer = MongoDataSetIOWriter(name=name, document_id=document_id)
-            mongo_data_set_io.assert_called_once_with(name, document_id)
+            mongo_data_set_io.assert_called_once_with(name, document_id, collection='data_sets', database='qilib')
 
             set_array = DataArray(name='set_array', label='for_testing', is_setpoint=True, shape=(2, 2))
             data_array = DataArray(name='the_array', label='unit_test', unit='T', is_setpoint=False, preset_data=None,
@@ -47,14 +47,15 @@ class TestMongoDataSetIOWriter(unittest.TestCase):
             expected = {
                 'data_arrays.the_array': {'name': 'the_array', 'label': "unit_test", 'unit': 'T', 'is_setpoint': False,
                                           'set_arrays': ['set_array'], 'preset_data': data_array.dumps()}}
-            mongo_data_set_io.assert_has_calls([call('test', '0x2A'), call().update_document(expected)])
+            mongo_data_set_io.assert_has_calls(
+                [call('test', '0x2A', collection='data_sets', database='qilib'), call().update_document(expected)])
 
     def test_finalize(self):
         with patch('qilib.data_set.mongo_data_set_io_writer.MongoDataSetIO') as mongo_data_set_io:
             name = 'test'
             document_id = '0x2A'
             writer = MongoDataSetIOWriter(name=name, document_id=document_id)
-            mongo_data_set_io.assert_called_once_with(name, document_id)
+            mongo_data_set_io.assert_called_once_with(name, document_id, collection='data_sets', database='qilib')
 
             writer.finalize()
             mongo_data_set_io.assert_has_calls([call().finalize()])

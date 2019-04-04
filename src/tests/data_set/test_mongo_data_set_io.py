@@ -12,7 +12,7 @@ class TestMongoDataSetIO(unittest.TestCase):
     def test_constructor_only_name(self):
         mock_mongo_client = MagicMock()
         with patch('qilib.data_set.mongo_data_set_io.MongoClient',
-                   return_value={'test': {'inventory': mock_mongo_client}}) as mongo_client:
+                   return_value={'qilib': {'data_sets': mock_mongo_client}}) as mongo_client:
             mock_mongo_client.find_one.return_value = {'_id': ObjectId('5c9a3457e3306c41f7ae1f3e'),
                                                        'name': 'test_data_set'}
             mock_mongo_client.insert_one.return_value.inserted_id = ObjectId('5c9a3457e3306c41f7ae1f3e')
@@ -27,7 +27,7 @@ class TestMongoDataSetIO(unittest.TestCase):
     def test_constructor_name_not_found(self):
         mock_mongo_client = MagicMock()
         with patch('qilib.data_set.mongo_data_set_io.MongoClient',
-                   return_value={'test': {'inventory': mock_mongo_client}}) as mongo_client:
+                   return_value={'qilib': {'data_sets': mock_mongo_client}}) as mongo_client:
             insert_one = namedtuple('insert_one', 'inserted_id')
             insert_one.inserted_id = ObjectId('5c9a3457e3306c41f7ae1f3e')
             mock_mongo_client.find_one.return_value = None
@@ -43,7 +43,7 @@ class TestMongoDataSetIO(unittest.TestCase):
     def test_constructor_name_not_found_raises_error(self):
         mock_mongo_client = MagicMock()
         with patch('qilib.data_set.mongo_data_set_io.MongoClient',
-                   return_value={'test': {'inventory': mock_mongo_client}}):
+                   return_value={'qilib': {'data_sets': mock_mongo_client}}):
             mock_mongo_client.find_one.return_value = None
 
             error = DocumentNotFoundError, "Document not found in database."
@@ -53,7 +53,7 @@ class TestMongoDataSetIO(unittest.TestCase):
     def test_constructor_only_id(self):
         mock_mongo_client = MagicMock()
         with patch('qilib.data_set.mongo_data_set_io.MongoClient',
-                   return_value={'test': {'inventory': mock_mongo_client}}) as mongo_client:
+                   return_value={'qilib': {'data_sets': mock_mongo_client}}) as mongo_client:
             mock_mongo_client.find_one.return_value = {'_id': ObjectId('5c9a3457e3306c41f7ae1f3e'),
                                                        'name': 'test_data_set'}
             mongo_data_set_io = MongoDataSetIO(document_id='5c9a3457e3306c41f7ae1f3e')
@@ -66,7 +66,7 @@ class TestMongoDataSetIO(unittest.TestCase):
     def test_constructor_id_not_found(self):
         mock_mongo_client = MagicMock()
         with patch('qilib.data_set.mongo_data_set_io.MongoClient',
-                   return_value={'test': {'inventory': mock_mongo_client}}):
+                   return_value={'qilib': {'data_sets': mock_mongo_client}}):
             mock_mongo_client.find_one.return_value = None
 
             error = DocumentNotFoundError, "Document not found in database."
@@ -76,7 +76,7 @@ class TestMongoDataSetIO(unittest.TestCase):
     def test_constructor_name_and_id(self):
         mock_mongo_client = MagicMock()
         with patch('qilib.data_set.mongo_data_set_io.MongoClient',
-                   return_value={'test': {'inventory': mock_mongo_client}}) as mongo_client:
+                   return_value={'qilib': {'data_sets': mock_mongo_client}}) as mongo_client:
             mock_mongo_client.find_one.return_value = {'_id': ObjectId('5c9a3457e3306c41f7ae1f3e'),
                                                        'name': 'test_data_set'}
             mock_mongo_client.insert_one.return_value.inserted_id = ObjectId('5c9a3457e3306c41f7ae1f3e')
@@ -92,7 +92,7 @@ class TestMongoDataSetIO(unittest.TestCase):
     def test_constructor_name_and_id_not_found(self):
         mock_mongo_client = MagicMock()
         with patch('qilib.data_set.mongo_data_set_io.MongoClient',
-                   return_value={'test': {'inventory': mock_mongo_client}}):
+                   return_value={'qilib': {'data_sets': mock_mongo_client}}):
             mock_mongo_client.find_one.return_value = None
 
             error = DocumentNotFoundError, "Document not found in database."
@@ -107,7 +107,7 @@ class TestMongoDataSetIO(unittest.TestCase):
     def test_watch(self):
         mock_mongo_client = MagicMock()
         with patch('qilib.data_set.mongo_data_set_io.MongoClient',
-                   return_value={'test': {'inventory': mock_mongo_client}}):
+                   return_value={'qilib': {'data_sets': mock_mongo_client}}):
             mock_mongo_client.find_one.return_value = {'_id': ObjectId('5c9a3457e3306c41f7ae1f3e'),
                                                        'name': 'test_data_set'}
             mock_mongo_client.watch.return_value = 'Watching'
@@ -120,7 +120,7 @@ class TestMongoDataSetIO(unittest.TestCase):
     def test_get_document(self):
         mock_mongo_client = MagicMock()
         with patch('qilib.data_set.mongo_data_set_io.MongoClient',
-                   return_value={'test': {'inventory': mock_mongo_client}}):
+                   return_value={'qilib': {'data_sets': mock_mongo_client}}):
             db_document = {'_id': ObjectId('5c9a3457e3306c41f7ae1f3e'),
                            'name': 'test_data_set'}
             mock_mongo_client.find_one.return_value = db_document
@@ -137,7 +137,7 @@ class TestMongoDataSetIO(unittest.TestCase):
     def test_append_to_document(self):
         mock_mongo_client = MagicMock()
         with patch('qilib.data_set.mongo_data_set_io.MongoClient',
-                   return_value={'test': {'inventory': mock_mongo_client}}):
+                   return_value={'qilib': {'data_sets': mock_mongo_client}}):
             mongo_data_set_io = MongoDataSetIO(name='test_data_set')
             mongo_data_set_io.append_to_document({'metadata.label': 'test_data'})
             mock_mongo_client.update_one.called_once_with({'name': 'test_data_set'},
@@ -147,7 +147,7 @@ class TestMongoDataSetIO(unittest.TestCase):
     def test_update_document(self):
         mock_mongo_client = MagicMock()
         with patch('qilib.data_set.mongo_data_set_io.MongoClient',
-                   return_value={'test': {'inventory': mock_mongo_client}}):
+                   return_value={'qilib': {'data_sets': mock_mongo_client}}):
             mongo_data_set_io = MongoDataSetIO(name='test_data_set')
             mongo_data_set_io.update_document({'array_updates': ('(2,2)', {'test': 5})})
             mock_mongo_client.update_one.called_once_with({'name': 'test_data_set'},

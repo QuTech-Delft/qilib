@@ -49,8 +49,8 @@ class MemoryDataSetIOReader(DataSetIOReader):
                 TimeoutError: If timeout is reached while the storage queue is still empty
         """
 
-        empty_queue = False
         blocking = timeout != 0
+        empty_queue = self._storage_queue.empty() if timeout == 0 else False
         while not empty_queue:
             try:
                 data_type, storage_data = self._storage_queue.get(blocking, timeout if timeout > 0 else None)

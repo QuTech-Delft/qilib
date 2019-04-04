@@ -14,7 +14,8 @@ class TestMongoDataSetIOReader(unittest.TestCase):
                 patch('qilib.data_set.mongo_data_set_io_reader.Queue', return_value=mock_queue):
             reader = MongoDataSetIOReader(name='test')
             thread.assert_called_once()
-            mock_io.assert_called_once_with('test', None, create_if_not_found=False)
+            mock_io.assert_called_once_with('test', None, create_if_not_found=False, collection='data_sets',
+                                            database='qilib')
             data_set = DataSet(storage_reader=reader)
 
             mock_queue.get.return_value = {'updateDescription': {'updatedFields': {'metadata': {'name': 'test_name'}}}}
@@ -34,7 +35,8 @@ class TestMongoDataSetIOReader(unittest.TestCase):
             return_value=mock_queue):
             reader = MongoDataSetIOReader(name='test')
             thread.assert_called_once()
-            mock_io.assert_called_once_with('test', None, create_if_not_found=False)
+            mock_io.assert_called_once_with('test', None, create_if_not_found=False, collection='data_sets',
+                                            database='qilib')
             data_set = DataSet(storage_reader=reader)
             data_array = DataArray(name='test_array', label='lab', shape=(2, 2))
             data_set.add_array(data_array)
@@ -52,12 +54,12 @@ class TestMongoDataSetIOReader(unittest.TestCase):
     def test_sync_from_storage_array(self):
         mock_queue = MagicMock()
         with patch('qilib.data_set.mongo_data_set_io_reader.MongoDataSetIO') as mock_io, patch(
-                'qilib.data_set.mongo_data_set_io_reader.Thread') as thread, patch(
-            'qilib.data_set.mongo_data_set_io_reader.Queue',
-            return_value=mock_queue):
+                'qilib.data_set.mongo_data_set_io_reader.Thread') as thread, \
+                patch('qilib.data_set.mongo_data_set_io_reader.Queue', return_value=mock_queue):
             reader = MongoDataSetIOReader(name='test')
             thread.assert_called_once()
-            mock_io.assert_called_once_with('test', None, create_if_not_found=False)
+            mock_io.assert_called_once_with('test', None, create_if_not_found=False, collection='data_sets',
+                                            database='qilib')
             data_set = DataSet(storage_reader=reader)
             set_array = DataArray(name='setter', label='for_testing', is_setpoint=True,
                                   preset_data=np.array(range(0, 2)))
@@ -92,14 +94,21 @@ class TestMongoDataSetIOReader(unittest.TestCase):
             self.assertEqual('setter', data_array.set_arrays[0].name)
             self.assertListEqual([42, 25], list(data_array.set_arrays[0]))
 
+            data_array[0] = 255
+            update_data["data_arrays.test_array"]["preset_data"] = data_array.dumps()
+            data_set.sync_from_storage(-1)
+
+            self.assertEqual(255, data_set.test_array[0])
+
     def test_sync_from_storage_array_update_timeout(self):
         with patch('qilib.data_set.mongo_data_set_io_reader.MongoDataSetIO') as mock_io, patch(
                 'qilib.data_set.mongo_data_set_io_reader.Thread') as thread:
             reader = MongoDataSetIOReader(name='test')
             thread.assert_called_once()
-            mock_io.assert_called_once_with('test', None, create_if_not_found=False)
+            mock_io.assert_called_once_with('test', None, create_if_not_found=False, collection='data_sets',
+                                            database='qilib')
             error = TimeoutError, ''
-            self.assertRaisesRegex(*error, reader.sync_from_storage, 0)
+            self.assertRaisesRegex(*error, reader.sync_from_storage, 0.001)
 
     def test_bind_data_set(self):
         mock_mongo_data_set_io = MagicMock()
@@ -110,7 +119,8 @@ class TestMongoDataSetIOReader(unittest.TestCase):
                                                                 'metadata': {'default_array_name': 'array'}}
             reader = MongoDataSetIOReader(name='test')
             thread.assert_called_once()
-            mock_io.assert_called_once_with('test', None, create_if_not_found=False)
+            mock_io.assert_called_once_with('test', None, create_if_not_found=False, collection='data_sets',
+                                            database='qilib')
             data_set = DataSet()
             reader.bind_data_set(data_set)
             self.assertEqual('test', data_set.name)
@@ -119,5 +129,6 @@ class TestMongoDataSetIOReader(unittest.TestCase):
     def test_load(self):
         with patch('qilib.data_set.mongo_data_set_io_reader.MongoDataSetIO') as mock_io:
             data_set = MongoDataSetIOReader.load('test', '0x2A')
-            mock_io.assert_called_once_with('test', '0x2A', create_if_not_found=False)
+            mock_io.assert_called_once_with('test', '0x2A', create_if_not_found=False, collection='data_sets',
+                                            database='qilib')
             self.assertIsInstance(data_set.storage, MongoDataSetIOReader)

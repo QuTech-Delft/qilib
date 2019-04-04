@@ -153,13 +153,16 @@ class DataSet:
             storage.finalize()
 
     def add_storage_writer(self, storage_writer: Any) -> None:
-        """ Add a new DataSetIOStorageWriter to the Dataset
+        """ Add a new DataSetIOStorageWriter to the DataSet
 
         Args:
             storage_writer: A new initialized storage writer.
 
         """
+        if self._storage_reader is not None:
+            raise ValueError("It is not allowed to have both storage_reader and storage_writer.")
         self._storage_writer.append(storage_writer)
+        self.save_to_storage()
 
     @property
     def storage(self) -> Any:

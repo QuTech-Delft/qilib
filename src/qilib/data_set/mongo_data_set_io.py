@@ -32,8 +32,8 @@ class MongoDataSetIO:
     """ Helper class for the MongoDataSetIOReader and -Writer"""
 
     def __init__(self, name: Optional[str] = None, document_id: Optional[str] = None,
-                 create_if_not_found: Optional[bool] = True, database: str = 'test',
-                 collection: str = 'inventory') -> None:
+                 create_if_not_found: Optional[bool] = True, database: str = 'qilib',
+                 collection: str = 'data_sets') -> None:
         """
 
         Args:
@@ -95,7 +95,7 @@ class MongoDataSetIO:
             A complete document.
 
         """
-        document = self._db.find_one({"name": self._name})
+        document = self._db.find_one({"_id": ObjectId(self._id)})
         return document
 
     def finalize(self) -> None:
