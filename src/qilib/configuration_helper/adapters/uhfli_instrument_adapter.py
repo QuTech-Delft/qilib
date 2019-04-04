@@ -12,10 +12,10 @@ class UhfliInstrumentAdapter(InstrumentAdapter):
         self._instrument: ZIUHFLI = ZIUHFLI(self.name, device_ID=address)
 
     def apply(self, config: PythonJsonStructure) -> None:
-        if any(config[parameter]['value'] is None for parameter in config):
+        if ('value' in config[parameter] or any(config[parameter]['value'] is None) for parameter in config):
             error_message = 'Some parameter values of {0} are None and will not be set!'.format(self._instrument.name)
             logging.warning(error_message)
-        parameters = [parameter for parameter in config if config[parameter]['value'] is not None]
+        parameters = [parameter for parameter in config if ('value' in config[parameter] and config[parameter]['value'] is not None)]
         for parameter in parameters:
             if hasattr(self._instrument.parameters[parameter], 'set'):
                 self._instrument.set(parameter, config[parameter]['value'])
