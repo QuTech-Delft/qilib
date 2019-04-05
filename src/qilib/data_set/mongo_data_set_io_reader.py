@@ -17,7 +17,6 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
-import pickle
 from queue import Queue, Empty
 from threading import Thread
 from typing import Optional, Any, Dict, List
@@ -169,12 +168,12 @@ class MongoDataSetIOReader(DataSetIOReader):
                                label=array['label'],
                                unit=array['unit'],
                                is_setpoint=array['is_setpoint'],
-                               preset_data=pickle.loads(array['preset_data']),
+                               preset_data=MongoDataSetIO.decode_numpy_array(array['preset_data']),
                                set_arrays=set_arrays)
         return data_array
 
     def _update_data_array(self, array: Dict[str, Any]) -> None:
-        np_array = pickle.loads(array['preset_data'])
+        np_array = MongoDataSetIO.decode_numpy_array(array['preset_data'])
         self._data_set.data_arrays[array['name']].label = array['label']
         self._data_set.data_arrays[array['name']].unit = array['unit']
 

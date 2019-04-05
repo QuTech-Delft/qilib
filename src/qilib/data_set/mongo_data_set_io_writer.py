@@ -84,7 +84,7 @@ class MongoDataSetIOWriter(DataSetIOWriter):
             "unit": data_array.unit,
             "is_setpoint": data_array.is_setpoint,
             "set_arrays": [array.name for array in data_array.set_arrays],
-            "preset_data": data_array.dumps()}}
+            "preset_data": MongoDataSetIO.encode_numpy_array(data_array)}}
         self._mongo_data_set_io.update_document(update_data)
 
     def finalize(self) -> None:

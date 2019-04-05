@@ -2,6 +2,7 @@ import unittest
 from collections import namedtuple
 from unittest.mock import patch, MagicMock, call
 
+import numpy as np
 from bson import ObjectId
 
 from qilib.data_set import MongoDataSetIO
@@ -153,3 +154,18 @@ class TestMongoDataSetIO(unittest.TestCase):
             mock_mongo_client.update_one.called_once_with({'name': 'test_data_set'},
                                                           {'$set': {'array_updates': ('(2,2)', {'test': 5})},
                                                            "$currentDate": {"lastModified": True}})
+
+    def test_encode_decode(self):
+        d_type = np.float64
+        shape = (3, 3)
+        array = np.ndarray(shape=shape, dtype=d_type)
+        for i in range(3):
+            for j in range(3):
+                array[i][j] = i
+        encoded_array = MongoDataSetIO.encode_numpy_array(array)
+        decoded_array = MongoDataSetIO.decode_numpy_array(encoded_array)
+        for row in range(3):
+            self.assertListEqual([row, row, row], list(decoded_array[row]))
+        self.assertIsInstance(decoded_array, np.ndarray)
+        self.assertTupleEqual(shape, decoded_array.shape)
+        self.assertTrue(np.issubdtype(decoded_array.dtype, d_type))

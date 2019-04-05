@@ -3,7 +3,7 @@ from unittest.mock import patch, MagicMock
 
 import numpy as np
 
-from qilib.data_set import MongoDataSetIOReader, DataSet, DataArray
+from qilib.data_set import MongoDataSetIOReader, DataSet, DataArray, MongoDataSetIO
 
 
 class TestMongoDataSetIOReader(unittest.TestCase):
@@ -56,6 +56,7 @@ class TestMongoDataSetIOReader(unittest.TestCase):
         with patch('qilib.data_set.mongo_data_set_io_reader.MongoDataSetIO') as mock_io, patch(
                 'qilib.data_set.mongo_data_set_io_reader.Thread') as thread, \
                 patch('qilib.data_set.mongo_data_set_io_reader.Queue', return_value=mock_queue):
+            mock_io.decode_numpy_array = MongoDataSetIO.decode_numpy_array
             reader = MongoDataSetIOReader(name='test')
             thread.assert_called_once()
             mock_io.assert_called_once_with('test', None, create_if_not_found=False, collection='data_sets',
@@ -74,7 +75,7 @@ class TestMongoDataSetIOReader(unittest.TestCase):
                 "unit": set_array.unit,
                 "is_setpoint": set_array.is_setpoint,
                 "set_arrays": [array.name for array in set_array.set_arrays],
-                "preset_data": set_array.dumps()}}}
+                "preset_data": MongoDataSetIO.encode_numpy_array(set_array)}}}
             mock_queue.get.return_value = {'updateDescription': {'updatedFields': update_data}}
             data_set.sync_from_storage(-1)
             update_data = {"data_arrays.test_array": {
@@ -83,7 +84,7 @@ class TestMongoDataSetIOReader(unittest.TestCase):
                 "unit": data_array.unit,
                 "is_setpoint": data_array.is_setpoint,
                 "set_arrays": [array.name for array in data_array.set_arrays],
-                "preset_data": data_array.dumps()}}
+                "preset_data": MongoDataSetIO.encode_numpy_array(data_array)}}
 
             mock_queue.get.return_value = {'updateDescription': {'updatedFields': update_data}}
             data_set.sync_from_storage(-1)
@@ -95,7 +96,7 @@ class TestMongoDataSetIOReader(unittest.TestCase):
             self.assertListEqual([42, 25], list(data_array.set_arrays[0]))
 
             data_array[0] = 255
-            update_data["data_arrays.test_array"]["preset_data"] = data_array.dumps()
+            update_data["data_arrays.test_array"]["preset_data"] = MongoDataSetIO.encode_numpy_array(data_array)
             data_set.sync_from_storage(-1)
 
             self.assertEqual(255, data_set.test_array[0])
@@ -113,8 +114,8 @@ class TestMongoDataSetIOReader(unittest.TestCase):
     def test_bind_data_set(self):
         mock_mongo_data_set_io = MagicMock()
         with patch('qilib.data_set.mongo_data_set_io_reader.MongoDataSetIO',
-                   return_value=mock_mongo_data_set_io) as mock_io, patch(
-            'qilib.data_set.mongo_data_set_io_reader.Thread') as thread:
+                   return_value=mock_mongo_data_set_io) as mock_io, \
+                patch('qilib.data_set.mongo_data_set_io_reader.Thread') as thread:
             mock_mongo_data_set_io.get_document.return_value = {'name': 'test',
                                                                 'metadata': {'default_array_name': 'array'}}
             reader = MongoDataSetIOReader(name='test')

@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import patch, call
 
-from qilib.data_set import MongoDataSetIOWriter, DataArray
+from qilib.data_set import MongoDataSetIOWriter, DataArray, MongoDataSetIO
 
 
 class TestMongoDataSetIOWriter(unittest.TestCase):
@@ -34,6 +34,7 @@ class TestMongoDataSetIOWriter(unittest.TestCase):
 
     def test_sync_data_array_to_storage(self):
         with patch('qilib.data_set.mongo_data_set_io_writer.MongoDataSetIO') as mongo_data_set_io:
+            mongo_data_set_io.encode_numpy_array = MongoDataSetIO.encode_numpy_array
             name = 'test'
             document_id = '0x2A'
             writer = MongoDataSetIOWriter(name=name, document_id=document_id)
@@ -46,7 +47,8 @@ class TestMongoDataSetIOWriter(unittest.TestCase):
 
             expected = {
                 'data_arrays.the_array': {'name': 'the_array', 'label': "unit_test", 'unit': 'T', 'is_setpoint': False,
-                                          'set_arrays': ['set_array'], 'preset_data': data_array.dumps()}}
+                                          'set_arrays': ['set_array'],
+                                          'preset_data': MongoDataSetIO.encode_numpy_array(data_array)}}
             mongo_data_set_io.assert_has_calls(
                 [call('test', '0x2A', collection='data_sets', database='qilib'), call().update_document(expected)])
 
