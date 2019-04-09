@@ -1,14 +1,31 @@
+"""Quantum Inspire library
+
+Copyright 2019 QuTech Delft
+
+qilib is available under the [MIT open-source license](https://opensource.org/licenses/MIT):
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit
+persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
+Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+"""
 import re
-import logging
 from typing import Tuple
 
-from qilib.configuration_helper import InstrumentAdapter, SerialPortResolver
+from qilib.configuration_helper import SerialPortResolver
+from qilib.configuration_helper.adapters import SpiRackInstrumentAdapter, CommonInstrumentAdapter
 from qilib.utils import PythonJsonStructure
 
-from qilib.configuration_helper.adapters import SpiRackInstrumentAdapter
 
-
-class SpiModuleInstrumentAdapter(InstrumentAdapter):
+class SpiModuleInstrumentAdapter(CommonInstrumentAdapter):
 
     def __init__(self, address: str) -> None:
         """ The base instrument adapter for each SPI rack module.
@@ -25,25 +42,6 @@ class SpiModuleInstrumentAdapter(InstrumentAdapter):
         identifier, self._module_number = SpiModuleInstrumentAdapter.__collect_settings(address)
         adapter = SerialPortResolver.get_serial_port_adapter('SpiRackInstrumentAdapter', identifier)
         self._spi_rack: SpiRackInstrumentAdapter = adapter.instrument
-
-    def apply(self, config: PythonJsonStructure) -> None:
-        """ Applies the given adapter configuration settings onto the SPI rack module.
-
-        Only the setter commands will be updated. Note that setter only parameters which have
-        not been set yield a None when reading the configuration from the instrument adapter.
-        These None parameter values in the configuration will not be set. A warning will be
-        given if any of the configuration parameter values are None.
-
-        Args:
-            config: The configuration with all the SPI rack module settings.
-        """
-        if any(config[parameter]['value'] is None for parameter in config):
-            error_message = 'Some parameter values of {0} are None and will not be set!'.format(self._instrument.name)
-            logging.warning(error_message)
-        parameters = [parameter for parameter in config if config[parameter]['value'] is not None]
-        for parameter in parameters:
-            if hasattr(self._instrument.parameters[parameter], 'set'):
-                self._instrument.set(parameter, config[parameter]['value'])
 
     def read(self, update: bool = True) -> PythonJsonStructure:
         """ Reads and returns all SPI rack module settings from the device.

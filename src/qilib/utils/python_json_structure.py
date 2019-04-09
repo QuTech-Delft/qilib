@@ -22,9 +22,8 @@ import numpy as np
 
 
 class PythonJsonStructure(dict):
-
     __serializable_container_types = (list, tuple, np.ndarray)
-    __serializable_value_types = (type(None), bool, int, float, complex, str, bytes, np.int64)
+    __serializable_value_types = (type(None), bool, int, float, complex, str, bytes)
 
     def __init__(self, *args, **kwargs):
         """ A python container which can hold data objects and can be serialized
@@ -77,8 +76,6 @@ class PythonJsonStructure(dict):
 
     def __check_serializability(self, data):
         if PythonJsonStructure.__is_value_type(data):
-            if isinstance(data, np.int64):
-                return int(data)
             return data
 
         if PythonJsonStructure.__is_dict_type(data):

@@ -70,7 +70,7 @@ class TestZIHDAWG8InstrumentAdapter(unittest.TestCase):
     def test_apply(self):
         with patch.object(zhinst.utils, 'create_api_session', return_value=3 * (MagicMock(),)) as daq, \
           patch.object(ZIHDAWG8, 'download_device_node_tree', return_value=self.node_tree) as ddnt, \
-          patch('qilib.configuration_helper.adapters.hdawg8_instrument_adapter.logging') as logger_mock:
+          patch('qilib.configuration_helper.adapters.common_instrument_adapter.logging') as logger_mock:
             address = 'test_dev1'
             adapter_name = 'ZIHDAWG8InstrumentAdapter'
             instrument_name = "{0}_{1}".format(adapter_name, address)

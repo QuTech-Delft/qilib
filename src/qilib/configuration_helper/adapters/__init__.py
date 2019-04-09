@@ -1,3 +1,4 @@
+from qilib.configuration_helper.adapters.common_instrument_adapter import CommonInstrumentAdapter
 from qilib.configuration_helper.adapters.spi_rack_instrument_adapter import SpiRackInstrumentAdapter
 from qilib.configuration_helper.adapters.spi_module_instrument_adapter import SpiModuleInstrumentAdapter
 
@@ -5,6 +6,5 @@ from qilib.configuration_helper.adapters.d5a_instrument_adapter import D5aInstru
 from qilib.configuration_helper.adapters.f1d_instrument_adapter import F1dInstrumentAdapter
 from qilib.configuration_helper.adapters.hdawg8_instrument_adapter import ZIHDAWG8InstrumentAdapter
 from qilib.configuration_helper.adapters.m2j_instrument_adapter import M2jInstrumentAdapter
-from qilib.configuration_helper.adapters.m4i_instrument_adapter import M4iInstrumentAdapter
 from qilib.configuration_helper.adapters.s5i_instrument_adapter import S5iInstrumentAdapter
-from qilib.configuration_helper.adapters.uhfli_instrument_adapter import UhfliInstrumentAdapter
+from qilib.configuration_helper.adapters.uhfli_instrument_adapter import ZIUHFLIInstrumentAdapter

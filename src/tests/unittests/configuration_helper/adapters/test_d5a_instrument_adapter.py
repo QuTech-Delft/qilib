@@ -37,7 +37,7 @@ class TestD5aInstrumentAdapter(unittest.TestCase):
 
     def test_apply_config(self):
         with patch('qilib.configuration_helper.adapters.spi_rack_instrument_adapter.SPI_rack') as spi_mock, \
-         patch('qilib.configuration_helper.adapters.spi_module_instrument_adapter.logging') as logger_mock, \
+         patch('qilib.configuration_helper.adapters.common_instrument_adapter.logging') as logger_mock, \
          patch('qcodes.instrument_drivers.QuTech.D5a.D5a_module') as d5a_module_mock:
             range_4volt_bi = 2
             dac_value = 0.03997802734375

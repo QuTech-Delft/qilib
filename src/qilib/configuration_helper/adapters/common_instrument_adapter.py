@@ -17,29 +17,31 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
-from spirack import SPI_rack
+import logging
+from abc import ABC
 
 from qilib.configuration_helper import InstrumentAdapter
 from qilib.utils import PythonJsonStructure
 
 
-class SpiRackInstrumentAdapter(InstrumentAdapter):
-
-    def __init__(self, address: str) -> None:
-        super().__init__(address)
-        self._instrument: SPI_rack = SPI_rack(address, baud='115200', timeout=1)
+class CommonInstrumentAdapter(InstrumentAdapter, ABC):
 
     def apply(self, config: PythonJsonStructure) -> None:
-        self._instrument.apply_settings(config['serialport'])
+        """ Applies the given instrument configuration settings onto the adapters instrument.
 
-    def read(self, update: bool = True) -> PythonJsonStructure:
-        parameters = {
-            'version': self._instrument.get_firmware_version(),
-            'temperature': self._instrument.get_temperature(),
-            'battery': self._instrument.get_battery(),
-            'serialport': self._instrument.get_settings()
-        }
-        return PythonJsonStructure(parameters)
+        Only the setter commands will be updated. Note that setter only parameters which have
+        not been set yield a None when reading the configuration from the instrument adapter.
+        These None parameter values in the configuration will not be set. A warning will be
+        given if any of the configuration parameter values are None.
 
-    def _filter_parameters(self, parameters: PythonJsonStructure) -> PythonJsonStructure:
-        return parameters
+        Args:
+            config: The configuration with settings for the adapters instrument.
+
+        """
+        parameters = [parameter for parameter in config if hasattr(self._instrument.parameters[parameter], 'set')]
+        if any(config[parameter]['value'] is None for parameter in parameters):
+            error_message = 'Some parameter values of {0} are None and will not be set!'.format(self._instrument.name)
+            logging.warning(error_message)
+        for parameter in parameters:
+            if 'value' in config[parameter] and config[parameter]['value'] is not None:
+                self._instrument.set(parameter, config[parameter]['value'])
