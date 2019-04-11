@@ -24,10 +24,17 @@ import numpy as np
 from bson import ObjectId
 from pymongo import MongoClient
 from pymongo.change_stream import CollectionChangeStream
+from pymongo.errors import DuplicateKeyError
+
+from qilib.data_set import DataArray
 
 
 class DocumentNotFoundError(Exception):
     """ Error that is raised when document is not found."""
+
+
+class FieldNotUniqueError(Exception):
+    """ Error raised if field is not unique"""
 
 
 class NumpyKeys:
@@ -42,9 +49,12 @@ class NumpyKeys:
 class MongoDataSetIO:
     """ Helper class for the MongoDataSetIOReader and -Writer"""
 
+    DEFAULT_DATABASE = 'qilib'
+    DEFAULT_COLLECTION = 'data_sets'
+
     def __init__(self, name: Optional[str] = None, document_id: Optional[str] = None,
-                 create_if_not_found: Optional[bool] = True, database: str = 'qilib',
-                 collection: str = 'data_sets') -> None:
+                 create_if_not_found: Optional[bool] = True, database: str = DEFAULT_DATABASE,
+                 collection: str = DEFAULT_COLLECTION) -> None:
         """
 
         Args:
@@ -63,6 +73,7 @@ class MongoDataSetIO:
 
         self._client = MongoClient()
         self._db = self._client[database][collection]
+        self._assert_name_field_is_unique()
 
         query_dict = {}
         if name is not None:
@@ -138,7 +149,8 @@ class MongoDataSetIO:
              "$currentDate": {"lastModified": True}})
 
     @staticmethod
-    def encode_numpy_array(array: np.ndarray) -> Dict[str, Dict[str, Union[str, Tuple[int, ...], bytes]]]:
+    def encode_numpy_array(
+            array: Union[np.ndarray, DataArray]) -> Dict[str, Dict[str, Union[str, Tuple[int, ...], bytes]]]:
         """ Encode numpy array to store in database.
         Args:
             array: Numpy array to encode.
@@ -169,3 +181,20 @@ class MongoDataSetIO:
         content = encoded_array[NumpyKeys.CONTENT]
         return np.frombuffer(base64.b64decode(content[NumpyKeys.ARRAY]),
                              dtype=np.dtype(content[NumpyKeys.DATA_TYPE])).reshape(content[NumpyKeys.SHAPE])
+
+    def _assert_name_field_is_unique(self) -> None:
+        """ The field 'name' should be unique in the database.
+
+        Raises:
+            FieldNotUniqueError: If there is already a duplicate name in the database or if this method otherwise
+                fails to set 'name' unique.
+
+        """
+        try:
+            self._db.create_index("name", unique=True)
+        except DuplicateKeyError as e:
+            raise FieldNotUniqueError("Failed to set field 'name' unique.") from e
+        else:
+            index_info = self._db.index_information()
+            if index_info['name_1']['unique'] is False:
+                raise FieldNotUniqueError("Field 'name' is not unique in database.")

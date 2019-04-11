@@ -18,19 +18,30 @@ COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER I
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 from queue import Queue, Empty
-from threading import Thread
+from threading import Thread, ThreadError
 from typing import Optional, Any, Dict, List
+
+from pymongo.change_stream import CollectionChangeStream
+from pymongo.errors import InvalidOperation, OperationFailure
 
 from qilib.data_set import DataSet, MongoDataSetIO, DataArray
 from qilib.data_set.data_set_io_reader import DataSetIOReader
+
+watchers = []
 
 
 class MongoDataSetIOReader(DataSetIOReader):
     """ Allows a DataSet to subscribe to changes, and updates, in a mongodb."""
 
-    def __init__(self, name: Optional[str] = None, document_id: Optional[str] = None, database: str = 'qilib',
-                 collection: str = 'data_sets') -> None:
+    THREAD_ERROR = 'thread_error'
+
+    def __init__(self, name: Optional[str] = None, document_id: Optional[str] = None,
+                 database: str = MongoDataSetIO.DEFAULT_DATABASE,
+                 collection: str = MongoDataSetIO.DEFAULT_COLLECTION) -> None:
         """ DataSetIOReader implementation for a mongodb.
+
+        Note:
+            The finalize method has to be called to close database connection and join the watcher thread.
 
         Args:
             name: Name of data set in the underlying mongodb.
@@ -49,11 +60,17 @@ class MongoDataSetIOReader(DataSetIOReader):
                                                  collection=collection)
         self._set_arrays: Dict[str, DataArray] = {}
         self._watcher = self._mongo_data_set_io.watch()
+        watchers.append(self._watcher)
         self._update_queue = Queue()  # type: ignore
-        self._update_thread = Thread(target=self._update_worker)
+        self._update_thread = Thread(target=self._update_worker, args=(self._update_queue, self._watcher))
         self._update_thread.daemon = True
         self._update_thread.start()
-        self._data_set: DataSet
+        self._data_set: Any = None
+
+    def __del__(self) -> None:
+        self._watcher.close()
+        watchers.remove(self._watcher)
+        self._update_thread.join()
 
     def sync_from_storage(self, timeout: float) -> None:
         """ Poll the Mongo database for changes and apply any to the bound data_set.
@@ -73,6 +90,9 @@ class MongoDataSetIOReader(DataSetIOReader):
                 document = self._update_queue.get(blocking, timeout if timeout > 0 else None)
             except Empty as e:
                 raise TimeoutError from e
+            if MongoDataSetIOReader.THREAD_ERROR in document:
+                raise ThreadError('Watcher thread has stopped unexpectedly.') from document[
+                    MongoDataSetIOReader.THREAD_ERROR]
             updated_fields = document['updateDescription']['updatedFields']
             adjusted_updates = self._convert_dot_notation_to_dict(updated_fields)
             self._update_data_set(adjusted_updates)
@@ -134,11 +154,14 @@ class MongoDataSetIOReader(DataSetIOReader):
                     self._data_set.add_array(self._construct_data_array(array))
         if self.ARRAY_UPDATES in document:
             for array_update in document.get(self.ARRAY_UPDATES):
-                self._data_set.add_data(*array_update)
+                index_or_slice = tuple(array_update[0])
+                data = array_update[1]
+                self._data_set.add_data(index_or_slice, data)
 
     @staticmethod
-    def load(name: Optional[str] = None, document_id: Optional[str] = None, database: str = 'qilib',
-             collection: str = 'data_sets') -> DataSet:
+    def load(name: Optional[str] = None, document_id: Optional[str] = None,
+             database: str = MongoDataSetIO.DEFAULT_DATABASE,
+             collection: str = MongoDataSetIO.DEFAULT_COLLECTION) -> DataSet:
         """ Load an existing data set from the mongodb.
 
         Args:
@@ -180,7 +203,11 @@ class MongoDataSetIOReader(DataSetIOReader):
         for i in range(len(np_array)):
             self._data_set.data_arrays[array['name']][i] = np_array[i]
 
-    def _update_worker(self) -> None:
-        while True:
-            document = self._watcher.next()
-            self._update_queue.put(document)
+    @staticmethod
+    def _update_worker(queue: Any, watcher: CollectionChangeStream) -> None:
+        try:
+            while True:
+                document = watcher.next()
+                queue.put(document)
+        except (StopIteration, InvalidOperation, OperationFailure) as e:
+            queue.put({MongoDataSetIOReader.THREAD_ERROR: e})

@@ -4,9 +4,10 @@ from unittest.mock import patch, MagicMock, call
 
 import numpy as np
 from bson import ObjectId
+from pymongo.errors import DuplicateKeyError
 
 from qilib.data_set import MongoDataSetIO
-from qilib.data_set.mongo_data_set_io import DocumentNotFoundError
+from qilib.data_set.mongo_data_set_io import DocumentNotFoundError, FieldNotUniqueError
 
 
 class TestMongoDataSetIO(unittest.TestCase):
@@ -24,6 +25,18 @@ class TestMongoDataSetIO(unittest.TestCase):
             mock_mongo_client.find_one.assert_called_once_with({'name': 'test_data_set'})
             self.assertEqual(mongo_data_set_io.name, 'test_data_set')
             self.assertEqual(mongo_data_set_io.id, '5c9a3457e3306c41f7ae1f3e')
+
+    def test_set_unique_field_fails(self):
+        mock_mongo_client = MagicMock()
+        with patch('qilib.data_set.mongo_data_set_io.MongoClient',
+                   return_value={'qilib': {'data_sets': mock_mongo_client}}):
+            mock_mongo_client.index_information.return_value = {'name_1': {'unique': False}}
+            error = FieldNotUniqueError, "Field 'name' is not unique in database."
+            self.assertRaisesRegex(*error, MongoDataSetIO, name='test_data_set')
+
+            mock_mongo_client.create_index.side_effect = DuplicateKeyError("")
+            error = FieldNotUniqueError, "Failed to set field 'name' unique."
+            self.assertRaisesRegex(*error, MongoDataSetIO, name='test_data_set')
 
     def test_constructor_name_not_found(self):
         mock_mongo_client = MagicMock()

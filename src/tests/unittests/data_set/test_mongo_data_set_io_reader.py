@@ -1,7 +1,9 @@
 import unittest
+from threading import ThreadError
 from unittest.mock import patch, MagicMock
 
 import numpy as np
+from pymongo.errors import OperationFailure
 
 from qilib.data_set import MongoDataSetIOReader, DataSet, DataArray, MongoDataSetIO
 
@@ -30,9 +32,8 @@ class TestMongoDataSetIOReader(unittest.TestCase):
     def test_sync_from_storage_array_update(self):
         mock_queue = MagicMock()
         with patch('qilib.data_set.mongo_data_set_io_reader.MongoDataSetIO') as mock_io, patch(
-                'qilib.data_set.mongo_data_set_io_reader.Thread') as thread, patch(
-            'qilib.data_set.mongo_data_set_io_reader.Queue',
-            return_value=mock_queue):
+                'qilib.data_set.mongo_data_set_io_reader.Thread') as thread, \
+                patch('qilib.data_set.mongo_data_set_io_reader.Queue', return_value=mock_queue):
             reader = MongoDataSetIOReader(name='test')
             thread.assert_called_once()
             mock_io.assert_called_once_with('test', None, create_if_not_found=False, collection='data_sets',
@@ -101,6 +102,20 @@ class TestMongoDataSetIOReader(unittest.TestCase):
 
             self.assertEqual(255, data_set.test_array[0])
 
+    def test_sync_from_storage_error_on_queue(self):
+        mock_queue = MagicMock()
+        with patch('qilib.data_set.mongo_data_set_io_reader.MongoDataSetIO') as mock_io, patch(
+                'qilib.data_set.mongo_data_set_io_reader.Thread') as thread, \
+                patch('qilib.data_set.mongo_data_set_io_reader.Queue', return_value=mock_queue):
+            reader = MongoDataSetIOReader(name='test')
+            thread.assert_called_once()
+            mock_io.assert_called_once_with('test', None, create_if_not_found=False, collection='data_sets',
+                                            database='qilib')
+
+            mock_queue.get.return_value = {'thread_error': OperationFailure('Error')}
+            error = ThreadError, 'Watcher thread has stopped unexpectedly.'
+            self.assertRaisesRegex(*error, reader.sync_from_storage, -1)
+
     def test_sync_from_storage_array_update_timeout(self):
         with patch('qilib.data_set.mongo_data_set_io_reader.MongoDataSetIO') as mock_io, patch(
                 'qilib.data_set.mongo_data_set_io_reader.Thread') as thread:
@@ -128,8 +143,26 @@ class TestMongoDataSetIOReader(unittest.TestCase):
             self.assertEqual('array', data_set.default_array_name)
 
     def test_load(self):
-        with patch('qilib.data_set.mongo_data_set_io_reader.MongoDataSetIO') as mock_io:
+        with patch('qilib.data_set.mongo_data_set_io_reader.MongoDataSetIO') as mock_io, \
+                patch('qilib.data_set.mongo_data_set_io_reader.Thread') as thread:
             data_set = MongoDataSetIOReader.load('test', '0x2A')
+            thread.assert_called_once()
             mock_io.assert_called_once_with('test', '0x2A', create_if_not_found=False, collection='data_sets',
                                             database='qilib')
             self.assertIsInstance(data_set.storage, MongoDataSetIOReader)
+
+    def test_thread_and_queue(self):
+        mock_queue_instance = MagicMock()
+        with patch('qilib.data_set.mongo_data_set_io_reader.MongoDataSetIO'), patch(
+                'qilib.data_set.mongo_data_set_io_reader.Thread') as mock_thread, \
+                patch('qilib.data_set.mongo_data_set_io_reader.Queue', return_value=mock_queue_instance):
+
+            def work(target, args):
+                target(*args)
+                return mock_thread
+
+            mock_thread.side_effect = work
+            iteration_error = StopIteration('Boom!')
+            mock_queue_instance.put.side_effect = [iteration_error, None]
+            MongoDataSetIOReader(name='test')
+            mock_queue_instance.put.assert_called_with({'thread_error': iteration_error})

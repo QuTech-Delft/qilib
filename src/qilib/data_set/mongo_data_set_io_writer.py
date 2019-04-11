@@ -27,8 +27,9 @@ from qilib.data_set.data_set_io_writer import DataSetIOWriter
 class MongoDataSetIOWriter(DataSetIOWriter):
     """ Allow a DataSet to store changes, and complete DataSet, to a mongodb."""
 
-    def __init__(self, name: Optional[str] = None, document_id: Optional[str] = None, database: str = 'qilib',
-                 collection: str = 'data_sets') -> None:
+    def __init__(self, name: Optional[str] = None, document_id: Optional[str] = None,
+                 database: str = MongoDataSetIO.DEFAULT_DATABASE,
+                 collection: str = MongoDataSetIO.DEFAULT_COLLECTION) -> None:
         """ Construct a new instance of MongoDataSetIOWriter. If name is provided, but not found in the database
             a new document is created with that name.
 
