@@ -23,6 +23,7 @@ class TestZIUHFLIInstrumentAdapter(unittest.TestCase):
         adapter.apply(config)
         trigger_level = adapter.instrument.scope_trig_level.raw_value
         self.assertEqual(0.2, trigger_level)
+        adapter.instrument.close()
 
     def test_int64_convert_to_int(self):
         with patch.object(zhinst.utils, 'create_api_session', return_value=3 * (MagicMock(),)), \
@@ -42,3 +43,4 @@ class TestZIUHFLIInstrumentAdapter(unittest.TestCase):
                     self.assertNotIsInstance(parameter.raw_value, np.int64)
             logger_mock.warning.assert_called_with('Some parameter values of ZIUHFLIInstrumentAdapter_dev4142 are'
                                                    ' None and will not be set!')
+            adapter.instrument.close()
