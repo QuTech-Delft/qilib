@@ -17,29 +17,22 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
-from qcodes.instrument_drivers.ZI.ZIHDAWG8 import ZIHDAWG8
+import numpy as np
+from qcodes.instrument_drivers.ZI.ZIUHFLI import ZIUHFLI
 
 from qilib.configuration_helper.adapters import CommonInstrumentAdapter
 from qilib.utils import PythonJsonStructure
 
 
-class ZIHDAWG8InstrumentAdapter(CommonInstrumentAdapter):
+class ZIUHFLIInstrumentAdapter(CommonInstrumentAdapter):
     def __init__(self, address: str) -> None:
         super().__init__(address)
-        self._instrument: ZIHDAWG8 = ZIHDAWG8(self.name, address)
-
-    def read(self, update: bool = True) -> PythonJsonStructure:
-        return PythonJsonStructure(super().read(update))
+        self._instrument: ZIUHFLI = ZIUHFLI(self.name, device_ID=address)
 
     def _filter_parameters(self, parameters: PythonJsonStructure) -> PythonJsonStructure:
-        parameters.pop('IDN')
+        for parameter, values in parameters.items():
+            if 'value' in values and isinstance(values['value'], np.int64):
+                values['value'] = int(values['value'])
+            if 'raw_value' in values and isinstance(values['raw_value'], np.int64):
+                values['raw_value'] = int(values['raw_value'])
         return parameters
-
-    def start(self, awg_number: int) -> None:
-        self._instrument.start_awg(awg_number)
-
-    def stop(self, awg_number: int) -> None:
-        self._instrument.stop_awg(awg_number)
-
-    def upload(self, sequence_program: str, awg_number: int) -> None:
-        self._instrument.upload_sequence_program(awg_number, sequence_program)

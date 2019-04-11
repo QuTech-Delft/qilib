@@ -22,7 +22,6 @@ import numpy as np
 
 
 class PythonJsonStructure(dict):
-
     __serializable_container_types = (list, tuple, np.ndarray)
     __serializable_value_types = (type(None), bool, int, float, complex, str, bytes)
 
@@ -96,7 +95,7 @@ class PythonJsonStructure(dict):
 
     @staticmethod
     def __assert_correct_key_type(key):
-        if not isinstance(key, str):
+        if not isinstance(key, (str, int)):
             raise TypeError('Invalid key! (key={})'.format(key))
 
     @staticmethod
