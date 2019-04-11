@@ -49,7 +49,7 @@ class NumpyKeys:
 class MongoDataSetIO:
     """ Helper class for the MongoDataSetIOReader and -Writer"""
 
-    DEFAULT_DATABASE = 'qilib'
+    DEFAULT_DATABASE_NAME = 'qilib'
     DEFAULT_COLLECTION = 'data_sets'
 
     def __init__(self, name: Optional[str] = None, document_id: Optional[str] = None,
