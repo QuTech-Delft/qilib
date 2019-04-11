@@ -36,8 +36,8 @@ class MongoDataSetIOReader(DataSetIOReader):
     THREAD_ERROR = 'thread_error'
 
     def __init__(self, name: Optional[str] = None, document_id: Optional[str] = None,
-                 database: str = MongoDataSetIO.DEFAULT_DATABASE,
-                 collection: str = MongoDataSetIO.DEFAULT_COLLECTION) -> None:
+                 database: str = MongoDataSetIO.DEFAULT_DATABASE_NAME,
+                 collection: str = MongoDataSetIO.DEFAULT_COLLECTION_NAME) -> None:
         """ DataSetIOReader implementation for a mongodb.
 
         Note:
@@ -70,17 +70,17 @@ class MongoDataSetIOReader(DataSetIOReader):
     def __del__(self) -> None:
         self._watcher.close()
         watchers.remove(self._watcher)
-        self._update_thread.join()
+        self._update_thread.join(1)
 
     def sync_from_storage(self, timeout: float) -> None:
         """ Poll the Mongo database for changes and apply any to the bound data_set.
 
-          Args:
-              timeout: Stop syncing if collecting an item takes longer than the timeout time.
-                       The timeout can be -1 (blocking), 0 (non-blocking), or >0 (wait at most that many seconds).
+        Args:
+            timeout: Stop syncing if collecting an item takes longer than the timeout time.
+                The timeout can be -1 (blocking), 0 (non-blocking), or >0 (wait at most that many seconds).
 
-          Raises:
-                TimeoutError: If timeout is reached while the storage queue is still empty
+        Raises:
+            TimeoutError: If timeout is reached while the storage queue is still empty
 
         """
         blocking = timeout != 0
@@ -154,14 +154,14 @@ class MongoDataSetIOReader(DataSetIOReader):
                     self._data_set.add_array(self._construct_data_array(array))
         if self.ARRAY_UPDATES in document:
             for array_update in document.get(self.ARRAY_UPDATES):
-                index_or_slice = tuple(array_update[0])
+                index_or_slice = tuple(array_update[0]) if isinstance(array_update[0], list) else array_update[0]
                 data = array_update[1]
                 self._data_set.add_data(index_or_slice, data)
 
     @staticmethod
     def load(name: Optional[str] = None, document_id: Optional[str] = None,
-             database: str = MongoDataSetIO.DEFAULT_DATABASE,
-             collection: str = MongoDataSetIO.DEFAULT_COLLECTION) -> DataSet:
+             database: str = MongoDataSetIO.DEFAULT_DATABASE_NAME,
+             collection: str = MongoDataSetIO.DEFAULT_COLLECTION_NAME) -> DataSet:
         """ Load an existing data set from the mongodb.
 
         Args:

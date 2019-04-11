@@ -53,8 +53,8 @@ class MongoDataSetIO:
     DEFAULT_COLLECTION_NAME = 'data_sets'
 
     def __init__(self, name: Optional[str] = None, document_id: Optional[str] = None,
-                 create_if_not_found: Optional[bool] = True, database: str = DEFAULT_DATABASE,
-                 collection: str = DEFAULT_COLLECTION) -> None:
+                 create_if_not_found: Optional[bool] = True, database: str = DEFAULT_DATABASE_NAME,
+                 collection: str = DEFAULT_COLLECTION_NAME) -> None:
         """
 
         Args:

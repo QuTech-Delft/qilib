@@ -43,14 +43,14 @@ class TestMongoDataSetIOReader(unittest.TestCase):
             data_set.add_array(data_array)
 
             mock_queue.get.return_value = {'updateDescription': {
-                'updatedFields': {'array_updates': [[(0, 0), {'test_array': 42}], [(0, 1), {'test_array': 25}]]}}}
+                'updatedFields': {'array_updates': [[[0, 0], {'test_array': 42}], [[0, 1], {'test_array': 25}]]}}}
             data_set.sync_from_storage(-1)
             self.assertListEqual([42, 25], list(data_set.test_array[0]))
 
             mock_queue.get.return_value = {'updateDescription': {
-                'updatedFields': {'array_updates.1': [(1, 1), {'test_array': 67}]}}}
+                'updatedFields': {'array_updates.1': [1, {'test_array': [67, 67]}]}}}
             data_set.sync_from_storage(-1)
-            self.assertEqual(67, data_set.test_array[1][1])
+            self.assertListEqual([67, 67], list(data_set.test_array[1]))
 
     def test_sync_from_storage_array(self):
         mock_queue = MagicMock()
