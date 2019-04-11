@@ -50,7 +50,7 @@ class MongoDataSetIO:
     """ Helper class for the MongoDataSetIOReader and -Writer"""
 
     DEFAULT_DATABASE_NAME = 'qilib'
-    DEFAULT_COLLECTION = 'data_sets'
+    DEFAULT_COLLECTION_NAME = 'data_sets'
 
     def __init__(self, name: Optional[str] = None, document_id: Optional[str] = None,
                  create_if_not_found: Optional[bool] = True, database: str = DEFAULT_DATABASE,
