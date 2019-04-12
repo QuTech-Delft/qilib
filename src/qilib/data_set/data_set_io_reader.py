@@ -25,17 +25,27 @@ from qilib.data_set import DataSet
 class DataSetIOReader(ABC):
     """ Abstract base class for data set io readers."""
 
+    DATA = 'data'
+    METADATA = 'metadata'
+    DATA_ARRAY = 'data_array'
+    DATA_ARRAYS = 'data_arrays'
+    ARRAY_DATA = 'array_data'
+    ARRAY_UPDATES = 'array_updates'
+
     def __init__(self) -> None:
         """ This is an abstract base class and should not be instantiated directly."""
         self._data_set: DataSet
+        self._bound = False
 
     def bind_data_set(self, data_set: DataSet) -> None:
         """ Binds the DataSet to the DataSetIOReader.
 
         Args:
             data_set: The object that encompasses DataArrays.
+
         """
         self._data_set = data_set
+        self._bound = True
 
     @abstractmethod
     def sync_from_storage(self, timeout: float) -> None:

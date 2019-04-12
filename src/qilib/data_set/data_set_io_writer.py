@@ -18,12 +18,17 @@ COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER I
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 from abc import ABC, abstractmethod
-from typing import Any, List, Union, Dict
+from typing import Any, Union, Dict, Tuple
 
 from qilib.data_set import DataArray
 
 
 class DataSetIOWriter(ABC):
+    """ Abstract base class for data set io writers."""
+
+    def __init__(self) -> None:
+        self._finalized = False
+
     @abstractmethod
     def sync_metadata_to_storage(self, field_name: str, value: Any) -> None:
         """ Registers a change to a metadata field.
@@ -36,11 +41,12 @@ class DataSetIOWriter(ABC):
         """
 
     @abstractmethod
-    def sync_data_to_storage(self, index_or_slice: Union[int, List[int]], data: Dict[str, Any]) -> None:
+    def sync_data_to_storage(self, index_or_slice: Union[int, Tuple[int]], data: Dict[str, Any]) -> None:
         """ Registers a DataArray update to the DataSetIO.
 
-            data_array: A container for measurement data and setpoint arrays.
-            index_or_slice: The indices of the DataSet to update.
+        Args:
+            index_or_slice: The indices of the DataArray to update.
+            data: Name of the DataArray to be updated and the new value.
         """
 
     @abstractmethod
@@ -58,3 +64,7 @@ class DataSetIOWriter(ABC):
             No more data will be written after applying this function and triggers the closing
             of file handles, or optimizes event streams.
         """
+
+    def _is_finalized(self) -> None:
+        if self._finalized:
+            raise ValueError('Operation on closed IO writer.')
