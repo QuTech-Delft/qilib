@@ -32,8 +32,8 @@ class ZIHDAWG8InstrumentAdapter(CommonInstrumentAdapter):
         return PythonJsonStructure(super().read(update))
 
     def _filter_parameters(self, parameters: PythonJsonStructure) -> PythonJsonStructure:
-        parameters.pop('IDN')
-        return parameters
+        filtered = {parameter: value for (parameter, value) in parameters.items() if 'system_nics_' not in parameter}
+        return PythonJsonStructure(filtered)
 
     def start(self, awg_number: int) -> None:
         self._instrument.start_awg(awg_number)
