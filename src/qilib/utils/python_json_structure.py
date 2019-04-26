@@ -28,7 +28,7 @@ class PythonJsonStructure(dict):
     def __init__(self, *args, **kwargs):
         """ A python container which can hold data objects and can be serialized
             into JSON. Currently the following data types can be added to the
-            container object: bool, bytes, int, float, list, tuple, dict
+            container object: bool, bytes, int, float, list, tuple, dict,
             PythonJsonStructure and numpy arrays. The PythonJsonStructure is a
             dictionary with similar calling methods, but with some
             limitations/restrictions.
