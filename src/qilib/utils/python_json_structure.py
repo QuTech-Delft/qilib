@@ -112,7 +112,7 @@ class PythonJsonStructure(dict):
 
     def __check_serializability_ndarray(self, data):
         if data.dtype in (bool, int, float, np.int32, np.float32, np.float64):
-            return True
+            return data
         return_data = np.empty_like(data)
         for index in np.ndindex(data.shape):
             return_data[index] = self.__check_serializability(data[index])
