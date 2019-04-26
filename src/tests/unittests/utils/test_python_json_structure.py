@@ -211,3 +211,14 @@ class TestPythonJsonStructure(unittest.TestCase):
             serialized_object = serialize(json_object)
             unserialized_object = unserialize(serialized_object)
             np.testing.assert_equal(json_object, unserialized_object)
+
+    def test_storage_numpy_array(self):
+        json_object = PythonJsonStructure()
+        large_numpy_array = np.zeros((10000, 2000, 3))
+        json_object['array'] = large_numpy_array
+        self.assertIsInstance(json_object['array'], np.ndarray)
+
+    def test_boolean_numpy_array(self):
+        json_object = PythonJsonStructure()
+        json_object['boolean_array'] = np.array([True, False])
+        self.assertEqual(json_object['boolean_array'].dtype, bool)
