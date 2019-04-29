@@ -216,6 +216,7 @@ class TestDataSet(TestCase):
         data_set = DataSet(storage_writer=storage_writer)
         data_set.finalize()
         storage_writer.finalize.assert_called_once_with()
+        self.assertTrue(data_set.is_finalized)
 
     def test_string(self):
         name = 'ItsAName'

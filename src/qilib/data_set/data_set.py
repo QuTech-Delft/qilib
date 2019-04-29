@@ -52,7 +52,7 @@ class DataSet:
             ValueError: If setpoints are provided and don't match those of the data_arrays or if multiple data_arrays
                 are provided with various set_arrays.
         """
-
+        self._finalized = False
         self._storage_writer = storage_writer if storage_writer is not None else []
         if not isinstance(self._storage_writer, collections.Sequence):
             self._storage_writer = [self._storage_writer]
@@ -139,7 +139,7 @@ class DataSet:
 
     def save_to_storage(self) -> None:
         """ Save DataSet to underlying storage."""
-        for metadata in ['name', 'time_stamp', 'user_data', 'default_array_name']:
+        for metadata in ['name', 'time_stamp', 'user_data', 'default_array_name', '_finalized']:
             self._add_metadata_to_storage(metadata, getattr(self, metadata))
         for array in self._set_arrays:
             self._add_array_to_storage(array)
@@ -148,6 +148,7 @@ class DataSet:
 
     def finalize(self) -> None:
         """ Indicates to DataSetIOWriters that no more data will be written."""
+        self._finalized = True
         self.save_to_storage()
         for storage in self._storage_writer:
             storage.finalize()
@@ -163,6 +164,10 @@ class DataSet:
             raise ValueError("It is not allowed to have both storage_reader and storage_writer.")
         self._storage_writer.append(storage_writer)
         self.save_to_storage()
+
+    @property
+    def is_finalized(self) -> bool:
+        return self._finalized
 
     @property
     def storage(self) -> Any:
