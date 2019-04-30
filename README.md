@@ -71,7 +71,7 @@ from qilib.data_set import DataArray
 
 x_size = 10
 y_size = 5
-x_points = np.array(x_size)
+x_points = np.array(range(x_size))
 y_points = np.tile(np.array(range(y_size)), [x_size, 1])
 x = DataArray(name="x", label="x-axis", unit="mV", is_setpoint=True, preset_data=x_points)
 y = DataArray(name="y", label="y-axis", unit="mV", is_setpoint=True, preset_data=y_points)
