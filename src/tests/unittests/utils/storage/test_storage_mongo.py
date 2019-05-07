@@ -62,6 +62,13 @@ class TestStorageMongo(unittest.TestCase):
         storage.save_data((1, 2), ['aap', 'noot'])
         self.assertRaises(NodeAlreadyExistsError, storage.save_data, 'mies', ['aap'])
 
+    def test_leaf_overwrite(self):
+        storage = self.storage
+        storage.save_data('over', ['aap', 'noot'])
+        self.assertEqual(storage.load_data(['aap', 'noot']), 'over')
+        storage.save_data('overwrite', ['aap', 'noot'])
+        self.assertEqual(storage.load_data(['aap', 'noot']), 'overwrite')
+
     def test_no_data(self):
         self.assertRaises(NoDataAtKeyError, self.storage.load_data, ['nosuchdata'])
         self.assertRaises(NoDataAtKeyError, self.storage.load_data, ['nonode', 'nosuchdata'])
@@ -103,6 +110,9 @@ class TestStorageMongo(unittest.TestCase):
         self.assertRaises(NoDataAtKeyError, storage.load_data, ['1', '2'])
         results = storage.list_data_subtags(['1', '2'])
         self.assertEqual(results, ['3'])
+
+    def test_save_with_wrong_tag_type(self):
+        self.assertRaises(TypeError, self.storage.save_data, None, 'wrong/tag/type')
 
     def test_get_latest(self):
         storage = self.storage
