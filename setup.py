@@ -26,7 +26,7 @@ setup(name='qilib',
       python_requires='>=3.6',
       package_dir={'': 'src'},
       packages=['qilib', 'qilib.configuration_helper', 'qilib.configuration_helper.adapters',
-                'qilib.data_set', 'qilib.utils'],
+                'qilib.data_set', 'qilib.utils', 'qilib.utils.storage'],
       classifiers=[
           'Development Status :: 3 - Alpha',
           'Programming Language :: Python :: 3',
