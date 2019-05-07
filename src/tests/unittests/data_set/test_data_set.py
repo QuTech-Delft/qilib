@@ -106,7 +106,7 @@ class TestDataSet(TestCase):
                            set_arrays=[])
         expect = "DataSet(id={}, name='{}', storage_writer=[], storage_reader=None, time_stamp={}, user_data={}, " \
                  "data_arrays={}, set_arrays={})".format(
-            id(data_set), 'some_name', 'datetime.datetime(2000, 1, 1, 0, 0)', {'user': 'data'}, {}, [])
+            id(data_set), 'some_name', 'datetime.datetime(2000, 1, 1, 0, 0)', {'user': 'data'}, {}, {})
         self.assertEqual(expect, repr(data_set))
 
     def test_add_array(self):

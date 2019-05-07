@@ -116,7 +116,8 @@ class DataSet:
         """
 
         for array_name, data_value in data.items():
-            self._data_arrays[array_name][index_or_slice] = data_value
+            getattr(self, array_name)[index_or_slice] = data_value
+
         for storage in self._storage_writer:
             storage.sync_data_to_storage(index_or_slice, data)
 
@@ -221,11 +222,14 @@ class DataSet:
         if self._set_arrays != set_arrays:
             raise ValueError('Set point arrays do not match.')
 
-    def _add_set_arrays(self, set_arrays: Union[List['DataArray'], Tuple['DataArray', ...]]) -> None:
+    def _add_set_arrays(self, set_arrays: DataArrays) -> None:
         if isinstance(set_arrays, collections.Sequence):
             self._set_arrays = set_arrays
-        else:
+        elif isinstance(set_arrays, DataArray):
             self._set_arrays = [set_arrays]
+        else:
+            raise TypeError("'set_arrays' have to be of type 'DataArray', not {}".format(type(set_arrays)))
+
         for array in self._set_arrays:
             self._verify_array_name(array.name)
             setattr(self, array.name, array)
