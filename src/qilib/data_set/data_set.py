@@ -187,6 +187,10 @@ class DataSet:
         return self._data_arrays
 
     @property
+    def set_arrays(self) -> Union[List['DataArray'], Tuple['DataArray', ...]]:
+        return self._set_arrays
+
+    @property
     def time_stamp(self) -> datetime:
         return self._time_stamp
 
@@ -222,7 +226,9 @@ class DataSet:
             self._set_arrays = set_arrays
         else:
             self._set_arrays = [set_arrays]
-        for array in set_arrays:
+        for array in self._set_arrays:
+            self._verify_array_name(array.name)
+            setattr(self, array.name, array)
             for storage in self._storage_writer:
                 storage.sync_add_data_array_to_storage(array)
 
