@@ -65,7 +65,7 @@ class TestPythonJsonStructure(unittest.TestCase):
             'bytes': b'1010101',
             'tuple': (1, 2, 3),
             'dict': {'a': 1, 'b': 2, 'c': 3},
-            'ndarray': np.array([[1, 2], [3, 4, 5]]),
+            'ndarray': np.array([[1, 2], [3, 4]]),
             'json_object': PythonJsonStructure()
         }
 
