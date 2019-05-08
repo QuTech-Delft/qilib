@@ -106,7 +106,7 @@ class TestDataSet(TestCase):
                            set_arrays=[])
         expect = "DataSet(id={}, name='{}', storage_writer=[], storage_reader=None, time_stamp={}, user_data={}, " \
                  "data_arrays={}, set_arrays={})".format(
-            id(data_set), 'some_name', 'datetime.datetime(2000, 1, 1, 0, 0)', {'user': 'data'}, {}, {})
+            id(data_set), 'some_name', 'datetime.datetime(2000, 1, 1, 0, 0)', {'user': 'data'}, {}, [])
         self.assertEqual(expect, repr(data_set))
 
     def test_add_array(self):
@@ -168,6 +168,19 @@ class TestDataSet(TestCase):
         data_set.add_data((2, 2), {'some_array': double_array})
         self.assertTrue(np.array_equal(double_array, some_array[2][2]))
         self.assertFalse(np.array_equal(double_array, some_array[2][1]))
+
+    def test_add_data_set_arrays(self):
+        x_points = np.array(range(0, 2))
+        y_points = np.array(range(0, 2))
+        x = DataArray(name="x", label="x-axis", unit="mV", is_setpoint=True, preset_data=x_points)
+        y = DataArray(name="y", label="y-axis", unit="mV", is_setpoint=True,
+                      preset_data=np.tile(np.array(y_points), [x.size, 1]))
+        z = DataArray(name="z", label="z-axis", unit="ma", set_arrays=(x, y),
+                      preset_data=np.NaN * np.ones((x_points.size, y_points.size)))
+        data_set = DataSet(data_arrays=z)
+        data_set.add_data((1, 0), {'y': 23})
+
+        self.assertEqual(data_set.y[(1, 0)], 23)
 
     def test_setters(self):
         data_set = DataSet()
@@ -299,3 +312,31 @@ class TestDataSet(TestCase):
         self.assertDictEqual(user_data, data_set_consumer.user_data)
         self.assertEqual(timestamp, data_set_consumer.time_stamp)
         self.assertEqual(default_array_name, data_set_consumer.default_array_name)
+
+    def test_set_arrays_property(self):
+        x_points = np.array(range(0, 2))
+        y_points = np.array(range(0, 2))
+        x = DataArray(name="x", label="x-axis", unit="mV", is_setpoint=True, preset_data=x_points)
+        y = DataArray(name="y", label="y-axis", unit="mV", is_setpoint=True,
+                      preset_data=np.tile(np.array(y_points), [x.size, 1]))
+        z = DataArray(name="z", label="z-axis", unit="ma", set_arrays=(x, y),
+                      preset_data=np.NaN * np.ones((x_points.size, y_points.size)))
+        data_set = DataSet(data_arrays=[z])
+
+        self.assertEqual(data_set.set_arrays, (x, y))
+
+    def test_set_arrays_access_via_attribute(self):
+        x_points = np.array(range(0, 2))
+        y_points = np.array(range(0, 2))
+        x = DataArray(name="x", label="x-axis", unit="mV", is_setpoint=True, preset_data=x_points)
+        y = DataArray(name="y", label="y-axis", unit="mV", is_setpoint=True,
+                      preset_data=np.tile(np.array(y_points), [x.size, 1]))
+        z = DataArray(name="z", label="z-axis", unit="ma", set_arrays=(x, y),
+                      preset_data=np.NaN * np.ones((x_points.size, y_points.size)))
+        data_set = DataSet(data_arrays=[z])
+
+        attrs = dir(data_set)
+        self.assertIn('x', attrs)
+        self.assertIn('y', attrs)
+        self.assertEqual(data_set.x, x)
+        self.assertEqual(data_set.y, y)
