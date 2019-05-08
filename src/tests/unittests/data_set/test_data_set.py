@@ -106,7 +106,7 @@ class TestDataSet(TestCase):
                            set_arrays=[])
         expect = "DataSet(id={}, name='{}', storage_writer=[], storage_reader=None, time_stamp={}, user_data={}, " \
                  "data_arrays={}, set_arrays={})".format(
-            id(data_set), 'some_name', 'datetime.datetime(2000, 1, 1, 0, 0)', {'user': 'data'}, {}, [])
+            id(data_set), 'some_name', 'datetime.datetime(2000, 1, 1, 0, 0)', {'user': 'data'}, {}, {})
         self.assertEqual(expect, repr(data_set))
 
     def test_add_array(self):
@@ -181,6 +181,9 @@ class TestDataSet(TestCase):
         data_set.add_data((1, 0), {'y': 23})
 
         self.assertEqual(data_set.y[(1, 0)], 23)
+
+    def test_add_data_set_arrays_with_wrong_type(self):
+        self.assertRaises(TypeError, DataSet, set_arrays=np.array([1, 2, 3, 4]))
 
     def test_setters(self):
         data_set = DataSet()
@@ -323,7 +326,9 @@ class TestDataSet(TestCase):
                       preset_data=np.NaN * np.ones((x_points.size, y_points.size)))
         data_set = DataSet(data_arrays=[z])
 
-        self.assertEqual(data_set.set_arrays, (x, y))
+        self.assertEqual(len(data_set.set_arrays), 2)
+        self.assertEqual(data_set.set_arrays['x'], x)
+        self.assertEqual(data_set.set_arrays['y'], y)
 
     def test_set_arrays_access_via_attribute(self):
         x_points = np.array(range(0, 2))
