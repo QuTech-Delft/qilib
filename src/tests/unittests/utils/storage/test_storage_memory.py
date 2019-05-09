@@ -37,7 +37,7 @@ class TestStorageMemory(unittest.TestCase):
 
     def test_datetag_explicit(self):
         dt = datetime.datetime(2019, 2, 18, 13, 37, 0, 23)
-        t = self.storage.datetag(dt)
+        t = self.storage.datetag_part(dt)
         self.assertEqual(t, '2019-02-18T13:37:00.000023')
 
     def test_node_overwrite(self):

@@ -17,7 +17,7 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
-from typing import List
+from typing import List, Union
 
 from qilib.configuration_helper import InstrumentAdapterFactory
 from qilib.utils import PythonJsonStructure
@@ -31,8 +31,9 @@ class DuplicateTagError(Exception):
 class InstrumentConfiguration:
     """ Associates a configuration with an InstrumentAdapter and allows it to be stored or retrieved from storage."""
 
-    def __init__(self, adapter_class_name: str, address: str, storage: StorageInterface, tag: List[str] = None,
-                 configuration: PythonJsonStructure = None) -> None:
+    def __init__(self, adapter_class_name: str, address: str, storage: StorageInterface,
+                 tag: Union[None, List[str]] = None,
+                 configuration: Union[None, PythonJsonStructure] = None) -> None:
         self._adapter_class_name = adapter_class_name
         self._address = address
         self._storage = storage
@@ -99,7 +100,7 @@ class InstrumentConfiguration:
         delta = self._get_configuration_delta(instrument_config)
         self._instrument.apply(delta)
 
-    def _get_configuration_delta(self, instrument_config):
+    def _get_configuration_delta(self, instrument_config: PythonJsonStructure) -> PythonJsonStructure:
         delta = PythonJsonStructure()
         for parameter, configuration in self._configuration.items():
             if 'value' in configuration and configuration['value'] != instrument_config[parameter]['value']:
@@ -117,6 +118,6 @@ class InstrumentConfiguration:
         """
         instrument_config = self._instrument.read(update=True)
         delta = self._get_configuration_delta(instrument_config)
-        if len(delta) > 0:
+        if len(delta) > 0 or len(instrument_config) != len(self._configuration):
             self._configuration = instrument_config
             self._tag = [StorageInterface.datetag_part()]
