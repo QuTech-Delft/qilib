@@ -116,7 +116,10 @@ class DataSet:
         """
 
         for array_name, data_value in data.items():
-            getattr(self, array_name)[index_or_slice] = data_value
+            if array_name in self._data_arrays:
+                self._data_arrays[array_name][index_or_slice] = data_value
+            else:
+                self._set_arrays[array_name][index_or_slice] = data_value
 
         for storage in self._storage_writer:
             storage.sync_data_to_storage(index_or_slice, data)
@@ -219,7 +222,7 @@ class DataSet:
         self._add_metadata_to_storage('default_array_name', default_array_name)
 
     def _verify_set_points(self, set_arrays: DataArrays) -> None:
-        if list(self._set_arrays.values()) != set_arrays:
+        if list(self._set_arrays.values()) != list(set_arrays):
             raise ValueError('Set point arrays do not match.')
 
     def _add_set_arrays(self, set_arrays: DataArrays) -> None:
