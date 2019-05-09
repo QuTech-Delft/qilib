@@ -21,7 +21,7 @@ from typing import Dict, Any
 
 import numpy as np
 
-from qilib.data_set.type_aliases import PJSValues
+from qilib.utils.type_aliases import PJSValues
 
 
 class PythonJsonStructure(dict):  # type: ignore
