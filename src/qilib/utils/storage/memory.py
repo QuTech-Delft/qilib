@@ -110,3 +110,13 @@ class StorageMemory(StorageInterface):
 
     def search(self, query: str) -> Any:
         raise NotImplementedError()
+
+    def tag_in_storage(self, tag: List[str]) -> bool:
+        tmp_data = self._data
+        for partial_tag in tag:
+            if partial_tag in tmp_data:
+                tmp_data = tmp_data[partial_tag]
+            else:
+                return False
+        return True
+

@@ -204,3 +204,13 @@ class StorageMongoDb(StorageInterface):
 
     def search(self, query: str) -> Any:
         raise NotImplementedError()
+
+    def tag_in_storage(self, tag: List[str]) -> bool:
+        parent = self._get_root()
+        for tag_part in tag:
+            doc = self._collection.find_one({'parent': parent, 'tag': tag_part})
+            if doc is None:
+                return False
+            else:
+                parent = doc['_id']
+        return True

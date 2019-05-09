@@ -60,7 +60,7 @@ class StorageInterface(ABC):
         self.logger.info('created StorageInterface %s', self.name)
 
     @staticmethod
-    def datetag(date_with_time: Optional[datetime] = None) -> str:
+    def datetag_part(date_with_time: Optional[datetime] = None) -> str:
         """
         Return string with date.
 
@@ -160,3 +160,12 @@ class StorageInterface(ABC):
     def search(self, query: str) -> Any:
         """ Future implementation of query interface """
         raise NotImplementedError('search interface not yet specified')
+
+    @abstractmethod
+    def tag_in_storage(self, tag: List[str]) -> bool:
+        """ Check if tag is already in storage
+        Args:
+            tag: hdf5 tag
+        Returns:
+            True of tag found in storage, else False.
+        """

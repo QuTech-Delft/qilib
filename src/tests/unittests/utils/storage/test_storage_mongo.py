@@ -133,3 +133,11 @@ class TestStorageMongo(unittest.TestCase):
         self.storage.save_data('foo', ['foo', 'bar'])
         result = self.storage.list_data_subtags(['foo', 'bar'])
         self.assertListEqual(result, [])
+
+    def test_tag_in_storage(self):
+        tag_in_storage = self.storage.tag_in_storage(['some-other-tag'])
+        self.assertFalse(tag_in_storage)
+
+        self.storage.save_data('some-dat', ['some-other-tag'])
+        tag_in_storage = self.storage.tag_in_storage(['some-other-tag'])
+        self.assertTrue(tag_in_storage)
