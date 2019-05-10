@@ -26,8 +26,17 @@ from qilib.utils import PythonJsonStructure
 class SpiRackInstrumentAdapter(InstrumentAdapter):
 
     def __init__(self, address: str) -> None:
+        """ Connect to the SPI rack module at the specified address
+
+        Args:
+            address: The (virutal) COM port for the device
+
+        The initilization performs the unlock() method of the SPI rack.
+
+        """
         super().__init__(address)
         self._instrument: SPI_rack = SPI_rack(address, baud='115200', timeout=1)
+        self._instrument.unlock()
 
     def apply(self, config: PythonJsonStructure) -> None:
         self._instrument.apply_settings(config['serialport'])
