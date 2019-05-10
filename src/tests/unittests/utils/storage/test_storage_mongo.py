@@ -48,13 +48,13 @@ class TestStorageMongo(unittest.TestCase):
         self.assertRaises(NotImplementedError, self.storage.search, None)
 
     def test_datetag_implicit(self):
-        t = self.storage.datetag()
+        t = self.storage.datetag_part()
         self.assertIsInstance(t, str)
         self.assertRegex(t, r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{6}')
 
     def test_datetag_explicit(self):
         dt = datetime.datetime(2019, 2, 18, 13, 37, 0, 23)
-        t = self.storage.datetag(dt)
+        t = self.storage.datetag_part(dt)
         self.assertEqual(t, '2019-02-18T13:37:00.000023')
 
     def test_node_overwrite(self):
@@ -133,3 +133,11 @@ class TestStorageMongo(unittest.TestCase):
         self.storage.save_data('foo', ['foo', 'bar'])
         result = self.storage.list_data_subtags(['foo', 'bar'])
         self.assertListEqual(result, [])
+
+    def test_tag_in_storage(self):
+        tag_in_storage = self.storage.tag_in_storage(['some-other-tag'])
+        self.assertFalse(tag_in_storage)
+
+        self.storage.save_data('some-dat', ['some-other-tag'])
+        tag_in_storage = self.storage.tag_in_storage(['some-other-tag'])
+        self.assertTrue(tag_in_storage)

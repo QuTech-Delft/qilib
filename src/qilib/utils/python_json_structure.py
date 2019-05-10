@@ -17,14 +17,17 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
+from typing import Dict, Any
 
 import numpy as np
 
+from qilib.utils.type_aliases import PJSValues
 
-class PythonJsonStructure(dict):
+
+class PythonJsonStructure(dict):  # type: ignore
     __serializable_value_types = (bool, int, float, complex, str, bytes)
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Dict[str, PJSValues], **kwargs: Any) -> None:
         """ A python container which can hold data objects and can be serialized
             into JSON. Currently the following data types can be added to the
             container object: bool, bytes, int, float, list, tuple, dict
@@ -39,18 +42,18 @@ class PythonJsonStructure(dict):
         super().__init__()
         self.update(*args, **kwargs)
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key: str, value: PJSValues) -> None:
         """ Appends or changes an item of the container.
 
         Args:
-            key (str): The key of the container item.
-            value (a supported data-type): The value of the updated item.
+            key: The key of the container item.
+            value: The value of the updated item.
         """
 
         value = self.__validate_key_value_pair(key, value)
         super().__setitem__(key, value)
 
-    def update(self, *args, **kwargs):
+    def update(self, *args: Any, **kwargs: Any) -> None:
         """ Update the PythonJsonStructure with the key/value pairs from other
             dict/PythonJsonStructure, overwriting existing keys."""
         if args:
@@ -62,25 +65,25 @@ class PythonJsonStructure(dict):
             for key, value in kwargs_items:
                 self[key] = value
 
-    def setdefault(self, key, default=None):
+    def setdefault(self, key: str, default: PJSValues = None) -> PJSValues:
         """ If key is in the dictionary, return its value. If not, insert key
             with a value of default and return default.
 
         Args:
-            key (str): The key of the container item.
-            default (any): The default value of the updated item.
+            key: The key of the container item.
+            default: The default value of the updated item.
         """
         default = self.__validate_key_value_pair(key, default)
         return super().setdefault(key, default)
 
-    def __validate_key_value_pair(self, key, value):
+    def __validate_key_value_pair(self, key: Any, value: Any) -> Any:
         if isinstance(value, dict):
             value = PythonJsonStructure(value)
         PythonJsonStructure.__assert_correct_key_type(key)
         self.__check_serializability(value)
         return value
 
-    def __check_serializability(self, data):
+    def __check_serializability(self, data: Any) -> None:
         if isinstance(data, (list, tuple)):
             for item in data:
                 self.__check_serializability(item)
@@ -96,11 +99,11 @@ class PythonJsonStructure(dict):
                 raise TypeError('Data is not serializable ({})!'.format(data_type))
 
     @staticmethod
-    def __assert_correct_key_type(key):
+    def __assert_correct_key_type(key: Any) -> None:
         if not isinstance(key, (str, int)):
             raise TypeError('Invalid key! (key={})'.format(key))
 
     @staticmethod
-    def __is_valid_type(value):
+    def __is_valid_type(value: Any) -> bool:
         valid = value in PythonJsonStructure.__serializable_value_types
         return valid
