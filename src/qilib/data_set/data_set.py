@@ -118,8 +118,10 @@ class DataSet:
         for array_name, data_value in data.items():
             if array_name in self._data_arrays:
                 self._data_arrays[array_name][index_or_slice] = data_value
-            else:
+            elif array_name in self._set_arrays:
                 self._set_arrays[array_name][index_or_slice] = data_value
+            else:
+                raise LookupError(f'No such array with name \'{array_name}\' in data set')
 
         for storage in self._storage_writer:
             storage.sync_data_to_storage(index_or_slice, data)

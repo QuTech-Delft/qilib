@@ -169,6 +169,12 @@ class TestDataSet(TestCase):
         self.assertTrue(np.array_equal(double_array, some_array[2][2]))
         self.assertFalse(np.array_equal(double_array, some_array[2][1]))
 
+    def test_add_data_unknown_array(self):
+        some_array = DataArray('some_array', 'label', shape=(5, 5, 5, 5))
+        data_set = DataSet(data_arrays=some_array)
+
+        self.assertRaises(LookupError, data_set.add_data, (3, 3, 3, 3), {'no_such_array': 0.42})
+
     def test_add_data_set_arrays(self):
         x_points = np.array(range(0, 2))
         y_points = np.array(range(0, 2))
