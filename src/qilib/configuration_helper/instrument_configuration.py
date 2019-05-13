@@ -31,6 +31,8 @@ class DuplicateTagError(Exception):
 class InstrumentConfiguration:
     """ Associates a configuration with an InstrumentAdapter and allows it to be stored or retrieved from storage."""
 
+    STORAGE_BASE_TAG = 'configuration'
+
     def __init__(self, adapter_class_name: str, address: str, storage: StorageInterface,
                  tag: Union[None, List[str]] = None,
                  configuration: Union[None, PythonJsonStructure] = None) -> None:
@@ -39,7 +41,7 @@ class InstrumentConfiguration:
         self._storage = storage
         self._instrument = InstrumentAdapterFactory.get_instrument_adapter(adapter_class_name, address)
         self._configuration = PythonJsonStructure() if configuration is None else configuration
-        self._tag = [StorageInterface.datetag_part()] if tag is None else tag
+        self._tag = [self.STORAGE_BASE_TAG, adapter_class_name, StorageInterface.datetag_part()] if tag is None else tag
 
     @property
     def tag(self) -> List[str]:
@@ -120,4 +122,4 @@ class InstrumentConfiguration:
         delta = self._get_configuration_delta(instrument_config)
         if len(delta) > 0 or len(instrument_config) != len(self._configuration):
             self._configuration = instrument_config
-            self._tag = [StorageInterface.datetag_part()]
+            self._tag = [self.STORAGE_BASE_TAG, self._adapter_class_name, StorageInterface.datetag_part()]

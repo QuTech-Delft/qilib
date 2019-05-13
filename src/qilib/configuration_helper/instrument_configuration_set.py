@@ -28,10 +28,12 @@ class DuplicateTagError(Exception):
 
 
 class InstrumentConfigurationSet:
+    STORAGE_BASE_TAG = 'configuration_set'
+
     def __init__(self, storage: StorageInterface, tag: Union[None, List[str]] = None,
                  instruments: Union[None, List[InstrumentConfiguration]] = None):
         self._storage = storage
-        self._tag = [StorageInterface.datetag_part()] if tag is None else tag
+        self._tag = [self.STORAGE_BASE_TAG, StorageInterface.datetag_part()] if tag is None else tag
         if instruments is None:
             instruments = []
         self._instruments = instruments
@@ -59,9 +61,8 @@ class InstrumentConfigurationSet:
         instruments = [instrument.tag for instrument in self.instruments]
         self._storage.save_data(instruments, self._tag)
 
-    # todo: generate tags in proper way
     def snapshot(self, tag: Union[None, List[str]] = None) -> None:
-        self._tag = [StorageInterface.datetag_part()] if tag is None else tag
+        self._tag = [self.STORAGE_BASE_TAG, StorageInterface.datetag_part()] if tag is None else tag
 
         for instrument in self._instruments:
             instrument.refresh()

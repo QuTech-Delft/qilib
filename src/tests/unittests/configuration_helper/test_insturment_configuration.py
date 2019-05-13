@@ -17,7 +17,7 @@ class TestInstrumentConfiguration(unittest.TestCase):
         self.assertIsInstance(instrument_configuration.configuration, PythonJsonStructure)
         self.assertDictEqual({}, instrument_configuration.configuration)
         self.assertEqual('fake-address', instrument_configuration.address)
-        self.assertRegex(instrument_configuration.tag[0], r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{6}')
+        self.assertRegex(instrument_configuration.tag[2], r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{6}')
 
     def test_constructor_full(self):
         config = PythonJsonStructure(voltage='low', current='lower', frequency='high-enough')
