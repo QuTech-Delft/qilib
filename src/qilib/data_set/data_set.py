@@ -62,7 +62,7 @@ class DataSet:
         self._user_data = user_data
         self._data_arrays: Dict[str, DataArray] = {}
         self._default_array_name = ""
-        self._set_arrays: Union[List['DataArray'], Tuple['DataArray', ...]] = []
+        self._set_arrays: Dict[str, DataArray] = {}
         if set_arrays is not None:
             self._add_set_arrays(set_arrays)
         if data_arrays is not None:
@@ -81,7 +81,7 @@ class DataSet:
         table = [['name', 'label', 'unit', 'shape', 'setpoint']]
         for name, array in self._data_arrays.items():
             table.append([name, array.label, array.unit, str(array.shape), str(array.is_setpoint)])
-        for array in self._set_arrays:
+        for array in self._set_arrays.values():
             table.append([array.name, array.label, array.unit, str(array.shape), str(array.is_setpoint)])
         return heading + self._format_str(table)
 
@@ -116,7 +116,13 @@ class DataSet:
         """
 
         for array_name, data_value in data.items():
-            self._data_arrays[array_name][index_or_slice] = data_value
+            if array_name in self._data_arrays:
+                self._data_arrays[array_name][index_or_slice] = data_value
+            elif array_name in self._set_arrays:
+                self._set_arrays[array_name][index_or_slice] = data_value
+            else:
+                raise LookupError(f'No such array with name \'{array_name}\' in data set')
+
         for storage in self._storage_writer:
             storage.sync_data_to_storage(index_or_slice, data)
 
@@ -141,7 +147,7 @@ class DataSet:
         """ Save DataSet to underlying storage."""
         for metadata in ['name', 'time_stamp', 'user_data', 'default_array_name', '_finalized']:
             self._add_metadata_to_storage(metadata, getattr(self, metadata))
-        for array in self._set_arrays:
+        for array in self._set_arrays.values():
             self._add_array_to_storage(array)
         for array in self._data_arrays.values():
             self._add_array_to_storage(array)
@@ -187,6 +193,10 @@ class DataSet:
         return self._data_arrays
 
     @property
+    def set_arrays(self) -> Dict[str, 'DataArray']:
+        return self._set_arrays
+
+    @property
     def time_stamp(self) -> datetime:
         return self._time_stamp
 
@@ -214,15 +224,19 @@ class DataSet:
         self._add_metadata_to_storage('default_array_name', default_array_name)
 
     def _verify_set_points(self, set_arrays: DataArrays) -> None:
-        if self._set_arrays != set_arrays:
+        if list(self._set_arrays.values()) != list(set_arrays):
             raise ValueError('Set point arrays do not match.')
 
-    def _add_set_arrays(self, set_arrays: Union[List['DataArray'], Tuple['DataArray', ...]]) -> None:
-        if isinstance(set_arrays, collections.Sequence):
-            self._set_arrays = set_arrays
-        else:
-            self._set_arrays = [set_arrays]
+    def _add_set_arrays(self, set_arrays: DataArrays) -> None:
+        if isinstance(set_arrays, DataArray):
+            set_arrays = [set_arrays]
+        elif not isinstance(set_arrays, collections.Sequence):
+            raise TypeError("'set_arrays' have to be of type 'DataArray', not {}".format(type(set_arrays)))
+
         for array in set_arrays:
+            self._verify_array_name(array.name)
+            self._set_arrays[array.name] = array
+            setattr(self, array.name, array)
             for storage in self._storage_writer:
                 storage.sync_add_data_array_to_storage(array)
 
