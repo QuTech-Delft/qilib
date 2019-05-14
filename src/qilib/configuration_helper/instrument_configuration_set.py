@@ -25,6 +25,8 @@ from qilib.utils.storage.interface import StorageInterface
 
 
 class InstrumentConfigurationSet:
+    """ The complete set of configurations for all instruments in the system. """
+
     STORAGE_BASE_TAG = 'configuration_set'
 
     def __init__(self, storage: StorageInterface, tag: Union[None, List[str]] = None,
@@ -45,6 +47,16 @@ class InstrumentConfigurationSet:
 
     @staticmethod
     def load(tag: List[str], storage: StorageInterface) -> 'InstrumentConfigurationSet':
+        """ A factory that creates a new InstrumentConfigurationSet by loading from database
+
+        Args:
+            tag: A unique identifier for a instrument configuration set
+            storage: Any storage that implements the StorageInterface
+
+        Returns:
+            A  new InstrumentConfigurationSet loaded from the storage
+        """
+
         # load the document as a list of instruments tags
         document = storage.load_data(tag)
         instruments = [InstrumentConfiguration.load(instrument_tag, storage)
@@ -53,6 +65,12 @@ class InstrumentConfigurationSet:
         return InstrumentConfigurationSet(storage, tag, instruments)
 
     def store(self) -> None:
+        """ Saves object to storage
+
+         Raises:
+             DuplicateTagError: If this object's tag is already in the database.
+        """
+
         if self._storage.tag_in_storage(self._tag):
             raise DuplicateTagError(f'InstrumentConfiguration with tag \'{self._tag}\' already in storage')
 
@@ -69,19 +87,31 @@ class InstrumentConfigurationSet:
         self._storage.save_data(instruments, self._tag)
 
     def snapshot(self, tag: Union[None, List[str]] = None) -> None:
+        """ Updates the configuration set by overwriting the tag and refreshing all underlying instruments """
+
         self._tag = [self.STORAGE_BASE_TAG, StorageInterface.datetag_part()] if tag is None else tag
 
         for instrument in self._instruments:
             instrument.refresh()
 
     def apply(self) -> None:
+        """ Uploads the configurations to the instruments """
+
         for instrument in self.instruments:
             instrument.apply()
 
     def apply_delta(self, update: bool = True) -> None:
+        """ Compare configurations with instruments and apply configurations that differs
+
+            Args:
+                update: If True, request all parameter values from instruments, else use latest set values
+        """
+
         for instrument in self.instruments:
             instrument.apply_delta(update)
 
     def apply_delta_lazy(self) -> None:
+        """ Compare configurations with instrument drivers last known settings and apply configurations that differs """
+
         for instrument in self.instruments:
             instrument.apply_delta_lazy()
