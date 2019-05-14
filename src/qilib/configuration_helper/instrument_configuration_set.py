@@ -20,11 +20,8 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 from typing import Union, List
 
 from qilib.configuration_helper import InstrumentConfiguration
+from qilib.configuration_helper.exceptions import DuplicateTagError
 from qilib.utils.storage.interface import StorageInterface
-
-
-class DuplicateTagError(Exception):
-    """ Raised if tag already in storage."""
 
 
 class InstrumentConfigurationSet:
@@ -48,9 +45,10 @@ class InstrumentConfigurationSet:
 
     @staticmethod
     def load(tag: List[str], storage: StorageInterface) -> 'InstrumentConfigurationSet':
+        # load the document as a list of instruments tags
         document = storage.load_data(tag)
         instruments = [InstrumentConfiguration.load(instrument_tag, storage)
-                       for instrument_tag in document['instruments']]
+                       for instrument_tag in document]
 
         return InstrumentConfigurationSet(storage, tag, instruments)
 
@@ -58,7 +56,16 @@ class InstrumentConfigurationSet:
         if self._storage.tag_in_storage(self._tag):
             raise DuplicateTagError(f'InstrumentConfiguration with tag \'{self._tag}\' already in storage')
 
-        instruments = [instrument.tag for instrument in self.instruments]
+        instruments = []
+        for instrument in self.instruments:
+            try:
+                instrument.store()
+            except DuplicateTagError:
+                pass
+            finally:
+                instruments.append(instrument.tag)
+
+        # save the document as a list of instruments tags
         self._storage.save_data(instruments, self._tag)
 
     def snapshot(self, tag: Union[None, List[str]] = None) -> None:

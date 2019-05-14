@@ -1,8 +1,8 @@
 import unittest
 from unittest.mock import patch, MagicMock
 
-from qilib.configuration_helper import InstrumentConfiguration, InstrumentAdapter
-from qilib.configuration_helper.instrument_configuration import DuplicateTagError
+from qilib.configuration_helper import InstrumentConfiguration
+from qilib.configuration_helper.exceptions import DuplicateTagError
 from qilib.utils import PythonJsonStructure
 from qilib.utils.storage import StorageMemory
 
@@ -17,6 +17,8 @@ class TestInstrumentConfiguration(unittest.TestCase):
         self.assertIsInstance(instrument_configuration.configuration, PythonJsonStructure)
         self.assertDictEqual({}, instrument_configuration.configuration)
         self.assertEqual('fake-address', instrument_configuration.address)
+        self.assertEqual(instrument_configuration.tag[0], 'configuration')
+        self.assertEqual(instrument_configuration.tag[1], 'DummyClass')
         self.assertRegex(instrument_configuration.tag[2], r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{6}')
 
     def test_constructor_full(self):
@@ -46,7 +48,7 @@ class TestInstrumentConfiguration(unittest.TestCase):
             instrument_configuration = InstrumentConfiguration('DummyClass', 'fake-address', self._storage,
                                                                tag=['2019-05-09T11:29:51.523636'])
             instrument_configuration.store()
-            error = "InstrumentConfiguration with tag '\['2019-05-09T11:29:51.523636'\]' already in storage"
+            error = r"InstrumentConfiguration with tag '\['2019-05-09T11:29:51.523636'\]' already in storage"
             self.assertRaisesRegex(DuplicateTagError, error, instrument_configuration.store)
 
     def test_store(self):

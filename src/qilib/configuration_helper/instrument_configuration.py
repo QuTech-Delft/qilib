@@ -20,12 +20,9 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 from typing import List, Union
 
 from qilib.configuration_helper import InstrumentAdapterFactory
+from qilib.configuration_helper.exceptions import DuplicateTagError
 from qilib.utils import PythonJsonStructure
 from qilib.utils.storage.interface import StorageInterface
-
-
-class DuplicateTagError(Exception):
-    """ Raised if tag already in storage."""
 
 
 class InstrumentConfiguration:
