@@ -20,37 +20,53 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 from typing import List, Union
 
 from qilib.configuration_helper import InstrumentAdapterFactory
+from qilib.configuration_helper.exceptions import DuplicateTagError
 from qilib.utils import PythonJsonStructure
 from qilib.utils.storage.interface import StorageInterface
-
-
-class DuplicateTagError(Exception):
-    """ Raised if tag already in storage."""
 
 
 class InstrumentConfiguration:
     """ Associates a configuration with an InstrumentAdapter and allows it to be stored or retrieved from storage."""
 
+    STORAGE_BASE_TAG = 'configuration'
+
     def __init__(self, adapter_class_name: str, address: str, storage: StorageInterface,
                  tag: Union[None, List[str]] = None,
                  configuration: Union[None, PythonJsonStructure] = None) -> None:
+        """ A set of instrument configurations
+
+        Args
+            instrument_adapter_class_name: Name of the InstrumentAdapter subclass
+            address: Address of the physical instrument
+            storage: Any storage that implements the StorageInterface
+            tag: A unique identifier for a instrument configuration set
+            configuration: The instrument configuration
+        """
         self._adapter_class_name = adapter_class_name
         self._address = address
         self._storage = storage
         self._instrument = InstrumentAdapterFactory.get_instrument_adapter(adapter_class_name, address)
         self._configuration = PythonJsonStructure() if configuration is None else configuration
-        self._tag = [StorageInterface.datetag_part()] if tag is None else tag
+        self._tag = [self.STORAGE_BASE_TAG, adapter_class_name, StorageInterface.datetag_part()] if tag is None else tag
 
     @property
     def tag(self) -> List[str]:
+        """ A unique identifier for this instrument configuration set """
         return self._tag
 
     @property
+    def storage(self):
+        """ The storage interface used """
+        return self._storage
+
+    @property
     def address(self) -> str:
+        """ The address of the physical instrument """
         return self._address
 
     @property
     def configuration(self) -> PythonJsonStructure:
+        """ The instrument configuration """
         return self._configuration
 
     @staticmethod
@@ -120,4 +136,4 @@ class InstrumentConfiguration:
         delta = self._get_configuration_delta(instrument_config)
         if len(delta) > 0 or len(instrument_config) != len(self._configuration):
             self._configuration = instrument_config
-            self._tag = [StorageInterface.datetag_part()]
+            self._tag = [self.STORAGE_BASE_TAG, self._adapter_class_name, StorageInterface.datetag_part()]
