@@ -1,6 +1,5 @@
 from unittest import TestCase
-
-from unittest.mock import patch, MagicMock, Mock
+from unittest.mock import patch, Mock
 
 from qilib.configuration_helper import InstrumentConfiguration
 from qilib.configuration_helper.instrument_configuration_set import InstrumentConfigurationSet, DuplicateTagError
@@ -28,6 +27,23 @@ class TestInstrumentConfigurationSet(TestCase):
         self.assertEqual(instrument_configuration_set_new.tag, instrument_configuration_set.tag)
         self.assertEqual(instrument_configuration_set_new.instruments, instrument_configuration_set.instruments)
 
+    def test_load_with_instruments(self):
+        with patch('qilib.configuration_helper.instrument_configuration.InstrumentAdapterFactory'):
+            instrument_1 = InstrumentConfiguration('DummyClass', 'fake-address-1', self._storage, tag=['instrument_1'])
+            instrument_2 = InstrumentConfiguration('DummyClass', 'fake-address-2', self._storage, tag=['instrument_2'])
+
+            instrument_configuration_set = InstrumentConfigurationSet(self._storage,
+                                                                      instruments=[instrument_1, instrument_2])
+            instrument_configuration_set.store()
+
+            instrument_configuration_set_new = InstrumentConfigurationSet.load(instrument_configuration_set.tag,
+                                                                               self._storage)
+
+        self.assertEqual(instrument_configuration_set_new.tag, instrument_configuration_set.tag)
+        self.assertEqual(len(instrument_configuration_set_new.instruments), 2)
+        self.assertEqual(instrument_configuration_set_new.instruments[0].tag, instrument_1.tag)
+        self.assertEqual(instrument_configuration_set_new.instruments[1].tag, instrument_2.tag)
+
     def test_store(self):
         instrument_configuration_set = InstrumentConfigurationSet(self._storage)
         instrument_configuration_set.store()
@@ -38,8 +54,6 @@ class TestInstrumentConfigurationSet(TestCase):
         with patch('qilib.configuration_helper.instrument_configuration.InstrumentAdapterFactory'):
             instrument_1 = InstrumentConfiguration('DummyClass', 'fake-address-1', self._storage, tag=['instrument_1'])
             instrument_2 = InstrumentConfiguration('DummyClass', 'fake-address-2', self._storage, tag=['instrument_2'])
-            instrument_1.store()
-            instrument_2.store()
 
             instrument_configuration_set = InstrumentConfigurationSet(self._storage,
                                                                       instruments=[instrument_1, instrument_2])
@@ -75,8 +89,8 @@ class TestInstrumentConfigurationSet(TestCase):
                                                                   instruments=[instrument_1, instrument_2])
         instrument_configuration_set.apply_delta()
 
-        instrument_1.apply_delta.assert_called_once_with(True)
-        instrument_2.apply_delta.assert_called_once_with(True)
+        instrument_1.apply_delta.assert_called_once()
+        instrument_2.apply_delta.assert_called_once()
 
     def test_apply_delta_lazy(self):
         instrument_1 = Mock()

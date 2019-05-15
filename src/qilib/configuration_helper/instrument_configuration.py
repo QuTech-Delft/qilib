@@ -45,6 +45,10 @@ class InstrumentConfiguration:
         return self._tag
 
     @property
+    def storage(self):
+        return self._storage
+
+    @property
     def address(self) -> str:
         return self._address
 

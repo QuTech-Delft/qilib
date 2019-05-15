@@ -30,7 +30,15 @@ class InstrumentConfigurationSet:
     STORAGE_BASE_TAG = 'configuration_set'
 
     def __init__(self, storage: StorageInterface, tag: Union[None, List[str]] = None,
-                 instruments: Union[None, List[InstrumentConfiguration]] = None):
+                 instruments: Union[None, List[InstrumentConfiguration]] = None) -> None:
+        """ A set of instrument configurations
+
+        Args
+            storage: Any storage that implements the StorageInterface
+            tag: A unique identifier for a instrument configuration set
+            instruments: A list of instrument configurations
+
+        """
         self._storage = storage
         self._tag = [self.STORAGE_BASE_TAG, StorageInterface.datetag_part()] if tag is None else tag
         if instruments is None:
@@ -39,10 +47,20 @@ class InstrumentConfigurationSet:
 
     @property
     def tag(self) -> List[str]:
+        """ A unique identifier for this instrument configuration set """
+
         return self._tag
 
     @property
+    def storage(self):
+        """ The storage interface used """
+
+        return self._storage
+
+    @property
     def instruments(self) -> List[InstrumentConfiguration]:
+        """ The instrument configurations in this set """
+
         return self._instruments
 
     @staticmethod
@@ -54,13 +72,12 @@ class InstrumentConfigurationSet:
             storage: Any storage that implements the StorageInterface
 
         Returns:
-            A  new InstrumentConfigurationSet loaded from the storage
+            A new InstrumentConfigurationSet loaded from the storage
         """
 
         # load the document as a list of instruments tags
-        document = storage.load_data(tag)
         instruments = [InstrumentConfiguration.load(instrument_tag, storage)
-                       for instrument_tag in document]
+                       for instrument_tag in storage.load_data(tag)]
 
         return InstrumentConfigurationSet(storage, tag, instruments)
 
@@ -100,15 +117,11 @@ class InstrumentConfigurationSet:
         for instrument in self.instruments:
             instrument.apply()
 
-    def apply_delta(self, update: bool = True) -> None:
-        """ Compare configurations with instruments and apply configurations that differs
-
-            Args:
-                update: If True, request all parameter values from instruments, else use latest set values
-        """
+    def apply_delta(self) -> None:
+        """ Compare configurations with instruments and apply configurations that differs """
 
         for instrument in self.instruments:
-            instrument.apply_delta(update)
+            instrument.apply_delta()
 
     def apply_delta_lazy(self) -> None:
         """ Compare configurations with instrument drivers last known settings and apply configurations that differs """
