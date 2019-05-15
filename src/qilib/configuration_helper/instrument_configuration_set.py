@@ -37,8 +37,8 @@ class InstrumentConfigurationSet:
             storage: Any storage that implements the StorageInterface
             tag: A unique identifier for a instrument configuration set
             instruments: A list of instrument configurations
-
         """
+
         self._storage = storage
         self._tag = [self.STORAGE_BASE_TAG, StorageInterface.datetag_part()] if tag is None else tag
         if instruments is None:

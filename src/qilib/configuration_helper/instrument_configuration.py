@@ -33,6 +33,15 @@ class InstrumentConfiguration:
     def __init__(self, adapter_class_name: str, address: str, storage: StorageInterface,
                  tag: Union[None, List[str]] = None,
                  configuration: Union[None, PythonJsonStructure] = None) -> None:
+        """ A set of instrument configurations
+
+        Args
+            instrument_adapter_class_name: Name of the InstrumentAdapter subclass
+            address: Address of the physical instrument
+            storage: Any storage that implements the StorageInterface
+            tag: A unique identifier for a instrument configuration set
+            configuration: The instrument configuration
+        """
         self._adapter_class_name = adapter_class_name
         self._address = address
         self._storage = storage
@@ -42,18 +51,22 @@ class InstrumentConfiguration:
 
     @property
     def tag(self) -> List[str]:
+        """ A unique identifier for this instrument configuration set """
         return self._tag
 
     @property
     def storage(self):
+        """ The storage interface used """
         return self._storage
 
     @property
     def address(self) -> str:
+        """ The address of the physical instrument """
         return self._address
 
     @property
     def configuration(self) -> PythonJsonStructure:
+        """ The instrument configuration """
         return self._configuration
 
     @staticmethod
