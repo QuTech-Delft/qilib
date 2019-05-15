@@ -17,7 +17,7 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
-from typing import List, Union
+from typing import List, Union, Any
 
 from qilib.configuration_helper import InstrumentConfigurationSet
 from qilib.utils.storage.interface import StorageInterface
@@ -36,8 +36,14 @@ class ConfigurationHelper:
             active_configuration: An optional instrument configuration set.
             inactive_configuration: An optional inactive instrument configuration set.
         """
-        self.active_configuration = active_configuration
-        self.inactive_configuration = inactive_configuration
+        if active_configuration is not None:
+            self.active_configuration = active_configuration
+        else:
+            self.active_configuration = InstrumentConfigurationSet(storage)
+        if inactive_configuration is not None:
+            self.inactive_configuration = inactive_configuration
+        else:
+            self.inactive_configuration = InstrumentConfigurationSet(storage)
         self._storage = storage
 
     def snapshot(self, tag: List[str]) -> None:
@@ -81,7 +87,7 @@ class ConfigurationHelper:
         self.inactive_configuration.apply_delta_lazy()
         self.active_configuration = self.inactive_configuration
 
-    def get_tag_by_label(self, label: str) -> List[str]:
+    def get_tag_by_label(self, label: str) -> Any:
         """ Retrieve tag from storage that has been assigned the given label."""
         return self._storage.load_data(['labels', label])
 

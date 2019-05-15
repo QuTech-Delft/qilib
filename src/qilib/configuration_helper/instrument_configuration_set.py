@@ -52,7 +52,7 @@ class InstrumentConfigurationSet:
         return self._tag
 
     @property
-    def storage(self):
+    def storage(self) -> StorageInterface:
         """ The storage interface used """
 
         return self._storage
