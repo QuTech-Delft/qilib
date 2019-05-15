@@ -1,7 +1,9 @@
 import unittest
-from unittest.mock import MagicMock, Mock
+from unittest.mock import MagicMock, Mock, patch
 
+from qilib.configuration_helper import InstrumentConfiguration, InstrumentConfigurationSet
 from qilib.configuration_helper.configuration_helper import ConfigurationHelper
+from qilib.utils import PythonJsonStructure
 from qilib.utils.storage import StorageMemory
 
 
@@ -14,14 +16,41 @@ class TestConfigurationHelper(unittest.TestCase):
         mock_configuration.snapshot.assert_called_once_with(['some', 'tag'])
 
     def test_retrieve_inactive_configuration_from_storage(self):
-        tag = ['some', 'tag']
+        tag = ['some']
+        storage = Mock()
+        configuration_tags = [['some_tag']]
+        configuration = {'adapter_class_name': 'Dummy', 'address': 'fake', 'configuration': {'param': 'value'}}
+        storage.load_data.side_effect = [configuration_tags, configuration]
+        with patch('qilib.configuration_helper.instrument_configuration.InstrumentAdapterFactory'):
+            configuration_helper = ConfigurationHelper(storage)
+            configuration_helper.retrieve_inactive_configuration_from_storage(tag)
+        inactive_configuration = configuration_helper.inactive_configuration
+        self.assertListEqual(inactive_configuration.tag, tag)
+        self.assertListEqual(inactive_configuration.instruments[0].tag, ['some_tag'])
+        self.assertEqual(inactive_configuration.instruments[0].address, 'fake')
+        self.assertDictEqual(inactive_configuration.instruments[0].configuration, {'param': 'value'})
+
+    def test_configuration_helper_integration(self):
         storage = StorageMemory('some_name')
-        mock_configuration = {'some': 'config'}
-        storage.save_data(mock_configuration, tag)
-        configuration_helper = ConfigurationHelper(storage)
-        configuration_helper.retrieve_inactive_configuration_from_storage(tag)
-        # TODO Fix after merging the actual InstrumentConfigurationSet
-        self.assertListEqual(tag, configuration_helper.inactive_configuration)
+        configuration_1 = PythonJsonStructure(amper=0.005)
+        configuration_2 = PythonJsonStructure(frequency='2.4 GHz')
+        with patch('qilib.configuration_helper.instrument_configuration.InstrumentAdapterFactory'):
+            instrument_1 = InstrumentConfiguration('DummyClass', 'fake-address-1', storage, tag=['instrument_1'],
+                                                   configuration=configuration_1)
+            instrument_2 = InstrumentConfiguration('DummyClass', 'fake-address-2', storage, tag=['instrument_2'],
+                                                   configuration=configuration_2)
+            instrument_configuration_set = InstrumentConfigurationSet(storage, tag=['set'],
+                                                                      instruments=[instrument_1, instrument_2])
+            instrument_configuration_set.store()
+
+            configuration_helper = ConfigurationHelper(storage)
+            configuration_helper.retrieve_inactive_configuration_from_storage(['set'])
+        inactive_configuration = configuration_helper.inactive_configuration
+        self.assertListEqual(inactive_configuration.tag, ['set'])
+        self.assertListEqual(inactive_configuration.instruments[0].tag, ['instrument_1'])
+        self.assertListEqual(inactive_configuration.instruments[1].tag, ['instrument_2'])
+        self.assertDictEqual({'amper': 0.005}, inactive_configuration.instruments[0].configuration)
+        self.assertDictEqual({'frequency': '2.4 GHz'}, inactive_configuration.instruments[1].configuration)
 
     def test_write_active_configuration_to_storage(self):
         storage = Mock()
@@ -75,6 +104,3 @@ class TestConfigurationHelper(unittest.TestCase):
         label = 'online'
         configuration_helper.label_tag(label, tag)
         self.assertListEqual(tag, configuration_helper.get_tag_by_label(label))
-
-
-

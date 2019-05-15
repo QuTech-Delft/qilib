@@ -45,7 +45,6 @@ class InstrumentConfigurationSet:
             instruments = []
         self._instruments = instruments
 
-
     @property
     def tag(self) -> List[str]:
         """ A unique identifier for this instrument configuration set """
@@ -77,8 +76,8 @@ class InstrumentConfigurationSet:
         """
 
         # load the document as a list of instruments tags
-        instruments = [InstrumentConfiguration.load(instrument_tag, storage)
-                       for instrument_tag in storage.load_data(tag)]
+        tags = storage.load_data(tag)
+        instruments = [InstrumentConfiguration.load(instrument_tag, storage) for instrument_tag in tags]
 
         return InstrumentConfigurationSet(storage, tag, instruments)
 

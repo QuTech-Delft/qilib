@@ -56,7 +56,7 @@ class ConfigurationHelper:
             tag: Unique identifier for an InstrumentConfigurationSet.
 
         """
-        self.inactive_configuration = InstrumentConfigurationSet.load(tag)
+        self.inactive_configuration = InstrumentConfigurationSet.load(tag, self._storage)
 
     def write_active_configuration_to_storage(self) -> None:
         """ Write the active configuration set to storage."""
