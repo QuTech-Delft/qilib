@@ -45,6 +45,7 @@ class InstrumentConfigurationSet:
             instruments = []
         self._instruments = instruments
 
+
     @property
     def tag(self) -> List[str]:
         """ A unique identifier for this instrument configuration set """
