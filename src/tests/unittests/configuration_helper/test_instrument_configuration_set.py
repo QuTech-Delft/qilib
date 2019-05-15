@@ -13,6 +13,7 @@ class TestInstrumentConfigurationSet(TestCase):
     def test_constructor(self):
         instrument_configuration_set = InstrumentConfigurationSet(self._storage)
         self.assertEqual(instrument_configuration_set.instruments, [])
+        self.assertIs(instrument_configuration_set.storage, self._storage)
         self.assertEqual(len(instrument_configuration_set.tag), 2)
         self.assertEqual(instrument_configuration_set.tag[0], 'configuration_set')
         self.assertRegex(instrument_configuration_set.tag[1], r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{6}')
@@ -54,6 +55,8 @@ class TestInstrumentConfigurationSet(TestCase):
         with patch('qilib.configuration_helper.instrument_configuration.InstrumentAdapterFactory'):
             instrument_1 = InstrumentConfiguration('DummyClass', 'fake-address-1', self._storage, tag=['instrument_1'])
             instrument_2 = InstrumentConfiguration('DummyClass', 'fake-address-2', self._storage, tag=['instrument_2'])
+            instrument_1.store()
+            instrument_2.store()
 
             instrument_configuration_set = InstrumentConfigurationSet(self._storage,
                                                                       instruments=[instrument_1, instrument_2])

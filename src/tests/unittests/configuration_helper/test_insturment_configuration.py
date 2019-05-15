@@ -17,6 +17,7 @@ class TestInstrumentConfiguration(unittest.TestCase):
         self.assertIsInstance(instrument_configuration.configuration, PythonJsonStructure)
         self.assertDictEqual({}, instrument_configuration.configuration)
         self.assertEqual('fake-address', instrument_configuration.address)
+        self.assertIs(instrument_configuration.storage, self._storage)
         self.assertEqual(instrument_configuration.tag[0], 'configuration')
         self.assertEqual(instrument_configuration.tag[1], 'DummyClass')
         self.assertRegex(instrument_configuration.tag[2], r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{6}')
