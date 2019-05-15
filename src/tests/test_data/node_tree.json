@@ -2809,13 +2809,6 @@
         "Type": "String",
         "Unit": "None"
     },
-    "/DEV8049/FEATURES/CODE": {
-        "Node": "/DEV8049/FEATURES/CODE",
-        "Description": "Node providing a mechanism to write feature codes.",
-        "Properties": "Read, Write",
-        "Type": "String",
-        "Unit": "None"
-    },
     "/DEV8049/SYSTEM/PROPERTIES/TIMEBASE": {
         "Node": "/DEV8049/SYSTEM/PROPERTIES/TIMEBASE",
         "Description": "Minimal time difference between two timestamps. Is equal to 1/(maximum sampling rate).",
