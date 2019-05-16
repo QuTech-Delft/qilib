@@ -23,8 +23,10 @@ from qilib.configuration_helper.adapters import CommonInstrumentAdapter
 from qilib.utils import PythonJsonStructure
 
 
-class KeysightInstrumentAdapter(CommonInstrumentAdapter):
-    def __init__(self, address):
+class KeysightE8267DInstrumentAdapter(CommonInstrumentAdapter):
+    """ Adapter for the Keysight E8267D vector source."""
+
+    def __init__(self, address: str) -> None:
         super().__init__(address)
         self._instrument: Keysight_E8267D = Keysight_E8267D(self.name, address)
 
