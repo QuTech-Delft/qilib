@@ -20,6 +20,7 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 from typing import Union, List
 
 from qilib.configuration_helper import InstrumentConfiguration
+from qilib.configuration_helper.visitor import Visitor
 from qilib.configuration_helper.exceptions import DuplicateTagError
 from qilib.utils.storage.interface import StorageInterface
 
@@ -129,3 +130,8 @@ class InstrumentConfigurationSet:
 
         for instrument in self.instruments:
             instrument.apply_delta_lazy()
+
+    def accept(self, visitor: Visitor) -> None:
+        """ Accepts a visitor and propagates to instrument configurations."""
+        for instrument in self.instruments:
+            instrument.accept(visitor)
