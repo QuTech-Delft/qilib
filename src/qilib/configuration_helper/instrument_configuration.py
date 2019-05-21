@@ -140,5 +140,11 @@ class InstrumentConfiguration:
             self._tag = [self.STORAGE_BASE_TAG, self._adapter_class_name, StorageInterface.datetag_part()]
 
     def accept(self, visitor: Visitor) -> None:
+        """ Accept a visitor, run visit method with self as a parameter and propagate to instrument adapter.
+
+        Args:
+            visitor: An implementation of the Visitor interface.
+
+        """
         visitor.visit(self)
         self._instrument.accept(visitor)

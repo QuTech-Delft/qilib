@@ -132,6 +132,11 @@ class InstrumentConfigurationSet:
             instrument.apply_delta_lazy()
 
     def accept(self, visitor: Visitor) -> None:
-        """ Accepts a visitor and propagates to instrument configurations."""
+        """ Accepts a visitor and propagates to instrument configurations.
+
+        Args:
+            visitor: An implementation of the Visitor interface.
+        
+        """
         for instrument in self.instruments:
             instrument.accept(visitor)

@@ -93,4 +93,10 @@ class InstrumentAdapter(ABC):
             self._instrument.close()
 
     def accept(self, visitor: Visitor) -> None:
+        """ Accept a visitor and run visit method with self as a parameter.
+
+        Args:
+            visitor: An implementation of the Visitor interface.
+
+        """
         visitor.visit(self)
