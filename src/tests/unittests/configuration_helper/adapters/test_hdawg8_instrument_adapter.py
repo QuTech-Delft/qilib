@@ -197,7 +197,7 @@ class TestZIHDAWG8InstrumentAdapter(unittest.TestCase):
         dawg_instace = MagicMock()
         with patch('qilib.configuration_helper.adapters.hdawg8_instrument_adapter.ZIHDAWG8', return_value=dawg_instace):
             adapter_name = 'ZIHDAWG8InstrumentAdapter'
-            hdawg_adapter = InstrumentAdapterFactory.get_instrument_adapter(adapter_name, 'dev41')
+            hdawg_adapter = InstrumentAdapterFactory.get_instrument_adapter(adapter_name, 'dev43')
         hdawg_adapter.close_instrument()
         dawg_instace.close.assert_called_once_with()
 
