@@ -84,3 +84,7 @@ class InstrumentAdapter(ABC):
             PythonJsonStructure: Contains the instrument snapshot without the instrument
                                  parameters which are filtered out by this function.
         """
+
+    def close_instrument(self) -> None:
+        """ Close the wrapped QCoDeS instrument."""
+        self._instrument.close()
