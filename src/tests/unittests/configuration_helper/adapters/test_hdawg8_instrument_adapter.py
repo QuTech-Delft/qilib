@@ -193,6 +193,14 @@ class TestZIHDAWG8InstrumentAdapter(unittest.TestCase):
             dawg.assert_has_calls([call().stop_awg(1)])
             hdawg_adapter.instrument.close()
 
+    def test_close_instrument(self):
+        dawg_instance = MagicMock()
+        with patch('qilib.configuration_helper.adapters.hdawg8_instrument_adapter.ZIHDAWG8', return_value=dawg_instance):
+            adapter_name = 'ZIHDAWG8InstrumentAdapter'
+            hdawg_adapter = InstrumentAdapterFactory.get_instrument_adapter(adapter_name, 'dev43')
+        hdawg_adapter.close_instrument()
+        dawg_instance.close.assert_called_once_with()
+
     def test_upload(self):
         with patch('qilib.configuration_helper.adapters.hdawg8_instrument_adapter.ZIHDAWG8') as dawg:
             adapter_name = 'ZIHDAWG8InstrumentAdapter'

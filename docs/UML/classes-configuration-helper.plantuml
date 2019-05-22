@@ -1,0 +1,101 @@
+@startuml
+
+
+note as n1
+Relations between classes introduce fields
+in the source class. For eg, 'InstrumentConfigurationSet'
+has a field 'storage' that contains the
+StorageInterface implementation instantiation.
+end note
+
+class qcodes.instrument.base.Instrument {
+    +full_name : str
+}
+
+package "Instrument Adapters" <<Rectangle>> {
+    class InstrumentAdapter {
+        apply(config : PythonJsonStructure)
+        read() : PythonJsonStructure
+        lazy_read() : PythonJsonStructure
+        close_instrument()
+    }
+    SomeSpecificInstrumentAdapter --|> InstrumentAdapter
+    SomeOtherInstrumentAdapter --|> InstrumentAdapter
+
+
+    package "SPI Module Instrument Adapters" <<Rectangle>> {
+        SpiRackInstrumentAdapter --|> InstrumentAdapter
+        SpiModuleInstrumentAdapter --|> InstrumentAdapter
+        SomeSpecificSpiModuleInstrumentAdapter --|> SpiModuleInstrumentAdapter
+        class SerialPortResolver {
+            {static} get_serial_port_adapter(instrument_class_name : str, identifier : str) : SpiRackInstrumentAdapter
+        }
+
+        SpiModuleInstrumentAdapter --> SerialPortResolver : identifier
+        SerialPortResolver --> SpiModuleInstrumentAdapter : SpiRackInstrumentAdapter
+    }
+}
+
+
+
+
+class InstrumentAdapterFactory {
+    {static} get_instrument_adapter(instrument_class_name : str, address : str) : InstrumentAdapter
+}
+InstrumentAdapterFactory --> "Instrument Adapters" : creates
+
+
+class InstrumentConfiguration {
+    tag : List[str]
+    adapter_class_name : str
+    address : str
+    configuration : PythonJsonStructure
+    {static} load(tag : List[str]) : InstrumentConfiguration
+    store()
+    apply()
+    apply_delta()
+    apply_delta_lazy()
+    refresh()
+}
+
+InstrumentAdapter "1" --> "1" qcodes.instrument.base.Instrument
+InstrumentConfiguration --> InstrumentAdapter : instrument
+
+
+
+class InstrumentConfigurationSet {
+    tag : List[str]
+    {static} load(tag: List[str], storage: StorageInterface) : InstrumentConfigurationSet
+    store()
+    snapshot(tag : List[str])
+    apply()
+    apply_delta()
+    apply_delta_lazy()
+}
+
+class ConfigurationHelper {
+    snapshot(tag : List[str])
+    retrieve_inactive_configuration_from_storage(tag : List[str])
+    write_active_configuration_to_storage()
+    write_inactive_configuration_to_storage()
+    apply_inactive()
+    apply_inactive_delta()
+    get_tag_by_label(label : str) : List[str]
+    label_tag(label : str, tag: : List[str])
+}
+
+class qc.utils.storage.interface.StorageInterface
+class qc.utils.storage.interface.StorageMongoDB
+
+qc.utils.storage.interface.StorageMongoDB -up-|> qc.utils.storage.interface.StorageInterface
+
+InstrumentConfigurationSet "1" --> "*" InstrumentConfiguration : instruments
+
+ConfigurationHelper --> InstrumentConfigurationSet : active_configuration
+ConfigurationHelper --> InstrumentConfigurationSet : inactive_configuration
+
+ConfigurationHelper -left-> qc.utils.storage.interface.StorageInterface : storage
+InstrumentConfiguration -left-> qc.utils.storage.interface.StorageInterface : storage
+InstrumentConfigurationSet -left-> qc.utils.storage.interface.StorageInterface : storage
+
+@enduml
