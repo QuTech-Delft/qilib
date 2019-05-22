@@ -17,22 +17,24 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
+import requests
+from qcodes.instrument_drivers.tektronix.Keithley_6500 import Keithley_6500
 
-from setuptools import setup
+from qilib.configuration_helper.adapters import CommonInstrumentAdapter
+from qilib.utils import PythonJsonStructure
 
-setup(name='qilib',
-      description='',
-      version='0.1.0',
-      python_requires='>=3.6',
-      package_dir={'': 'src'},
-      packages=['qilib', 'qilib.configuration_helper', 'qilib.configuration_helper.adapters',
-                'qilib.data_set', 'qilib.utils', 'qilib.utils.storage'],
-      classifiers=[
-          'Development Status :: 3 - Alpha',
-          'Programming Language :: Python :: 3',
-          'Programming Language :: Python :: 3.6',
-          'Programming Language :: Python :: 3.7'],
-      license='Other/Proprietary License',
 
-      install_requires=['spirack>=0.1.8', 'numpy', 'serialize', 'zhinst',
-                        'pymongo', 'requests'])
+class Keithley6500InstrumentAdapter(CommonInstrumentAdapter):
+    def __init__(self, address: str) -> None:
+        super().__init__(address)
+        if address[0:5] == 'TCPIP':
+            self._send_request_to_instrument(address)
+        self._instrument = Keithley_6500(self.name, address)
+
+    def _filter_parameters(self, parameters: PythonJsonStructure) -> PythonJsonStructure:
+        return parameters
+
+    @staticmethod
+    def _send_request_to_instrument(address: str) -> None:
+        ip_address = address.split('::')[1]
+        requests.get("http://{}/".format(ip_address))
