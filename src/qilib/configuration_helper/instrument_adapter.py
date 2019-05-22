@@ -87,4 +87,5 @@ class InstrumentAdapter(ABC):
 
     def close_instrument(self) -> None:
         """ Close the wrapped QCoDeS instrument."""
-        self._instrument.close()
+        if self._instrument is not None:
+            self._instrument.close()
