@@ -1,4 +1,5 @@
 from qilib.configuration_helper.adapters.common_instrument_adapter import CommonInstrumentAdapter
+from qilib.configuration_helper.adapters.keithley_dmm6500_adapter import Keithley6500InstrumentAdapter
 from qilib.configuration_helper.adapters.spi_rack_instrument_adapter import SpiRackInstrumentAdapter
 from qilib.configuration_helper.adapters.spi_module_instrument_adapter import SpiModuleInstrumentAdapter
 
