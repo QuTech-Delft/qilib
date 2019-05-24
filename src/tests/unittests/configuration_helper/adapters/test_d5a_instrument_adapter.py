@@ -62,6 +62,7 @@ class TestD5aInstrumentAdapter(unittest.TestCase):
             d5a_adapter.instrument.d5a.set_voltage.assert_called_with(0, dac_value)
             d5a_adapter.instrument.d5a.change_span_update.assert_called_with(0, 2)
             d5a_adapter.instrument.d5a.get_stepsize.assert_not_called()
+            self.assertEqual(d5a_adapter.instrument.parameters['dac1'].step, 20)
 
             self.mock_config['dac1']['value'] = None
             d5a_adapter.apply(self.mock_config)
