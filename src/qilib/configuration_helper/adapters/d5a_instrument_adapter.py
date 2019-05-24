@@ -37,3 +37,4 @@ class D5aInstrumentAdapter(SpiModuleInstrumentAdapter):
             self._instrument[dac].step = values['step']
             self._instrument[dac].inter_delay = values['inter_delay']
             self._instrument[dac].unit = values['unit']
+
