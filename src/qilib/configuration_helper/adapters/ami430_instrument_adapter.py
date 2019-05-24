@@ -17,6 +17,8 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
+from typing import Any
+
 from qcodes.instrument_drivers.american_magnetics.AMI430 import AMI430
 
 from qilib.configuration_helper import InstrumentAdapter
@@ -40,6 +42,7 @@ class AMI430InstrumentAdapter(InstrumentAdapter):
         super().__init__(address)
         ip_and_port = address.split(':')
         self._instrument = AMI430(name=self.name, address=ip_and_port[0], port=int(ip_and_port[1]))
+        self.field_variation_tolerance = 0.01
 
     def apply(self, config: PythonJsonStructure) -> None:
         """ Does not apply config to device, but compares config to device settings.
@@ -48,16 +51,30 @@ class AMI430InstrumentAdapter(InstrumentAdapter):
             config: Containing the instrument configuration.
 
         Raises:
-            ConfigurationError: If config does not match device configuration.
+            ConfigurationError: If config does not match device configuration or difference in field value is greater
+                than the field_variation_tolerance.
 
         """
-        configuration = self.read(True)
+        device_config = self.read(True)
         parameters = [parameter for parameter in config if hasattr(self._instrument.parameters[parameter], 'set')]
         for parameter in parameters:
-            if 'value' in config[parameter] and config[parameter]['value'] != configuration[parameter]['value']:
-                raise ConfigurationError(
-                    "Configuration for {} does not match: '{}' != '{}'".format(parameter, config[parameter]['value'],
-                                                                               configuration[parameter]['value']))
+            if parameter == 'field':
+                self._check_field_value(config[parameter]['value'], device_config[parameter]['value'])
+            elif 'value' in config[parameter]:
+                self._assert_value_matches(config[parameter]['value'], device_config[parameter]['value'], parameter)
 
     def _filter_parameters(self, parameters: PythonJsonStructure) -> PythonJsonStructure:
         return parameters
+
+    def _check_field_value(self, config_value: float, device_value: float) -> None:
+        delta = config_value - device_value
+        delta = delta if delta >= 0 else -delta
+        if delta > self.field_variation_tolerance:
+            raise ConfigurationError(
+                "Target value for field does not match device value: {}T != {}T".format(config_value, device_value))
+
+    @staticmethod
+    def _assert_value_matches(config_value: Any, device_value: Any, parameter: str) -> None:
+        if config_value != device_value:
+            raise ConfigurationError(
+                "Configuration for {} does not match: '{}' != '{}'".format(parameter, config_value, device_value))
