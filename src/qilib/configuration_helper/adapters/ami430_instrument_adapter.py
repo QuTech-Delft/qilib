@@ -18,6 +18,7 @@ COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER I
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 from typing import Any
+import math
 
 from qcodes.instrument_drivers.american_magnetics.AMI430 import AMI430
 
@@ -67,8 +68,7 @@ class AMI430InstrumentAdapter(InstrumentAdapter):
         return parameters
 
     def _check_field_value(self, config_value: float, device_value: float) -> None:
-        delta = config_value - device_value
-        delta = delta if delta >= 0 else -delta
+        delta = math.abs(config_value - device_value)
         if delta > self.field_variation_tolerance:
             raise ConfigurationError(
                 "Target value for field does not match device value: {}T != {}T".format(config_value, device_value))
