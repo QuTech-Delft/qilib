@@ -10,3 +10,4 @@ from qilib.configuration_helper.adapters.m2j_instrument_adapter import M2jInstru
 from qilib.configuration_helper.adapters.s5i_instrument_adapter import S5iInstrumentAdapter
 from qilib.configuration_helper.adapters.uhfli_instrument_adapter import ZIUHFLIInstrumentAdapter
 from qilib.configuration_helper.adapters.keysight_e8267d_instrument_adapter import KeysightE8267DInstrumentAdapter
+from qilib.configuration_helper.adapters.ami430_instrument_adapter import AMI430InstrumentAdapter
