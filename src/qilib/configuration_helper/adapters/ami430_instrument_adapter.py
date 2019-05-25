@@ -68,7 +68,7 @@ class AMI430InstrumentAdapter(InstrumentAdapter):
         return parameters
 
     def _check_field_value(self, config_value: float, device_value: float) -> None:
-        delta = math.abs(config_value - device_value)
+        delta = math.fabs(config_value - device_value)
         if delta > self.field_variation_tolerance:
             raise ConfigurationError(
                 "Target value for field does not match device value: {}T != {}T".format(config_value, device_value))
