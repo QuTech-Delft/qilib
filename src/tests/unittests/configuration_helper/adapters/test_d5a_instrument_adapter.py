@@ -16,7 +16,7 @@ class TestD5aInstrumentAdapter(unittest.TestCase):
                 'vals': '<Numbers -4000.0<=v<=4000.0>', 'label': 'DAC 1',
                 'name': 'dac1', 'instrument': 'qcodes.instrument_drivers.QuTech.D5a.D5a',
                 'instrument_name': 'D5aInstrumentAdapterD5a_COM3_MODULE4', 'step': 20,
-                'post_delay': 0, 'unit': 'mV'
+                'post_delay': 0, 'unit': 'V'
             },
             'stepsize1': {
                 'value': 3.0517578125e-05, 'ts': '2019-01-03 16:06:36',
@@ -63,6 +63,8 @@ class TestD5aInstrumentAdapter(unittest.TestCase):
             d5a_adapter.instrument.d5a.change_span_update.assert_called_with(0, 2)
             d5a_adapter.instrument.d5a.get_stepsize.assert_not_called()
             self.assertEqual(d5a_adapter.instrument.parameters['dac1'].step, 20)
+            self.assertEqual(d5a_adapter.instrument.parameters['dac1'].inter_delay, 0.05)
+            self.assertEqual(d5a_adapter.instrument.parameters['dac1'].unit, 'V')
 
             self.mock_config['dac1']['value'] = None
             d5a_adapter.apply(self.mock_config)
