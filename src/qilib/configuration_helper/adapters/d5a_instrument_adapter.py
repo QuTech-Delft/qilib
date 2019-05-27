@@ -20,6 +20,7 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 from qcodes.instrument_drivers.QuTech.D5a import D5a
 
 from qilib.configuration_helper.adapters import SpiModuleInstrumentAdapter
+from qilib.utils import PythonJsonStructure
 
 
 class D5aInstrumentAdapter(SpiModuleInstrumentAdapter):
@@ -27,3 +28,12 @@ class D5aInstrumentAdapter(SpiModuleInstrumentAdapter):
     def __init__(self, address: str) -> None:
         super().__init__(address)
         self._instrument = D5a(self._name, self._spi_rack, self._module_number, mV=True)
+
+    def apply(self, config: PythonJsonStructure) -> None:
+        """ Step values for dacs should be part of configuration."""
+        super().apply(config)
+        dac_parameters = {param: values for param, values in config.items() if param[0:3] == 'dac'}
+        for dac, values in dac_parameters.items():
+            self._instrument[dac].step = values['step']
+            self._instrument[dac].inter_delay = values['inter_delay']
+            self._instrument[dac].unit = values['unit']
