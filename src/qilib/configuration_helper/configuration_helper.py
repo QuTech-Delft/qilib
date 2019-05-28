@@ -17,18 +17,18 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
-from typing import List, Union, Any
+from typing import List, Any, Optional
 
 from qilib.configuration_helper import InstrumentConfigurationSet
 from qilib.utils.storage.interface import StorageInterface
 
 
 class ConfigurationHelper:
-    """  Provides access to the instrument configuration database and maintains two ConfigurationSets."""
+    """  Provides access to the instrument configuration database and maintains two InstrumentConfigurationSets."""
 
     def __init__(self, storage: StorageInterface,
-                 active_configuration: Union[InstrumentConfigurationSet, None] = None,
-                 inactive_configuration: Union[InstrumentConfigurationSet, None] = None) -> None:
+                 active_configuration: Optional[InstrumentConfigurationSet] = None,
+                 inactive_configuration: Optional[InstrumentConfigurationSet] = None) -> None:
         """ Instantiate a new ConfigurationHelper.
 
         Args:
@@ -37,23 +37,34 @@ class ConfigurationHelper:
             inactive_configuration: An optional inactive instrument configuration set.
         """
         if active_configuration is not None:
-            self.active_configuration = active_configuration
+            self._active_configuration = active_configuration
         else:
-            self.active_configuration = InstrumentConfigurationSet(storage)
+            self._active_configuration = InstrumentConfigurationSet(storage)
         if inactive_configuration is not None:
-            self.inactive_configuration = inactive_configuration
+            self._inactive_configuration = inactive_configuration
         else:
-            self.inactive_configuration = InstrumentConfigurationSet(storage)
+            self._inactive_configuration = InstrumentConfigurationSet(storage)
         self._storage = storage
 
-    def snapshot(self, tag: List[str]) -> None:
-        """ Overwrite the tag and refreshes all underlying InstrumentConfiguration's on the active configuration.
+    def snapshot(self, tag: Optional[List[str]]) -> None:
+        """ Refresh the active configuration set so it reflects thee actual settings of the devices.
 
         Args:
-            tag: Unique identifier for an InstrumentConfigurationSet.
+            tag: Unique identifier for an InstrumentConfigurationSet. If no tag is provided it will be generated based
+                on current time and date.
 
         """
-        self.active_configuration.snapshot(tag)
+        self._active_configuration.snapshot(tag)
+
+    @property
+    def active_configuration(self) -> InstrumentConfigurationSet:
+        """ The configuration set that is currently active."""
+        return self._active_configuration
+
+    @property
+    def inactive_configuration(self) -> InstrumentConfigurationSet:
+        """ The configuration set that is to be applied."""
+        return self._inactive_configuration
 
     def retrieve_inactive_configuration_from_storage(self, tag: List[str]) -> None:
         """ Load configuration set from storage and set as inactive.
@@ -62,35 +73,46 @@ class ConfigurationHelper:
             tag: Unique identifier for an InstrumentConfigurationSet.
 
         """
-        self.inactive_configuration = InstrumentConfigurationSet.load(tag, self._storage)
+        self._inactive_configuration = InstrumentConfigurationSet.load(tag, self._storage)
 
     def write_active_configuration_to_storage(self) -> None:
         """ Write the active configuration set to storage."""
-        self.active_configuration.store()
+        self._active_configuration.store()
 
     def write_inactive_configuration_to_storage(self) -> None:
         """ Write the inactive configuration set to storage."""
-        self.inactive_configuration.store()
+        self._inactive_configuration.store()
 
     def apply_inactive(self) -> None:
         """ Apply inactive configuration and set as active."""
-        self.inactive_configuration.apply()
-        self.active_configuration = self.inactive_configuration
+        self._inactive_configuration.apply()
+        self._active_configuration = self._inactive_configuration
 
     def apply_inactive_delta(self) -> None:
         """ Call apply_delta on inactive configuration set and set it as active."""
-        self.inactive_configuration.apply_delta()
-        self.active_configuration = self.inactive_configuration
+        self._inactive_configuration.apply_delta()
+        self._active_configuration = self._inactive_configuration
 
     def apply_inactive_delta_lazy(self) -> None:
         """ Call apply_delta_lazy on inactive configuration set and set it as active."""
-        self.inactive_configuration.apply_delta_lazy()
-        self.active_configuration = self.inactive_configuration
+        self._inactive_configuration.apply_delta_lazy()
+        self._active_configuration = self._inactive_configuration
 
     def get_tag_by_label(self, label: str) -> Any:
-        """ Retrieve tag from storage that has been assigned the given label."""
+        """ Retrieve tag from storage that has been assigned the given label.
+
+        Args:
+            label: A known configuration, e.g., 'online'.
+
+        """
         return self._storage.load_data(['labels', label])
 
     def label_tag(self, label: str, tag: List[str]) -> None:
-        """ Label a tag in storage with a given label."""
+        """ Label a tag in storage with a given label.
+
+        Args:
+            label: A known configuration, e.g., 'online'.
+            tag: The tag to label.
+
+        """
         self._storage.save_data(tag, ['labels', label])

@@ -24,7 +24,7 @@ class TestConfigurationHelper(unittest.TestCase):
         with patch('qilib.configuration_helper.instrument_configuration.InstrumentAdapterFactory'):
             configuration_helper = ConfigurationHelper(storage)
             configuration_helper.retrieve_inactive_configuration_from_storage(tag)
-        inactive_configuration = configuration_helper.inactive_configuration
+        inactive_configuration = configuration_helper._inactive_configuration
         self.assertListEqual(inactive_configuration.tag, tag)
         self.assertListEqual(inactive_configuration.instruments[0].tag, ['some_tag'])
         self.assertEqual(inactive_configuration.instruments[0].address, 'fake')
@@ -49,8 +49,8 @@ class TestConfigurationHelper(unittest.TestCase):
         self.assertListEqual(inactive_configuration.tag, ['set'])
         self.assertListEqual(inactive_configuration.instruments[0].tag, ['instrument_1'])
         self.assertListEqual(inactive_configuration.instruments[1].tag, ['instrument_2'])
-        self.assertDictEqual({'amper': 0.005}, inactive_configuration.instruments[0].configuration)
-        self.assertDictEqual({'frequency': '2.4 GHz'}, inactive_configuration.instruments[1].configuration)
+        self.assertDictEqual(configuration_1, inactive_configuration.instruments[0].configuration)
+        self.assertDictEqual(configuration_2, inactive_configuration.instruments[1].configuration)
 
     def test_write_active_configuration_to_storage(self):
         storage = Mock()
@@ -62,8 +62,7 @@ class TestConfigurationHelper(unittest.TestCase):
     def test_write_inactive_configuration_to_storage(self):
         storage = Mock()
         configuration_set = Mock()
-        configuration_helper = ConfigurationHelper(storage)
-        configuration_helper.inactive_configuration = configuration_set
+        configuration_helper = ConfigurationHelper(storage, inactive_configuration=configuration_set)
         configuration_helper.write_inactive_configuration_to_storage()
         configuration_set.store.assert_called_once_with()
 
