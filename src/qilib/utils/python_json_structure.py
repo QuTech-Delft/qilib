@@ -17,7 +17,6 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
-import bson
 from typing import Dict, Any
 
 import numpy as np
@@ -26,8 +25,8 @@ from qilib.utils.type_aliases import PJSValues
 
 
 class PythonJsonStructure(dict):  # type: ignore
-    __serializable_value_types = (bool, int, float, complex, str, bytes, np.float32, np.float64, np.int32, np.int64,
-                                  bson.Int64)
+    __serializable_value_types = (bool, int, float, complex, str, bytes)
+    __serializable_numpy_types = (np.float32, np.float64, np.int32, np.int64, np.cfloat)
 
     def __init__(self, *args: Dict[str, PJSValues], **kwargs: Any) -> None:
         """ A python container which can hold data objects and can be serialized
@@ -96,9 +95,7 @@ class PythonJsonStructure(dict):  # type: ignore
                 self.__check_serializability(item)
 
         elif data is not None:
-            data_type = data.dtype if isinstance(data, np.ndarray) else type(data)
-            if not PythonJsonStructure.__is_valid_type(data_type):
-                raise TypeError('Data is not serializable ({})!'.format(data_type))
+            PythonJsonStructure.__is_valid_type(data)
 
     @staticmethod
     def __assert_correct_key_type(key: Any) -> None:
@@ -106,6 +103,12 @@ class PythonJsonStructure(dict):  # type: ignore
             raise TypeError('Invalid key! (key={})'.format(key))
 
     @staticmethod
-    def __is_valid_type(value: Any) -> bool:
-        valid = value in PythonJsonStructure.__serializable_value_types
-        return valid
+    def __is_valid_type(data: Any) -> None:
+        if isinstance(data, np.ndarray):
+            valid = data.dtype in PythonJsonStructure.__serializable_numpy_types
+            data_type = data.dtype
+        else:
+            valid = any([isinstance(data, type) for type in PythonJsonStructure.__serializable_value_types])
+            data_type = type(data)
+        if not valid:
+            raise TypeError('Data is not serializable ({})!'.format(data_type))
