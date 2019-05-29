@@ -33,7 +33,7 @@ mongod --replSet "rs0"
 ```
 and from within the mongo shell initiate with:
 ```
-rs0.initiate()
+rs.initiate()
 ```
 
 ## Testing
