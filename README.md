@@ -23,7 +23,7 @@ For development install in editable mode:
 
 ### Install Mongo database
 To use the MongoDataSetIOReader and MongoDataSetIOWriter a mongodb needs to be installed. 
-For Windows, Linux or OS X follow the instrucion [here](https://docs.mongodb.com/v3.2/administration/install-community/)
+For Windows, Linux or OS X follow the instructions [here](https://docs.mongodb.com/v3.2/administration/install-community/)
 on how to install the database.
 
 After installing the database it has to be configured as [replica set](https://docs.mongodb.com/manual/replication/) by
