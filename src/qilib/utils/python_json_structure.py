@@ -17,6 +17,7 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
+import bson
 from typing import Dict, Any
 
 import numpy as np
@@ -25,7 +26,8 @@ from qilib.utils.type_aliases import PJSValues
 
 
 class PythonJsonStructure(dict):  # type: ignore
-    __serializable_value_types = (bool, int, float, complex, str, bytes, np.float32, np.float64, np.int32, np.int64)
+    __serializable_value_types = (bool, int, float, complex, str, bytes, np.float32, np.float64, np.int32, np.int64,
+                                  bson.Int64)
 
     def __init__(self, *args: Dict[str, PJSValues], **kwargs: Any) -> None:
         """ A python container which can hold data objects and can be serialized
