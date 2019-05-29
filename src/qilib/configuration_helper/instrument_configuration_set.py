@@ -52,7 +52,7 @@ class InstrumentConfigurationSet:
         return self._tag
 
     @property
-    def storage(self):
+    def storage(self) -> StorageInterface:
         """ The storage interface used """
 
         return self._storage
@@ -76,8 +76,8 @@ class InstrumentConfigurationSet:
         """
 
         # load the document as a list of instruments tags
-        instruments = [InstrumentConfiguration.load(instrument_tag, storage)
-                       for instrument_tag in storage.load_data(tag)]
+        tags = storage.load_data(tag)
+        instruments = [InstrumentConfiguration.load(instrument_tag, storage) for instrument_tag in tags]
 
         return InstrumentConfigurationSet(storage, tag, instruments)
 
