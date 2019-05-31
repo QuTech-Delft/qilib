@@ -45,6 +45,8 @@ class D5aInstrumentAdapter(SpiModuleInstrumentAdapter):
     def apply(self, config: PythonJsonStructure) -> None:
         """ Step values for dacs should be part of configuration."""
         super().apply(config)
+        unit = config['dac1']['unit']
+        self._instrument.set_dac_unit(unit)
         dac_parameters = {param: values for param, values in config.items() if param[0:3] == 'dac'}
         for dac, values in dac_parameters.items():
             self._instrument[dac].step = values['step']
