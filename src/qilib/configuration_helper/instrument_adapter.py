@@ -20,6 +20,8 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 from abc import ABC, abstractmethod
 
 from qcodes import Instrument
+
+from qilib.configuration_helper.visitor import Visitor
 from qilib.utils import PythonJsonStructure
 
 
@@ -89,3 +91,12 @@ class InstrumentAdapter(ABC):
         """ Close the wrapped QCoDeS instrument."""
         if self._instrument is not None:
             self._instrument.close()
+
+    def accept(self, visitor: Visitor) -> None:
+        """ Accept a visitor and run visit method with self as a parameter.
+
+        Args:
+            visitor: An implementation of the Visitor interface.
+
+        """
+        visitor.visit(self)

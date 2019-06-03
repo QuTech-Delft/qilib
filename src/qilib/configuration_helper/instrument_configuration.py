@@ -20,6 +20,7 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 from typing import List, Union
 
 from qilib.configuration_helper import InstrumentAdapterFactory
+from qilib.configuration_helper.visitor import Visitor
 from qilib.configuration_helper.exceptions import DuplicateTagError
 from qilib.utils import PythonJsonStructure
 from qilib.utils.storage.interface import StorageInterface
@@ -137,3 +138,13 @@ class InstrumentConfiguration:
         if len(delta) > 0 or len(instrument_config) != len(self._configuration):
             self._configuration = instrument_config
             self._tag = [self.STORAGE_BASE_TAG, self._adapter_class_name, StorageInterface.datetag_part()]
+
+    def accept(self, visitor: Visitor) -> None:
+        """ Accept a visitor, run visit method with self as a parameter and propagate to instrument adapter.
+
+        Args:
+            visitor: An implementation of the Visitor interface.
+
+        """
+        visitor.visit(self)
+        self._instrument.accept(visitor)
