@@ -34,3 +34,9 @@ class TestInstrumentAdapterFactory(unittest.TestCase):
     def test_raise_value_error(self):
         with self.assertRaises(ValueError):
             InstrumentAdapterFactory.get_instrument_adapter('SomeAdapter', 'dev42')
+
+    def test_import_error_as_value_error(self):
+        error_msg = 'Failed to load TimeStampInstrumentAdapter'
+        adapter = 'TimeStampInstrumentAdapter'
+        get_adapter = InstrumentAdapterFactory.get_instrument_adapter
+        self.assertRaisesRegex(ValueError, error_msg, get_adapter, adapter, 'address')

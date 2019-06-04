@@ -17,26 +17,33 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
-import requests
-from qcodes.instrument_drivers.tektronix.Keithley_6500 import Keithley_6500
+from typing import Any
 
-from qilib.configuration_helper.adapters import CommonInstrumentAdapter
+try:
+    from qtt.instrument_drivers.TimeStamp import TimeStampInstrument
+except ImportError as e:
+    raise ImportError(
+        "Quantum Technology Toolbox, qtt, not installed. Please do 'pip install qtt' or install from source.") from e
+
+from qilib.configuration_helper import InstrumentAdapter
 from qilib.utils import PythonJsonStructure
 
 
-class Keithley6500InstrumentAdapter(CommonInstrumentAdapter):
-    def __init__(self, address: str) -> None:
+class TimeStampInstrumentAdapter(InstrumentAdapter):
+    def __init__(self, address: str) -> Any:
         super().__init__(address)
-        if address[0:5] == 'TCPIP':
-            # Perform a http request to the instrument's IP address before opening the device to make sure any
-            # stuck state is unstuck.
-            self._send_request_to_instrument(address)
-        self._instrument = Keithley_6500(self.name, address)
+        self._instrument = TimeStampInstrument(name=self._name)
+
+    def apply(self, config: PythonJsonStructure) -> None:
+        """ As there is no configuration to apply, this method is a NOP."""
 
     def _filter_parameters(self, parameters: PythonJsonStructure) -> PythonJsonStructure:
-        return parameters
+        """ As there is no configuration to read, this method is a NOP."""
 
-    @staticmethod
-    def _send_request_to_instrument(address: str) -> None:
-        ip_address = address.split('::')[1]
-        requests.get("http://{}/".format(ip_address))
+    def read(self, update: bool = False) -> PythonJsonStructure:
+        """ Override default read mechanism as this adapter has no real configuration.
+
+        Returns:
+            Empty python-json structure.
+        """
+        return PythonJsonStructure()

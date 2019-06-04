@@ -32,6 +32,7 @@ class InstrumentAdapterFactory:
     """
 
     instrument_adapters: Dict[Tuple[str, str], InstrumentAdapter] = {}
+    failed_adapters: Dict[str, str] = {}
 
     @staticmethod
     def is_instrument_adapter(instrument_adapter_class_name: str) -> bool:
@@ -58,15 +59,21 @@ class InstrumentAdapterFactory:
 
         Returns:
              An instance of the requested InstrumentAdapter.
+
+        Raises:
+            ValueError: If adapter is not found or error occurred while importing the adapter.
+
         """
         instrument_adapter_key = instrument_adapter_class_name, str(address)
         if instrument_adapter_key in cls.instrument_adapters:
             return cls.instrument_adapters[instrument_adapter_key]
+        if cls.is_instrument_adapter(instrument_adapter_class_name):
+            adapter = cast(InstrumentAdapter,
+                           vars(qilib.configuration_helper.adapters)[instrument_adapter_class_name](address))
+        elif instrument_adapter_class_name in cls.failed_adapters:
+            raise ValueError(f"Failed to load {instrument_adapter_class_name}") from cls.failed_adapters[
+                instrument_adapter_class_name]
         else:
-            if cls.is_instrument_adapter(instrument_adapter_class_name):
-                adapter = cast(InstrumentAdapter,
-                               vars(qilib.configuration_helper.adapters)[instrument_adapter_class_name](address))
-            else:
-                raise ValueError("No such InstrumentAdapter {0}".format(instrument_adapter_class_name))
-            cls.instrument_adapters[instrument_adapter_key] = adapter
-            return adapter
+            raise ValueError(f"No such InstrumentAdapter {instrument_adapter_class_name}")
+        cls.instrument_adapters[instrument_adapter_key] = adapter
+        return adapter
