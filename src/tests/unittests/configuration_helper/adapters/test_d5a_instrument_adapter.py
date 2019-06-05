@@ -2,6 +2,8 @@ import unittest
 from unittest.mock import patch, MagicMock
 
 from qilib.configuration_helper import InstrumentAdapterFactory, SerialPortResolver
+from qilib.configuration_helper.adapters import D5aInstrumentAdapter
+from qilib.configuration_helper.adapters.d5a_instrument_adapter import SpanValueError
 
 
 class TestD5aInstrumentAdapter(unittest.TestCase):
@@ -72,6 +74,13 @@ class TestD5aInstrumentAdapter(unittest.TestCase):
             logger_mock.warning.assert_called_once_with(warning_text)
 
             d5a_adapter.instrument.close()
+
+    def test_incorrect_span_raises_error(self):
+        SerialPortResolver.serial_port_identifiers = {'spirack1': 'COMnumber_test'}
+        with patch('qilib.configuration_helper.adapters.d5a_instrument_adapter.D5a') as d5a_mock:
+            d5a_mock.span3.return_value = '4v uni'
+            error_msg = 'D5a instrument has span unequal to "4v bi"'
+            self.assertRaisesRegex(SpanValueError,error_msg, D5aInstrumentAdapter, 'spirack1_module3')
 
     def test_read_config(self):
         with patch('qilib.configuration_helper.adapters.spi_rack_instrument_adapter.SPI_rack') as spi_mock, \

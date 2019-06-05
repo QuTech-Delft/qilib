@@ -23,17 +23,31 @@ from qilib.configuration_helper.adapters import SpiModuleInstrumentAdapter
 from qilib.utils import PythonJsonStructure
 
 
+class SpanValueError(Exception):
+    """ Error when dacs have misconfigured span values."""
+
+
+DAC_STEP = 10e-3
+INTER_DELAY = 0.1
+RESET_VOLTAGE = False
+MV = True
+
+
 class D5aInstrumentAdapter(SpiModuleInstrumentAdapter):
 
     def __init__(self, address: str) -> None:
         super().__init__(address)
-        self._instrument = D5a(self._name, self._spi_rack, self._module_number, mV=True)
+        self._instrument = D5a(self._name, self._spi_rack, self._module_number, mV=MV, inter_delay=INTER_DELAY,
+                               reset_voltages=RESET_VOLTAGE, dac_step=DAC_STEP)
+        if self._instrument.span3() != '4v bi':
+            raise SpanValueError('D5a instrument has span unequal to "4v bi"')
 
     def apply(self, config: PythonJsonStructure) -> None:
         """ Step values for dacs should be part of configuration."""
         super().apply(config)
+        unit = config['dac1']['unit']
+        self._instrument.set_dac_unit(unit)
         dac_parameters = {param: values for param, values in config.items() if param[0:3] == 'dac'}
         for dac, values in dac_parameters.items():
             self._instrument[dac].step = values['step']
             self._instrument[dac].inter_delay = values['inter_delay']
-            self._instrument[dac].unit = values['unit']
