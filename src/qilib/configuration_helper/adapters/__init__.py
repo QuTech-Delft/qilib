@@ -11,6 +11,10 @@ from qilib.configuration_helper.adapters.hdawg8_instrument_adapter import ZIHDAW
 from qilib.configuration_helper.adapters.m2j_instrument_adapter import M2jInstrumentAdapter
 from qilib.configuration_helper.adapters.s5i_instrument_adapter import S5iInstrumentAdapter
 try:
+    from qilib.configuration_helper.adapters.virtual_dac_instrument_adapter import VirtualDACInstrumentAdapter
+except ImportError as e:
+    InstrumentAdapterFactory.failed_adapters['VirtualDACInstrumentAdapter'] = e
+try:
     from qilib.configuration_helper.adapters.time_stamp_instrument_adapter import TimeStampInstrumentAdapter
 except ImportError as e:
     InstrumentAdapterFactory.failed_adapters['TimeStampInstrumentAdapter'] = e

@@ -8,7 +8,7 @@ class DummyInstrumentAdapter(CommonInstrumentAdapter):
 
     def __init__(self, address: str) -> None:
         super().__init__(address)
-        self._instrument = DummyInstrument(name='dummy')
+        self._instrument = DummyInstrument(name=self.name)
 
     def _filter_parameters(self, parameters):
         return parameters

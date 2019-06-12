@@ -21,7 +21,6 @@ class DummyInstrument(Instrument):
         self.add_parameter('enable_output',
                            get_cmd=None,
                            set_cmd=None,
-                           unit='Hz',
                            label=name)
 
     def get_idn(self):
