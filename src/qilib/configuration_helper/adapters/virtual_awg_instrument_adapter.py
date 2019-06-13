@@ -1,6 +1,27 @@
-from typing import Dict
+"""Quantum Inspire library
+
+Copyright 2019 QuTech Delft
+
+qilib is available under the [MIT open-source license](https://opensource.org/licenses/MIT):
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit
+persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
+Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+"""
+
+from typing import Dict, Optional
 
 from qilib.configuration_helper import InstrumentAdapter, InstrumentAdapterFactory
+from qilib.configuration_helper.adapters import SettingsInstrumentAdapter
 from qilib.utils import PythonJsonStructure
 
 try:
@@ -19,12 +40,12 @@ ADAPTER_CLASS_NAME = 'adapter_class_name'
 
 
 class VirtualAwgInstrumentAdapter(InstrumentAdapter):
-    def __init__(self, address):
+    def __init__(self, address: str) -> None:
         super().__init__(address)
 
         self._instrument: VirtualAwg = VirtualAwg()
         self._adapters: Dict[str, InstrumentAdapter] = {}
-        self._settings_adapter = None
+        self._settings_adapter: Optional[SettingsInstrumentAdapter] = None
 
     def apply(self, config: PythonJsonStructure) -> None:
         instruments = config.pop(INSTRUMENTS)
@@ -61,16 +82,30 @@ class VirtualAwgInstrumentAdapter(InstrumentAdapter):
 
         return config
 
-    def add_instrument(self, adapter_class_name, address):
+    def add_instrument(self, adapter_class_name: str, address: str) -> None:
+        """
+        Adds an instrument to the Virtual AWG instrument
+
+        Args:
+            adapter_class_name: The adapter's class name
+            address: The address of the adapter
+        """
+
         adapter = InstrumentAdapterFactory.get_instrument_adapter(adapter_class_name, address)
         if adapter.name not in self._adapters:
             self._adapters[adapter.name] = adapter
         if adapter.instrument not in self._instrument.instruments:
             self._instrument.add_instruments([adapter.instrument])
 
-        return adapter
+    def add_settings(self, gates: dict, markers: dict) -> None:
+        """
+        Adds a setting instrument to the Virtual AWG instrument
 
-    def add_settings(self, gates, markers):
+        Args:
+            gates: Gates
+            markers: Markers
+        """
+
         adapter = InstrumentAdapterFactory.get_instrument_adapter('SettingsInstrumentAdapter', '')
 
         adapter.instrument.awg_gates = gates
