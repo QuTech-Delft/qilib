@@ -41,6 +41,8 @@ class VirtualAwgInstrumentAdapter(InstrumentAdapter):
         adapter.apply(settings_config[CONFIG])
         adapter.instrument.awg_map = settings_config[AWG_MAP]
 
+        self.instrument.settings = adapter.instrument
+
         super().apply(config)
 
     def read(self, update: bool = False) -> PythonJsonStructure:
