@@ -36,7 +36,7 @@ ADDRESS = 'address'
 ADAPTER_CLASS_NAME = 'adapter_class_name'
 
 
-class VirtualDACInstrumentAdapter(CommonInstrumentAdapter):
+class VirtualDACInstrumentAdapter(SpiModuleInstrumentAdapter):
     """ Adapter for the qtt VirtualDAC."""
 
     def __init__(self, address: str) -> None:
