@@ -30,9 +30,11 @@ class ZIUHFLIInstrumentAdapter(CommonInstrumentAdapter):
         self._instrument: ZIUHFLI = ZIUHFLI(self.name, device_ID=address)
 
     def _filter_parameters(self, parameters: PythonJsonStructure) -> PythonJsonStructure:
-        for parameter, values in parameters.items():
+        for _, values in parameters.items():
             if 'value' in values and isinstance(values['value'], np.int64):
                 values['value'] = int(values['value'])
             if 'raw_value' in values and isinstance(values['raw_value'], np.int64):
                 values['raw_value'] = int(values['raw_value'])
+            if 'val_mapping' in values:
+                values.pop('val_mapping')
         return parameters
