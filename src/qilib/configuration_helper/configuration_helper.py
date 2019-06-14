@@ -46,7 +46,7 @@ class ConfigurationHelper:
             self._inactive_configuration = InstrumentConfigurationSet(storage)
         self._storage = storage
 
-    def snapshot(self, tag: Optional[List[str]]) -> None:
+    def snapshot(self, tag: Optional[List[str]] = None) -> None:
         """ Refresh the active configuration set so it reflects thee actual settings of the devices.
 
         Args:

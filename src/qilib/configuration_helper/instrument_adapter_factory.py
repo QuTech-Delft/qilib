@@ -32,7 +32,7 @@ class InstrumentAdapterFactory:
     """
 
     instrument_adapters: Dict[Tuple[str, str], InstrumentAdapter] = {}
-    failed_adapters: Dict[str, str] = {}
+    failed_adapters: Dict[str, Exception] = {}
 
     @staticmethod
     def is_instrument_adapter(instrument_adapter_class_name: str) -> bool:

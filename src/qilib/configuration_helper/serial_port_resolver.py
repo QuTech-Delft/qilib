@@ -31,7 +31,9 @@ class SerialPortResolver:
     serial_port_identifiers dictionary.
     """
 
-    serial_port_identifiers: Dict[str, str] = {}
+    serial_port_identifiers: Dict[str, str] = {'spirack3': 'COM3',
+                                               'spirack4': 'COM1',
+                                               'spirack7': 'COM6'}
 
     @classmethod
     def get_serial_port_adapter(cls, serial_port_adapter_class_name: str, identifier: str) -> InstrumentAdapter:
