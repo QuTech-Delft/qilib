@@ -24,7 +24,7 @@ except ImportError as e:
         "Quantum Technology Toolbox, qtt, not installed. Please do 'pip install qtt' or install from source.") from e
 
 from qilib.configuration_helper import InstrumentAdapterFactory
-from qilib.configuration_helper.adapters import CommonInstrumentAdapter
+from qilib.configuration_helper.adapters import SpiModuleInstrumentAdapter
 from qilib.utils import PythonJsonStructure
 
 # Keys in the configuration python json structure
