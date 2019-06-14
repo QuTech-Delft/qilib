@@ -2,7 +2,7 @@ import sys
 import unittest
 from unittest.mock import MagicMock, patch
 
-from qilib.configuration_helper import InstrumentAdapterFactory
+from qilib.configuration_helper import InstrumentAdapterFactory, SerialPortResolver
 from qilib.utils import PythonJsonStructure
 
 sys.modules['qtt.instrument_drivers.gates'] = MagicMock()
@@ -13,6 +13,9 @@ from tests.test_data.virtual_dac_snapshot import snapshot
 
 
 class TestVirtualDACInstrumentAdapter(unittest.TestCase):
+    def setUp(self):
+        SerialPortResolver.serial_port_identifiers['spirack3'] = 'COM3'
+
     def test_apply(self):
         qilib.configuration_helper.adapters.DummyInstrumentAdapter = DummyInstrumentAdapter
         dummy_adapter = InstrumentAdapterFactory.get_instrument_adapter('DummyInstrumentAdapter', 'some_address')
@@ -22,7 +25,7 @@ class TestVirtualDACInstrumentAdapter(unittest.TestCase):
         mock_virtual_dac_instance = MagicMock()
         with patch('qilib.configuration_helper.adapters.virtual_dac_instrument_adapter.VirtualDAC') as mock_virtual_dac:
             mock_virtual_dac.return_value = mock_virtual_dac_instance
-            adapter = VirtualDACInstrumentAdapter('address')
+            adapter = VirtualDACInstrumentAdapter('spirack3_module3')
             mock_virtual_dac.assert_called()
         config = PythonJsonStructure()
         config['config'] = snapshot['parameters']
@@ -63,7 +66,7 @@ class TestVirtualDACInstrumentAdapter(unittest.TestCase):
 
         with patch('qilib.configuration_helper.adapters.virtual_dac_instrument_adapter.VirtualDAC') as mock_virtual_dac:
             mock_virtual_dac.return_value = mock_virtual_dac_instance
-            adapter = VirtualDACInstrumentAdapter('address')
+            adapter = VirtualDACInstrumentAdapter('spirack3_module3')
             adapter.apply(bootstrap_config)
         config = adapter.read()
         self.assertIn('C1', config['config'])
