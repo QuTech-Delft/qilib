@@ -57,7 +57,7 @@ class VirtualDACInstrumentAdapter(SpiModuleInstrumentAdapter):
         config[INSTRUMENTS] = PythonJsonStructure()
         for adapter_name, adapter in self._dac_adapters.items():
             config[INSTRUMENTS][adapter_name] = PythonJsonStructure()
-            config[INSTRUMENTS][adapter_name][CONFIG] = adapter.read(True)
+            config[INSTRUMENTS][adapter_name][CONFIG] = adapter.read(update)
             config[INSTRUMENTS][adapter_name][ADDRESS] = adapter.address
             config[INSTRUMENTS][adapter_name][ADAPTER_CLASS_NAME] = adapter.__class__.__name__
         return config

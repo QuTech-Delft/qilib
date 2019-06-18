@@ -48,7 +48,7 @@ class VirtualAwgInstrumentAdapter(InstrumentAdapter):
         self._settings_adapter: Optional[SettingsInstrumentAdapter] = None
 
     def apply(self, config: PythonJsonStructure) -> None:
-        instruments = config.pop(INSTRUMENTS)
+        instruments = config[INSTRUMENTS]
         for instrument in instruments:
             adapter_class_name = instruments[instrument][ADAPTER_CLASS_NAME]
             address = instruments[instrument][ADDRESS]
@@ -57,7 +57,7 @@ class VirtualAwgInstrumentAdapter(InstrumentAdapter):
             adapter = self._adapters[instrument]
             adapter.apply(adapter_config)
 
-        settings_config = config.pop(SETTINGS)
+        settings_config = config[SETTINGS]
         adapter = InstrumentAdapterFactory.get_instrument_adapter('SettingsInstrumentAdapter', '')
         adapter.apply(settings_config[CONFIG])
         adapter.instrument.awg_map = settings_config[AWG_MAP]
@@ -74,7 +74,7 @@ class VirtualAwgInstrumentAdapter(InstrumentAdapter):
             config[INSTRUMENTS][adapter_name] = PythonJsonStructure()
             config[INSTRUMENTS][adapter_name][ADAPTER_CLASS_NAME] = adapter.__class__.__name__
             config[INSTRUMENTS][adapter_name][ADDRESS] = adapter.address
-            config[INSTRUMENTS][adapter_name][CONFIG] = adapter.read(True)
+            config[INSTRUMENTS][adapter_name][CONFIG] = adapter.read(update)
 
         config[SETTINGS] = PythonJsonStructure()
         config[SETTINGS][AWG_MAP] = self._settings_adapter.instrument.awg_map
