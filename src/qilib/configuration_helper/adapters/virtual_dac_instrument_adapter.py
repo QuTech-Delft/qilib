@@ -17,6 +17,7 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
+
 try:
     from qtt.instrument_drivers.gates import VirtualDAC
 except ImportError as e:
@@ -27,13 +28,8 @@ from qilib.configuration_helper import InstrumentAdapterFactory
 from qilib.configuration_helper.adapters import SpiModuleInstrumentAdapter
 from qilib.utils import PythonJsonStructure
 
-# Keys in the configuration python json structure
-INSTRUMENTS = 'instruments'
-BOUNDARIES = 'boundaries'
-GATE_MAP = 'gate_map'
-CONFIG = 'config'
-ADDRESS = 'address'
-ADAPTER_CLASS_NAME = 'adapter_class_name'
+from qilib.configuration_helper.adapters.constants import CONFIG, BOUNDARIES, GATE_MAP, INSTRUMENTS, ADDRESS, \
+    ADAPTER_CLASS_NAME
 
 
 class VirtualDACInstrumentAdapter(SpiModuleInstrumentAdapter):

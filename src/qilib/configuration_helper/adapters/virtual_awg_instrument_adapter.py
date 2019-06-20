@@ -18,25 +18,20 @@ COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER I
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 
-from typing import Dict, Optional
-
-from qilib.configuration_helper import InstrumentAdapter, InstrumentAdapterFactory
-from qilib.configuration_helper.adapters import SettingsInstrumentAdapter
-from qilib.utils import PythonJsonStructure
-
 try:
     from qtt.instrument_drivers.virtualAwg.virtual_awg import VirtualAwg
 except ImportError as e:
     raise ImportError(
         "Quantum Technology Toolbox, qtt, not installed. Please do 'pip install qtt' or install from source.") from e
 
-# Keys used in the configuration
-INSTRUMENTS = 'instruments'
-SETTINGS = 'settings'
-AWG_MAP = 'awg_map'
-CONFIG = 'config'
-ADDRESS = 'address'
-ADAPTER_CLASS_NAME = 'adapter_class_name'
+from typing import Dict, Optional
+
+from qilib.configuration_helper import InstrumentAdapter, InstrumentAdapterFactory
+from qilib.configuration_helper.adapters import SettingsInstrumentAdapter
+from qilib.utils import PythonJsonStructure
+
+from qilib.configuration_helper.adapters.constants import INSTRUMENTS, ADAPTER_CLASS_NAME, ADDRESS, CONFIG, SETTINGS, \
+    AWG_MAP
 
 
 class VirtualAwgInstrumentAdapter(InstrumentAdapter):
