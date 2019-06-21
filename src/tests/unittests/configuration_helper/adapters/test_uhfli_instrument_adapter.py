@@ -17,6 +17,8 @@ class TestZIUHFLIInstrumentAdapter(unittest.TestCase):
             self.assertEqual(0.2, trigger_level)
             config = adapter.read()
 
+            self.assertTrue(all(['val_mapping' not in config[key] for key in config.keys()]))
+
             adapter.instrument.scope_trig_level(0.7)
             trigger_level = adapter.instrument.scope_trig_level.raw_value
             self.assertEqual(0.7, trigger_level)

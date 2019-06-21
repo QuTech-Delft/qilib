@@ -77,7 +77,8 @@ class TestD5aInstrumentAdapter(unittest.TestCase):
 
     def test_incorrect_span_raises_error(self):
         SerialPortResolver.serial_port_identifiers = {'spirack1': 'COMnumber_test'}
-        with patch('qilib.configuration_helper.adapters.d5a_instrument_adapter.D5a') as d5a_mock:
+        with patch('qilib.configuration_helper.adapters.spi_rack_instrument_adapter.SPI_rack'), \
+         patch('qilib.configuration_helper.adapters.d5a_instrument_adapter.D5a') as d5a_mock:
             d5a_mock.span3.return_value = '4v uni'
             error_msg = 'D5a instrument has span unequal to "4v bi"'
             self.assertRaisesRegex(SpanValueError,error_msg, D5aInstrumentAdapter, 'spirack1_module3')
