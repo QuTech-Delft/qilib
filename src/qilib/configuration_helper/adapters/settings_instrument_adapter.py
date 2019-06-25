@@ -19,7 +19,7 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 """
 
 try:
-    from qtt.instrument_drivers.settings import SettingsInstrument
+    from qtt.instrument_drivers.virtualAwg.settings import SettingsInstrument
 except ImportError as e:
     raise ImportError(
         "Quantum Technology Toolbox, qtt, not installed. Please do 'pip install qtt' or install from source.") from e
