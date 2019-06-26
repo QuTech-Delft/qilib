@@ -53,7 +53,7 @@ class VirtualAwgInstrumentAdapter(InstrumentAdapter):
             adapter.apply(adapter_config)
 
         settings_config = config[SETTINGS]
-        adapter = InstrumentAdapterFactory.get_instrument_adapter('SettingsInstrumentAdapter', '')
+        adapter = SettingsInstrumentAdapter('')
         adapter.apply(settings_config[CONFIG])
         adapter.instrument.awg_map = settings_config[AWG_MAP]
 
@@ -101,12 +101,10 @@ class VirtualAwgInstrumentAdapter(InstrumentAdapter):
             markers: Markers
         """
 
-        adapter = InstrumentAdapterFactory.get_instrument_adapter('SettingsInstrumentAdapter', '')
-
+        adapter = SettingsInstrumentAdapter('')
         adapter.instrument.awg_gates = gates
         adapter.instrument.awg_markers = markers
         adapter.instrument.create_map()
-
         self._instrument.settings = adapter.instrument
         self._settings_adapter = adapter
 

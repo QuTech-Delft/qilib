@@ -43,7 +43,7 @@ class SettingsInstrumentAdapter(InstrumentAdapter):
             Empty python-json structure.
         """
 
-        return PythonJsonStructure()
+        return super().read(update)
 
     def _filter_parameters(self, parameters: PythonJsonStructure) -> PythonJsonStructure:
         """ As there is no configuration to read, this method is a NOP. """

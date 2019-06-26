@@ -8,7 +8,7 @@ matrix:
       sudo: true
       dist: xenial
 install:
-  - pip install -r requirements.txt . coveralls qtt
+  - pip install -r requirements.txt . coveralls
 script:
   - coverage run --source="./src/qilib" -m unittest discover -s src/tests -t src -v
 after_success:
