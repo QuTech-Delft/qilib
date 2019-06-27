@@ -22,8 +22,8 @@ try:
     from qtt.instrument_drivers.gates import VirtualDAC
 except ImportError as e:
     raise ImportError(
-        "Quantum Technology Toolbox, qtt, not installed. Please do 'pip install qtt' or install from source.") from e
-
+        "Quantum Technology Toolbox, qtt, not installed or incorrect version."
+        " Please do 'pip install --upgrade qtt' or install from source.") from e
 from qilib.configuration_helper import InstrumentAdapterFactory
 from qilib.configuration_helper.adapters import SpiModuleInstrumentAdapter
 from qilib.utils import PythonJsonStructure

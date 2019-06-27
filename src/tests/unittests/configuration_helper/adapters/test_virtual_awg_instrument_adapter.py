@@ -16,12 +16,10 @@ from qilib.configuration_helper import adapters
 reload(adapters)
 
 from qilib.configuration_helper.adapters.virtual_awg_instrument_adapter import VirtualAwgInstrumentAdapter
-from qilib.configuration_helper.adapters.settings_instrument_adapter import SettingsInstrumentAdapter
 
 
 class TestVirtualAwgInstrumentAdapter(unittest.TestCase):
     def test_read(self):
-        InstrumentAdapterFactory.instrument_adapters[('SettingsInstrumentAdapter', '')] = SettingsInstrumentAdapter
         with patch.object(zhinst.utils, 'create_api_session',
                           return_value=(MagicMock(), MagicMock(), MagicMock())), \
              patch.object(qilib.configuration_helper.adapters.hdawg8_instrument_adapter.ZIHDAWG8,
@@ -41,7 +39,8 @@ class TestVirtualAwgInstrumentAdapter(unittest.TestCase):
 
             self.assertIn('settings', config)
             self.assertIn('awg_map', config['settings'])
-            self.assertIn('config', config['settings'])
+
+            adapter.close_instrument()
 
     def test_apply(self):
         with patch.object(zhinst.utils, 'create_api_session',
@@ -67,7 +66,6 @@ class TestVirtualAwgInstrumentAdapter(unittest.TestCase):
             adapter = VirtualAwgInstrumentAdapter('')
 
             self.assertEqual(adapter.instrument.add_instruments.call_count, 0)
-
             adapter.apply(config)
 
             self.assertEqual(adapter.instrument.add_instruments.call_count, 1)
@@ -75,3 +73,5 @@ class TestVirtualAwgInstrumentAdapter(unittest.TestCase):
                                                                    'P2': (0, 2),
                                                                    'dig_mk': (0, 1, 1)
                                                                    })
+
+            adapter.close_instrument()

@@ -20,29 +20,32 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 
 try:
     from qtt.instrument_drivers.virtualAwg.virtual_awg import VirtualAwg
+    from qtt.instrument_drivers.virtualAwg.settings import SettingsInstrument
 except ImportError as e:
     raise ImportError(
-        "Quantum Technology Toolbox, qtt, not installed. Please do 'pip install qtt' or install from source.") from e
+        "Quantum Technology Toolbox, qtt, not installed or incorrect version."
+        " Please do 'pip install --upgrade qtt' or install from source.") from e
 
-from typing import Dict, Optional
+from typing import Dict
 
 from qilib.configuration_helper import InstrumentAdapter, InstrumentAdapterFactory
-from qilib.configuration_helper.adapters import SettingsInstrumentAdapter
-from qilib.utils import PythonJsonStructure
-
 from qilib.configuration_helper.adapters.constants import INSTRUMENTS, ADAPTER_CLASS_NAME, ADDRESS, CONFIG, SETTINGS, \
     AWG_MAP
+from qilib.utils import PythonJsonStructure
 
 
 class VirtualAwgInstrumentAdapter(InstrumentAdapter):
     def __init__(self, address: str) -> None:
         super().__init__(address)
 
-        self._instrument: VirtualAwg = VirtualAwg()
+        settings_instrument = SettingsInstrument('settings')
+        self._instrument: VirtualAwg = VirtualAwg(settings=settings_instrument)
         self._adapters: Dict[str, InstrumentAdapter] = {}
-        self._settings_adapter: Optional[SettingsInstrumentAdapter] = None
 
     def apply(self, config: PythonJsonStructure) -> None:
+        self._instrument.instruments = []
+        self._adapters = {}
+
         instruments = config[INSTRUMENTS]
         for instrument in instruments:
             adapter_class_name = instruments[instrument][ADAPTER_CLASS_NAME]
@@ -53,11 +56,9 @@ class VirtualAwgInstrumentAdapter(InstrumentAdapter):
             adapter.apply(adapter_config)
 
         settings_config = config[SETTINGS]
-        adapter = SettingsInstrumentAdapter('')
-        adapter.apply(settings_config[CONFIG])
-        adapter.instrument.awg_map = settings_config[AWG_MAP]
-
-        self.instrument.settings = adapter.instrument
+        self._instrument.settings.awg_gates = {}
+        self._instrument.settings.awg_markers = {}
+        self._instrument.settings.awg_map = settings_config[AWG_MAP]
 
         super().apply(config)
 
@@ -72,8 +73,7 @@ class VirtualAwgInstrumentAdapter(InstrumentAdapter):
             config[INSTRUMENTS][adapter_name][CONFIG] = adapter.read(update)
 
         config[SETTINGS] = PythonJsonStructure()
-        config[SETTINGS][AWG_MAP] = self._settings_adapter.instrument.awg_map
-        config[SETTINGS][CONFIG] = self._settings_adapter.read()
+        config[SETTINGS][AWG_MAP] = self._instrument.settings.awg_map
 
         return config
 
@@ -101,12 +101,13 @@ class VirtualAwgInstrumentAdapter(InstrumentAdapter):
             markers: Markers
         """
 
-        adapter = SettingsInstrumentAdapter('')
-        adapter.instrument.awg_gates = gates
-        adapter.instrument.awg_markers = markers
-        adapter.instrument.create_map()
-        self._instrument.settings = adapter.instrument
-        self._settings_adapter = adapter
+        self._instrument.settings.awg_gates = gates
+        self._instrument.settings.awg_markers = markers
+        self._instrument.settings.create_map()
 
     def _filter_parameters(self, parameters: PythonJsonStructure) -> PythonJsonStructure:
         return parameters
+
+    def close_instrument(self) -> None:
+        self._instrument.settings.close()
+        super().close_instrument()

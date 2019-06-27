@@ -53,8 +53,7 @@ class TestInstrumentAdapterFactory(unittest.TestCase):
 
         builtins.__import__ = fake_import
 
-        modules = {'TimeStampInstrumentAdapter': 'qilib.configuration_helper.adapters.time_stamp_instrument_adapter',
-                   'SettingsInstrumentAdapter': 'qilib.configuration_helper.adapters.settings_instrument_adapter'}
+        modules = {'TimeStampInstrumentAdapter': 'qilib.configuration_helper.adapters.time_stamp_instrument_adapter'}
         for path in modules.values():
             del sys.modules[path]
 

@@ -24,11 +24,6 @@ from qilib.configuration_helper.adapters.uhfli_instrument_adapter import ZIUHFLI
 from qilib.configuration_helper.adapters.keysight_e8267d_instrument_adapter import KeysightE8267DInstrumentAdapter
 
 try:
-    from qilib.configuration_helper.adapters.settings_instrument_adapter import SettingsInstrumentAdapter
-except ImportError as e:
-    InstrumentAdapterFactory.failed_adapters['SettingsInstrumentAdapter'] = e
-
-try:
     from qilib.configuration_helper.adapters.virtual_awg_instrument_adapter import VirtualAwgInstrumentAdapter
 except ImportError as e:
     InstrumentAdapterFactory.failed_adapters['VirtualAwgInstrumentAdapter'] = e
