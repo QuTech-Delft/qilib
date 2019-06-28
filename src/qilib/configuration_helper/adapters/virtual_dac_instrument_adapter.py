@@ -17,23 +17,19 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
+
 try:
     from qtt.instrument_drivers.gates import VirtualDAC
 except ImportError as e:
     raise ImportError(
-        "Quantum Technology Toolbox, qtt, not installed. Please do 'pip install qtt' or install from source.") from e
-
+        "Quantum Technology Toolbox, qtt, not installed or incorrect version."
+        " Please do 'pip install --upgrade qtt' or install from source.") from e
 from qilib.configuration_helper import InstrumentAdapterFactory
 from qilib.configuration_helper.adapters import SpiModuleInstrumentAdapter
 from qilib.utils import PythonJsonStructure
 
-# Keys in the configuration python json structure
-INSTRUMENTS = 'instruments'
-BOUNDARIES = 'boundaries'
-GATE_MAP = 'gate_map'
-CONFIG = 'config'
-ADDRESS = 'address'
-ADAPTER_CLASS_NAME = 'adapter_class_name'
+from qilib.configuration_helper.adapters.constants import CONFIG, BOUNDARIES, GATE_MAP, INSTRUMENTS, ADDRESS, \
+    ADAPTER_CLASS_NAME
 
 
 class VirtualDACInstrumentAdapter(SpiModuleInstrumentAdapter):
@@ -57,7 +53,7 @@ class VirtualDACInstrumentAdapter(SpiModuleInstrumentAdapter):
         config[INSTRUMENTS] = PythonJsonStructure()
         for adapter_name, adapter in self._dac_adapters.items():
             config[INSTRUMENTS][adapter_name] = PythonJsonStructure()
-            config[INSTRUMENTS][adapter_name][CONFIG] = adapter.read(True)
+            config[INSTRUMENTS][adapter_name][CONFIG] = adapter.read(update)
             config[INSTRUMENTS][adapter_name][ADDRESS] = adapter.address
             config[INSTRUMENTS][adapter_name][ADAPTER_CLASS_NAME] = adapter.__class__.__name__
         return config
