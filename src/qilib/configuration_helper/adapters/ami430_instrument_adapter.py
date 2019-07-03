@@ -65,6 +65,9 @@ class AMI430InstrumentAdapter(InstrumentAdapter):
                 self._assert_value_matches(config[parameter]['value'], device_config[parameter]['value'], parameter)
 
     def _filter_parameters(self, parameters: PythonJsonStructure) -> PythonJsonStructure:
+        for values in parameters.values():
+            if 'val_mapping' in values:
+                values.pop('val_mapping')
         return parameters
 
     def _check_field_value(self, config_value: float, device_value: float) -> None:
