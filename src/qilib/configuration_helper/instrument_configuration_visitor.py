@@ -49,7 +49,7 @@ class InstrumentConfigurationVisitor(Visitor):
 
         Args:
             adapter_identifier: The adapter name and address
-                                combinitation (e.g. ZIHDAWG8InstrumentAdapter_DEV8049).
+                                combination (e.g. ZIHDAWG8InstrumentAdapter_DEV8049).
 
         Raises:
             ValueError: If an adapter identifier is given which is not in the loaded adapters.
