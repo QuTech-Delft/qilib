@@ -19,6 +19,8 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 """
 from typing import Union, Any
 
+from qcodes import Instrument
+
 from qilib.configuration_helper import InstrumentAdapter, InstrumentConfiguration
 from qilib.configuration_helper.visitor import Visitor
 
@@ -44,7 +46,7 @@ class InstrumentConfigurationVisitor(Visitor):
     def _visit_instrument_adapter(self, instrument_adapter: InstrumentAdapter) -> None:
         self.instruments.append(instrument_adapter.instrument)
 
-    def get_instrument(self, adapter_identifier: str) -> Any:
+    def get_instrument(self, adapter_identifier: str) -> Instrument:
         """ Returns a specific instrument given the adapter name, address combination.
 
         Args:
@@ -55,7 +57,7 @@ class InstrumentConfigurationVisitor(Visitor):
             ValueError: If an adapter identifier is given which is not in the loaded adapters.
 
         Returns:
-            The instrument which belongs to the adapter identifier.
+            The qcodes instrument which belongs to the adapter identifier.
         """
         instrument = next((i for i in self.instruments if i.name == adapter_identifier), None)
         if instrument is None:
