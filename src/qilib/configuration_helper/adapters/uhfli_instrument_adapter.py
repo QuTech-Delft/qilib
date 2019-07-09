@@ -30,9 +30,6 @@ class ZIUHFLIInstrumentAdapter(CommonInstrumentAdapter):
         self._instrument: ZIUHFLI = ZIUHFLI(self.name, device_ID=address)
 
     def _filter_parameters(self, parameters: PythonJsonStructure) -> PythonJsonStructure:
-        parameters.pop('scope_samplingrate_float', None)
-        parameters.pop('scope_duration', None)
-
         for values in parameters.values():
             if 'value' in values and isinstance(values['value'], np.int64):
                 values['value'] = int(values['value'])
