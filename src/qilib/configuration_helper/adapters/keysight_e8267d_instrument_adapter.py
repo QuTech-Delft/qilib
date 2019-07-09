@@ -31,4 +31,9 @@ class KeysightE8267DInstrumentAdapter(CommonInstrumentAdapter):
         self._instrument: Keysight_E8267D = Keysight_E8267D(self.name, address)
 
     def _filter_parameters(self, parameters: PythonJsonStructure) -> PythonJsonStructure:
+        for values in parameters.values():
+            if 'val_mapping' in values:
+                values.pop('val_mapping')
+            if 'on_off_mapping' in values:
+                values.pop('on_off_mapping')
         return parameters
