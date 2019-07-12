@@ -66,13 +66,13 @@ class VirtualDACInstrumentAdapter(SpiModuleInstrumentAdapter):
             adapter_class_name = instruments[instrument][ADAPTER_CLASS_NAME]
             address = instruments[instrument][ADDRESS]
             adapter_config = instruments[instrument][CONFIG]
-            self._add_dac_to_instrument(adapter_class_name, address)
+            self.add_adapter_to_instrument_adapter(adapter_class_name, address)
             self._dac_adapters[instrument].apply(adapter_config)
         self._instrument.set_boundaries(config[BOUNDARIES])
         self._instrument.gate_map = config[GATE_MAP]
         super().apply(config[CONFIG])
 
-    def _add_dac_to_instrument(self, adapter_class_name: str, address: str) -> None:
+    def add_adapter_to_instrument_adapter(self, adapter_class_name: str, address: str) -> None:
         """ Add a dac to the virtual dac and cache a corresponding instrument adapter."""
 
         adapter = InstrumentAdapterFactory.get_instrument_adapter(adapter_class_name, address)

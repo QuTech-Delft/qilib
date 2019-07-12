@@ -25,7 +25,7 @@ class TestVirtualAwgInstrumentAdapter(unittest.TestCase):
              patch.object(qilib.configuration_helper.adapters.hdawg8_instrument_adapter.ZIHDAWG8,
                           'download_device_node_tree', return_value={}):
             adapter = VirtualAwgInstrumentAdapter('')
-            adapter.add_instrument('ZIHDAWG8InstrumentAdapter', 'DEV8048')
+            adapter.add_adapter_to_instrument_adapter('ZIHDAWG8InstrumentAdapter', 'DEV8048')
             adapter.add_settings({'P1': (0, 4)}, {'m4i_mk': (0, 4, 0)})
 
             config = adapter.read()
