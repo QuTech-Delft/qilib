@@ -51,7 +51,7 @@ class VirtualAwgInstrumentAdapter(InstrumentAdapter):
             adapter_class_name = instruments[instrument][ADAPTER_CLASS_NAME]
             address = instruments[instrument][ADDRESS]
             adapter_config = instruments[instrument][CONFIG]
-            self.add_instrument(adapter_class_name, address)
+            self.add_adapter_to_instrument_adapter(adapter_class_name, address)
             adapter = self._adapters[instrument]
             adapter.apply(adapter_config)
 
@@ -77,7 +77,7 @@ class VirtualAwgInstrumentAdapter(InstrumentAdapter):
 
         return config
 
-    def add_instrument(self, adapter_class_name: str, address: str) -> None:
+    def add_adapter_to_instrument_adapter(self, adapter_class_name: str, address: str) -> None:
         """
         Adds an instrument to the Virtual AWG instrument
 
