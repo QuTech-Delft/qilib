@@ -60,6 +60,8 @@ class VirtualDACInstrumentAdapter(SpiModuleInstrumentAdapter):
 
     def apply(self, config: PythonJsonStructure) -> None:
         """ Apply config to the virtual dac and all nested dacs."""
+        self._instrument.instruments = []
+        self._dac_adapters = {}
 
         instruments = config[INSTRUMENTS]
         for instrument in instruments:
