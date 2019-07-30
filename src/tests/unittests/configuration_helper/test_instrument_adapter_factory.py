@@ -1,12 +1,8 @@
 import unittest
-from importlib import reload
-from types import ModuleType
-from unittest.mock import MagicMock
 
-from qilib.utils import PythonJsonStructure
-
-from qilib.configuration_helper import adapters
 from qilib.configuration_helper import InstrumentAdapterFactory, InstrumentAdapter
+from qilib.configuration_helper import adapters
+from qilib.utils import PythonJsonStructure
 
 
 class TestInstrumentAdapterFactory(unittest.TestCase):
