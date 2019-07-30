@@ -9,7 +9,8 @@ from qilib.configuration_helper.adapters.d5a_instrument_adapter import SpanValue
 class TestD5aInstrumentAdapter(unittest.TestCase):
 
     def setUp(self):
-        InstrumentAdapterFactory.instrument_adapters = {}
+        InstrumentAdapterFactory.instrument_adapters.clear()
+
         self.mock_config = {
             'dac1': {
                 'value': 39.97802734375, 'ts': '2019-01-03 16:06:36',
@@ -33,14 +34,14 @@ class TestD5aInstrumentAdapter(unittest.TestCase):
                 'full_name': 'D5aInstrumentAdapterD5a_COM3_MODULE4_span1', 'inter_delay': 0,
                 'vals': "<Enum: {'4v uni', '4v bi', '2v bi'}>", 'label': 'span1', 'name': 'span1',
                 'instrument': 'qcodes.instrument_drivers.QuTech.D5a.D5a', 'instrument_name':
-                'D5aInstrumentAdapterD5a_COM3_MODULE4', 'post_delay': 0, 'unit': ''
+                    'D5aInstrumentAdapterD5a_COM3_MODULE4', 'post_delay': 0, 'unit': ''
             }
         }
 
     def test_apply_config(self):
         with patch('qilib.configuration_helper.adapters.spi_rack_instrument_adapter.SPI_rack') as spi_mock, \
-         patch('qilib.configuration_helper.adapters.common_instrument_adapter.logging') as logger_mock, \
-         patch('qcodes.instrument_drivers.QuTech.D5a.D5a_module') as d5a_module_mock:
+                patch('qilib.configuration_helper.adapters.common_instrument_adapter.logging') as logger_mock, \
+                patch('qcodes.instrument_drivers.QuTech.D5a.D5a_module') as d5a_module_mock:
             range_4volt_bi = 2
             dac_value = 0.03997802734375
             d5a_module_mock.range_4V_bi = range_4volt_bi
@@ -78,14 +79,14 @@ class TestD5aInstrumentAdapter(unittest.TestCase):
     def test_incorrect_span_raises_error(self):
         SerialPortResolver.serial_port_identifiers = {'spirack1': 'COMnumber_test'}
         with patch('qilib.configuration_helper.adapters.spi_rack_instrument_adapter.SPI_rack'), \
-         patch('qilib.configuration_helper.adapters.d5a_instrument_adapter.D5a') as d5a_mock:
+             patch('qilib.configuration_helper.adapters.d5a_instrument_adapter.D5a') as d5a_mock:
             d5a_mock.span3.return_value = '4v uni'
             error_msg = 'D5a instrument has span unequal to "4v bi"'
-            self.assertRaisesRegex(SpanValueError,error_msg, D5aInstrumentAdapter, 'spirack1_module3')
+            self.assertRaisesRegex(SpanValueError, error_msg, D5aInstrumentAdapter, 'spirack1_module3')
 
     def test_read_config(self):
         with patch('qilib.configuration_helper.adapters.spi_rack_instrument_adapter.SPI_rack') as spi_mock, \
-         patch('qcodes.instrument_drivers.QuTech.D5a.D5a_module') as d5a_module_mock:
+                patch('qcodes.instrument_drivers.QuTech.D5a.D5a_module') as d5a_module_mock:
             range_4volt_bi = 2
             d5a_module_mock.range_4V_bi = range_4volt_bi
             d5a_module_mock().span.__getitem__.return_value = range_4volt_bi

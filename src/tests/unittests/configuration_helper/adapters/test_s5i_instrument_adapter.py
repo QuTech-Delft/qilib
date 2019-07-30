@@ -7,7 +7,8 @@ from qilib.configuration_helper import InstrumentAdapterFactory, SerialPortResol
 class TestM2jInstrumentAdapter(unittest.TestCase):
 
     def setUp(self):
-        InstrumentAdapterFactory.instrument_adapters = {}
+        InstrumentAdapterFactory.instrument_adapters.clear()
+
         self.mock_config = {
             'output_enabled': {
                 'value': True,
@@ -82,8 +83,8 @@ class TestM2jInstrumentAdapter(unittest.TestCase):
 
     def test_apply_config(self):
         with patch('qilib.configuration_helper.adapters.spi_rack_instrument_adapter.SPI_rack') as spi_mock, \
-         patch('qilib.configuration_helper.adapters.common_instrument_adapter.logging') as logger_mock, \
-         patch('qcodes.instrument_drivers.QuTech.S5i.S5i_module') as s5i_module_mock:
+                patch('qilib.configuration_helper.adapters.common_instrument_adapter.logging') as logger_mock, \
+                patch('qcodes.instrument_drivers.QuTech.S5i.S5i_module') as s5i_module_mock:
             address = 'spirack1_module3'
             adapter_name = 'S5iInstrumentAdapter'
             instrument_name = '{0}_{1}'.format(adapter_name, address)
@@ -111,7 +112,7 @@ class TestM2jInstrumentAdapter(unittest.TestCase):
 
     def test_read_config(self):
         with patch('qilib.configuration_helper.adapters.spi_rack_instrument_adapter.SPI_rack') as spi_mock, \
-         patch('qcodes.instrument_drivers.QuTech.S5i.S5i_module') as s5i_module_mock:
+                patch('qcodes.instrument_drivers.QuTech.S5i.S5i_module') as s5i_module_mock:
             address = 'spirack1_module3'
             SerialPortResolver.serial_port_identifiers = {'spirack1': 'COMnumber_test'}
             s5i_adapter = InstrumentAdapterFactory.get_instrument_adapter('S5iInstrumentAdapter', address)

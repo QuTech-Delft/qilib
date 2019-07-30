@@ -5,6 +5,14 @@ from qilib.configuration_helper import adapters
 from qilib.utils import PythonJsonStructure
 
 
+class DummyInstrumentAdapter(InstrumentAdapter):
+    def apply(self, config: PythonJsonStructure) -> None:
+        pass
+
+    def _filter_parameters(self, parameters: PythonJsonStructure) -> PythonJsonStructure:
+        pass
+
+
 class TestInstrumentAdapterFactory(unittest.TestCase):
     class DummyAdapter(InstrumentAdapter):
         def _filter_parameters(self, parameters: PythonJsonStructure) -> PythonJsonStructure:
@@ -31,3 +39,12 @@ class TestInstrumentAdapterFactory(unittest.TestCase):
     def test_raise_value_error(self):
         with self.assertRaises(ValueError):
             InstrumentAdapterFactory.get_instrument_adapter('SomeAdapter', 'dev42')
+
+    def test_external_adapters(self):
+        self.assertRaises(ValueError, InstrumentAdapterFactory.get_instrument_adapter, 'DummyInstrumentAdapter', '')
+
+        import sys
+        InstrumentAdapterFactory.add_instrument_adapters(sys.modules[__name__])
+
+        adapter = InstrumentAdapterFactory.get_instrument_adapter('DummyInstrumentAdapter', '')
+        self.assertTrue(issubclass(type(adapter), InstrumentAdapter))
