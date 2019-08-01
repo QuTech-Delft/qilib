@@ -41,10 +41,17 @@ class TestInstrumentAdapterFactory(unittest.TestCase):
         with self.assertRaises(ValueError):
             InstrumentAdapterFactory.get_instrument_adapter('SomeAdapter', 'dev42')
 
-    def test_external_adapters(self):
+    def test_external_adapters_add_not_called(self):
+        from importlib import reload
+        from qilib.configuration_helper import instrument_adapter_factory
+
+        reload(instrument_adapter_factory)
         self.assertRaises(ValueError, InstrumentAdapterFactory.get_instrument_adapter, 'DummyInstrumentAdapter', '')
 
+    def test_external_adapters_add_is_called___yolo(self):
         InstrumentAdapterFactory.add_instrument_adapters(sys.modules[__name__])
 
         adapter = InstrumentAdapterFactory.get_instrument_adapter('DummyInstrumentAdapter', '')
         self.assertIsInstance(adapter, DummyInstrumentAdapter)
+
+        InstrumentAdapterFactory.instrument_adapters.pop(('DummyInstrumentAdapter', ''))

@@ -45,27 +45,6 @@ class InstrumentAdapterFactory:
 
         InstrumentAdapterFactory._external_adapters.update(vars(package))
 
-    @staticmethod
-    def is_instrument_adapter(instrument_adapter_class_name: str) -> bool:
-        """ Check that the class in package qilib.configuration_helper.adapters and is subclass of InstrumentAdapter
-
-        Args:
-            instrument_adapter_class_name: name of the class
-
-        Returns:
-            True if the named class exists as an InstrumentAdapter in package qilib.configuration_helper.adapters,
-            False otherwise
-
-        """
-
-        adapter = vars(qilib.configuration_helper.adapters).get(instrument_adapter_class_name,
-                                                                InstrumentAdapterFactory._external_adapters.get(
-                                                                    instrument_adapter_class_name))
-        if adapter is None:
-            return False
-
-        return issubclass(adapter, InstrumentAdapter)
-
     @classmethod
     def get_instrument_adapter(cls, instrument_adapter_class_name: str, address: str) -> InstrumentAdapter:
         """ Factory method for creating an InstrumentAdapter with QCoDeS instrument.
