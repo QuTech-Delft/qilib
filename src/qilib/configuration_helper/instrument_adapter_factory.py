@@ -33,11 +33,16 @@ class InstrumentAdapterFactory:
     """
 
     instrument_adapters: Dict[Tuple[str, str], InstrumentAdapter] = {}
-    failed_adapters: Dict[str, Exception] = {}
     _external_adapters: Dict[str, ModuleType] = {}
 
     @staticmethod
-    def add_instrument_adapters(package):
+    def add_instrument_adapters(package: ModuleType):
+        """ Adds InstrumentAdapters (from an external package)
+
+        Args:
+            package: The package that contains InstrumentAdapters
+        """
+
         InstrumentAdapterFactory._external_adapters.update(vars(package))
 
     @staticmethod
@@ -78,16 +83,13 @@ class InstrumentAdapterFactory:
         instrument_adapter_key = instrument_adapter_class_name, str(address)
         if instrument_adapter_key in cls.instrument_adapters:
             return cls.instrument_adapters[instrument_adapter_key]
-        if instrument_adapter_class_name in cls.failed_adapters:
-            raise ValueError(f"Failed to load {instrument_adapter_class_name}") from cls.failed_adapters[
-                instrument_adapter_class_name]
-        elif cls.is_instrument_adapter(instrument_adapter_class_name):
-            adapter = cast(InstrumentAdapter,
-                           vars(qilib.configuration_helper.adapters).get(instrument_adapter_class_name,
-                                                                         InstrumentAdapterFactory._external_adapters.get(
-                                                                             instrument_adapter_class_name))(address))
 
-        else:
+        adapter = vars(qilib.configuration_helper.adapters).get(instrument_adapter_class_name,
+                                                                InstrumentAdapterFactory._external_adapters.get(
+                                                                    instrument_adapter_class_name))
+        if adapter is None:
             raise ValueError(f"No such InstrumentAdapter {instrument_adapter_class_name}")
-        cls.instrument_adapters[instrument_adapter_key] = adapter
-        return adapter
+        else:
+            adapter = cast(InstrumentAdapter, adapter(address))
+            cls.instrument_adapters[instrument_adapter_key] = adapter
+            return adapter

@@ -1,3 +1,4 @@
+import sys
 import unittest
 
 from qilib.configuration_helper import InstrumentAdapterFactory, InstrumentAdapter
@@ -43,8 +44,7 @@ class TestInstrumentAdapterFactory(unittest.TestCase):
     def test_external_adapters(self):
         self.assertRaises(ValueError, InstrumentAdapterFactory.get_instrument_adapter, 'DummyInstrumentAdapter', '')
 
-        import sys
         InstrumentAdapterFactory.add_instrument_adapters(sys.modules[__name__])
 
         adapter = InstrumentAdapterFactory.get_instrument_adapter('DummyInstrumentAdapter', '')
-        self.assertTrue(issubclass(type(adapter), InstrumentAdapter))
+        self.assertIsInstance(adapter, DummyInstrumentAdapter)
