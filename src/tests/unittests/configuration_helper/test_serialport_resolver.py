@@ -7,7 +7,7 @@ from qilib.configuration_helper import adapters, SerialPortResolver, InstrumentA
 class TestSerialPortResolver(TestCase):
 
     def setUp(self):
-        InstrumentAdapterFactory.instrument_adapters = {}
+        InstrumentAdapterFactory.instrument_adapters.clear()
 
     def test_get_serialport_adapter_invalid_key(self):
         adapters.InstrumentAdapter = MagicMock()

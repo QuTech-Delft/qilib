@@ -10,7 +10,8 @@ from qilib.configuration_helper import (InstrumentAdapterFactory,
 class TestM2jInstrumentAdapter(unittest.TestCase):
 
     def setUp(self):
-        InstrumentAdapterFactory.instrument_adapters = {}
+        InstrumentAdapterFactory.instrument_adapters.clear()
+
         self.mock_config = {
             'gain': {
                 'value': 35,

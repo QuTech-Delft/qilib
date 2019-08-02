@@ -7,7 +7,8 @@ from qilib.configuration_helper import InstrumentAdapterFactory, SerialPortResol
 class TestD5aInstrumentAdapter(unittest.TestCase):
 
     def setUp(self):
-        InstrumentAdapterFactory.instrument_adapters = {}
+        InstrumentAdapterFactory.instrument_adapters.clear()
+
         self.mock_config = {
             'remote_settings': {
                 'value': 64,

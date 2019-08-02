@@ -1,12 +1,17 @@
+import sys
 import unittest
-from importlib import reload
-from types import ModuleType
-from unittest.mock import MagicMock
 
+from qilib.configuration_helper import InstrumentAdapterFactory, InstrumentAdapter
+from qilib.configuration_helper import adapters
 from qilib.utils import PythonJsonStructure
 
-from qilib.configuration_helper import adapters
-from qilib.configuration_helper import InstrumentAdapterFactory, InstrumentAdapter
+
+class DummyInstrumentAdapter(InstrumentAdapter):
+    def apply(self, config: PythonJsonStructure) -> None:
+        pass
+
+    def _filter_parameters(self, parameters: PythonJsonStructure) -> PythonJsonStructure:
+        pass
 
 
 class TestInstrumentAdapterFactory(unittest.TestCase):
@@ -36,33 +41,17 @@ class TestInstrumentAdapterFactory(unittest.TestCase):
         with self.assertRaises(ValueError):
             InstrumentAdapterFactory.get_instrument_adapter('SomeAdapter', 'dev42')
 
-    def test_import_error_as_value_error(self):
-        import builtins
-        import sys
-        import importlib
-        importlib.invalidate_caches()
+    def test_external_adapters_add_not_called(self):
+        from importlib import reload
+        from qilib.configuration_helper import instrument_adapter_factory
 
-        current_modules = sys.modules.copy()
-        original_import = builtins.__import__
+        reload(instrument_adapter_factory)
+        self.assertRaises(ValueError, InstrumentAdapterFactory.get_instrument_adapter, 'DummyInstrumentAdapter', '')
 
-        def fake_import(name, *args, **kwargs):
-            if name.startswith('qtt'):
-                raise ImportError()
-            else:
-                return original_import(name, *args, **kwargs)
+    def test_external_adapters_add_is_called___yolo(self):
+        InstrumentAdapterFactory.add_instrument_adapters(sys.modules[__name__])
 
-        builtins.__import__ = fake_import
+        adapter = InstrumentAdapterFactory.get_instrument_adapter('DummyInstrumentAdapter', '')
+        self.assertIsInstance(adapter, DummyInstrumentAdapter)
 
-        modules = {'TimeStampInstrumentAdapter': 'qilib.configuration_helper.adapters.time_stamp_instrument_adapter'}
-        for path in modules.values():
-            del sys.modules[path]
-
-        reload(adapters)
-
-        for adapter in modules.keys():
-            error_msg = f'Failed to load {adapter}'
-            get_adapter = InstrumentAdapterFactory.get_instrument_adapter
-            self.assertRaisesRegex(ValueError, error_msg, get_adapter, adapter, 'address')
-
-        builtins.__import__ = original_import
-        sys.modules = current_modules.copy()
+        InstrumentAdapterFactory.instrument_adapters.pop(('DummyInstrumentAdapter', ''))

@@ -17,9 +17,10 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
-import qilib
+from types import ModuleType
 from typing import Dict, Tuple, cast
 
+import qilib
 from qilib.configuration_helper import InstrumentAdapter
 
 
@@ -32,22 +33,17 @@ class InstrumentAdapterFactory:
     """
 
     instrument_adapters: Dict[Tuple[str, str], InstrumentAdapter] = {}
-    failed_adapters: Dict[str, Exception] = {}
+    _external_adapters: Dict[str, ModuleType] = {}
 
     @staticmethod
-    def is_instrument_adapter(instrument_adapter_class_name: str) -> bool:
-        """ Check that the class in package qilib.configuration_helper.adapters and is subclass of InstrumentAdapter
+    def add_instrument_adapters(package: ModuleType):
+        """ Adds InstrumentAdapters (from an external package)
 
         Args:
-            instrument_adapter_class_name: name of the class
-
-        Returns:
-            True if the named class exists as an InstrumentAdapter in package qilib.configuration_helper.adapters,
-            False otherwise
-
+            package: The package that contains InstrumentAdapters
         """
-        return hasattr(qilib.configuration_helper.adapters, instrument_adapter_class_name) and issubclass(
-            vars(qilib.configuration_helper.adapters)[instrument_adapter_class_name], InstrumentAdapter)
+
+        InstrumentAdapterFactory._external_adapters.update(vars(package))
 
     @classmethod
     def get_instrument_adapter(cls, instrument_adapter_class_name: str, address: str) -> InstrumentAdapter:
@@ -56,7 +52,6 @@ class InstrumentAdapterFactory:
         Args:
             instrument_adapter_class_name: Name of the InstrumentAdapter subclass.
             address: Address of the physical instrument.
-
         Returns:
              An instance of the requested InstrumentAdapter.
 
@@ -67,13 +62,13 @@ class InstrumentAdapterFactory:
         instrument_adapter_key = instrument_adapter_class_name, str(address)
         if instrument_adapter_key in cls.instrument_adapters:
             return cls.instrument_adapters[instrument_adapter_key]
-        if instrument_adapter_class_name in cls.failed_adapters:
-            raise ValueError(f"Failed to load {instrument_adapter_class_name}") from cls.failed_adapters[
-                instrument_adapter_class_name]
-        elif cls.is_instrument_adapter(instrument_adapter_class_name):
-            adapter = cast(InstrumentAdapter,
-                           vars(qilib.configuration_helper.adapters)[instrument_adapter_class_name](address))
-        else:
+
+        adapter = vars(qilib.configuration_helper.adapters).get(instrument_adapter_class_name,
+                                                                InstrumentAdapterFactory._external_adapters.get(
+                                                                    instrument_adapter_class_name))
+        if adapter is None:
             raise ValueError(f"No such InstrumentAdapter {instrument_adapter_class_name}")
-        cls.instrument_adapters[instrument_adapter_key] = adapter
-        return adapter
+        else:
+            adapter = cast(InstrumentAdapter, adapter(address))
+            cls.instrument_adapters[instrument_adapter_key] = adapter
+            return adapter
