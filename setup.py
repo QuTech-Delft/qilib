@@ -20,9 +20,33 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 
 from setuptools import setup
 
+
+def get_version_number():
+    """ Extract the version number from the source code.
+        Returns:
+            Str: the version number.
+    """
+    with open('version.py', 'r') as file_stream:
+        line = file_stream.readline().split()
+        version_number = line[2].replace('\'', '')
+    return version_number
+
+
+def get_long_description():
+    """ Extract the long description from the README file """
+
+    with open('README.md', encoding='utf-8') as f:
+        long_description = f.read()
+
+    return long_description
+
+
 setup(name='qilib',
-      description='',
-      version='0.1.0',
+      description='Quantum Library for the Quantum Inspire platform',
+      long_description=get_long_description(),
+      long_description_content_type='text/markdown',
+      version=get_version_number(),
+      author='QuantumInspire',
       python_requires='>=3.6',
       package_dir={'': 'src'},
       packages=['qilib', 'qilib.configuration_helper', 'qilib.configuration_helper.adapters',

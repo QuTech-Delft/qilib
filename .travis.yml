@@ -1,15 +1,27 @@
 language: python
 matrix:
   include:
-    - python: 3.6
-      sudo: true
-      dist: xenial
-    - python: 3.7
-      sudo: true
-      dist: xenial
+  - python: 3.6
+    sudo: true
+    dist: xenial
+  - python: 3.7
+    sudo: true
+    dist: xenial
 install:
-  - pip install -r requirements.txt . coveralls
+- pip install --upgrade mypy
+- pip install -r requirements.txt . coveralls
 script:
-  - coverage run --source="./src/qilib" -m unittest discover -s src/tests -t src -v
+- echo "running unit tests"
+- coverage run --source="./src/qilib" -m unittest discover -s src/tests -t src -v
+- echo "running mypy"
 after_success:
-  - coveralls
+- coveralls
+deploy:
+  provider: pypi
+  user: qinspire
+  password:
+    secure: qrUmUeMJAv2edTk7vSALvtwDdmjuem2v0lY3wneTDAnp8FEMt+gEVmqPxRTWOnoC0ckSMiOp43cKY9fqn/zh4terlZ5iNwSQEFvEvZ0+15v+8t+jhQjvPg43Kwn4wGg2Gwj3nMIzuZ/YC7kBbbeuGsdyO7XWTw32K8rE9K3xg7/iQvIWfwFq94Er4aqes9qB4B5QLo9LcTXuGa49vN8lj6t0CJOFnrfbO5ll4m2pLUQiAy07iAM1Ohw3cPlRo3Y6S+cvDlHoTmpM+LMsfW0LEexF4n6WKYiIL6B5wzCdexIP0fCU+Y68XhD6lF7jH1Oks/Ty+gZ+hx7rBUf0tV30V06Uchwi6SLm6R2BFZjRo3O7VL7JJfRo+ASaMcdHxxK37TNOFTDacPDXwuUxv7QFBTvf85Vk7M8Mu1eFVq+mBSL+isbhoqBdIHJ59t2/VcwuN8B9sb3xWVzxSVKi9NqwK08HFLV1lcaqjHEtp+KlcXys7EZUfj6wH0MiwpXPy6SyIMXi2tugDS8rIvi5kS9aXx1IOAFuRkzEM4rOk0Pb8g2Se7ffnf8atUh7yt0dvMfUud5Ta09cGura9zpMn86SAJIVOXbnYnJqYKp3QUTd+K8l+AR7XLumSP/70L6tb7Vg0eU0cQfTZqKHj1BsCNHD8kH/kosYsnb6J9qRmL7w2HI=
+  on:
+    tags: true
+    branch: master
+  skip_existing: true
