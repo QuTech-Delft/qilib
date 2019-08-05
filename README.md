@@ -1,28 +1,34 @@
 [![Coverage Status](https://coveralls.io/repos/github/QuTech-Delft/qilib/badge.svg?branch=dev)](https://coveralls.io/github/QuTech-Delft/qilib?branch=dev)
 
-# qilib
+# QILib
 
-Utility classes for Quantum Inspire.
+Quantum Library for the Quantum Inspire platform
 
 ## Installation
 
+The Quantum Inspire Library can be installed from PyPI via pip:
+
+```
+$ pip install qilib
+```
+
 ### Installing from source
-Clone the qilib repository from https://github.com/QuTech-Delft/qilib and install using pip: 
+Clone the qilib repository from https://github.com/QuTech-Delft/qilib and install using pip:
 ```
 $ git clone git@github.com:QuTech-Delft/qilib.git
 $ cd qilib
 $ python3 -m venv env
 $ . ./env/bin/activate
-(env) $ pip install -r requirements.txt . 
+(env) $ pip install -r requirements.txt .
 ```
 
 For development install in editable mode:
 ```
-(env) $ pip install -r requirements.txt -e . 
+(env) $ pip install -r requirements.txt -e .
 ```
 
 ### Install Mongo database
-To use the MongoDataSetIOReader and MongoDataSetIOWriter a mongodb needs to be installed. 
+To use the MongoDataSetIOReader and MongoDataSetIOWriter a mongodb needs to be installed.
 For Windows, Linux or OS X follow the instructions [here](https://docs.mongodb.com/v3.2/administration/install-community/)
 on how to install the database.
 
@@ -45,24 +51,24 @@ Run all unittests and collect the code coverage:
 ```
 
 ## Data set
-The three main building blocks of the qilib data set are a DataArray, DataSet and a DataSetIO that provides a 
+The three main building blocks of the qilib data set are a DataArray, DataSet and a DataSetIO that provides a
 storage backend for the DataSet.  
 
 ### DataArray
-A DataArray is a wrapper around a numpy array and can be used as one. A data array can also have another, or multiple, 
-data arrays as setpoints. For example, in a 2D-scan, there will be a 1D DataArray for the x-axis variable specifying a discrete set of setpoints 
-for that variable, a 2D DataArray for the y-axis variable using the x-axis DataArray as its values and a 2D DataArray 
+A DataArray is a wrapper around a numpy array and can be used as one. A data array can also have another, or multiple,
+data arrays as setpoints. For example, in a 2D-scan, there will be a 1D DataArray for the x-axis variable specifying a discrete set of setpoints
+for that variable, a 2D DataArray for the y-axis variable using the x-axis DataArray as its values and a 2D DataArray
 for the measured value.
 
 The DataArray constructor accepts either:
 + pre-defined data (numpy arrays)
 + array shapes (tuple)
 
-The DataArray makes sure that the dimensions of the set arrays are correct with regards to the data array and vice 
-versa. That means, e.g., trying to set a 1D array of 10 elements as the data array with a 1D setpoint array of 8 
+The DataArray makes sure that the dimensions of the set arrays are correct with regards to the data array and vice
+versa. That means, e.g., trying to set a 1D array of 10 elements as the data array with a 1D setpoint array of 8
 elements will raise an error.
 
-An example of a 2D measurement array, **z**, that is defined by the main setpoint array **x** and secondary setpoint 
+An example of a 2D measurement array, **z**, that is defined by the main setpoint array **x** and secondary setpoint
 array **y**:
 
 ```
@@ -80,43 +86,43 @@ z = DataArray(name="z", label="z-axis", unit="ma", set_arrays=(x,y), shape=(x_si
 ```
 
 ### DataSet
-A DataSet object encompasses DataArrays. A DataSet can have multiple measurement arrays sharing the same setpoints. 
+A DataSet object encompasses DataArrays. A DataSet can have multiple measurement arrays sharing the same setpoints.
 It is an error to have multiple measurement arrays with different setpoints in one DataSet.
 
 A DataSet can be incrementally updated with the `add_data()` method, which takes an index specification, a reference to
-the array that is to be updated and the update data: `index, {array_name: update_data}}`. In case of multi dimensional 
+the array that is to be updated and the update data: `index, {array_name: update_data}}`. In case of multi dimensional
 arrays whole rows, or rows of rows, can be updated together. For example:
 ```
 # this sets a single element at the 3rd setpoint along the x-axis, 4th along the y-axis
 dataset.add_data((2,3), {'z': 0.23})
- 
+
 # given that dataset is a 10 x 3 2D dataset:
 # this sets the entire y-axis data at the 5th setpoint along the x-axis
 # ie. the data specifies a value for each of the setpoints along the y-axis
 dataset.add_data(4, {'z': [0.23, 2.6, 0.42]})
-``` 
+```
 
 DataSet specifications:
-+ The constructor may accept DataArrays for setpoints and data arrays. Multiple measurement arrays may be specified as 
++ The constructor may accept DataArrays for setpoints and data arrays. Multiple measurement arrays may be specified as
 a sequence.
 + The DataSet will raise errors on mismatches in array dimensions.
 + The DataSet will only accept an array if its name does not equal that of any array already in the DataSet.
-+ Arrays can be read by the public property .data_arrays (a dict, key is the DataArray name, value the DataArray). 
-In addition, DataArrays are accessible as properties on the DataSet object (for example, an array with name 'x' added 
++ Arrays can be read by the public property .data_arrays (a dict, key is the DataArray name, value the DataArray).
+In addition, DataArrays are accessible as properties on the DataSet object (for example, an array with name 'x' added
 to a DataSet data_set can be access as data_set.x).
 + Updates made to the DataSet will be sent to the underlying DataSetIOWriter if available.
 + A DataSet can have one, or more, DataSetIOWriters.
-+ A DataSet can be instantiated with one DataSetIOReader but not both a DataSetIOWriter and a DataSetIOReader. 
- 
++ A DataSet can be instantiated with one DataSetIOReader but not both a DataSetIOWriter and a DataSetIOReader.
+
 ### DataSetIOWriter
 A DataSet can be instantiated with a DataSetIOWriter that provides a storage backend. All changes made on the DataSet
-are pushed to the storage. There are two DataSetIOWriter implementation available, MemoryDataSetIOWriter and 
+are pushed to the storage. There are two DataSetIOWriter implementation available, MemoryDataSetIOWriter and
 MongoDataSetIOWriter.
 
 #### MemoryDataSetIOWriter
 Provides an in-memory storage backend that can be used for live plotting of a measurement. All data is kept in memory
-and not stored on disc or in database. MemoryDataSetIOWriter should not be instantiated directly but created, along with 
-a MemoryDataSetIOReader, using the MemoryDataSetIOFactory. The Reader and Writer share a storage queue used to pass 
+and not stored on disc or in database. MemoryDataSetIOWriter should not be instantiated directly but created, along with
+a MemoryDataSetIOReader, using the MemoryDataSetIOFactory. The Reader and Writer share a storage queue used to pass
 updates from one DataSet to another.
 ```
 io_reader, io_writer = MemoryDataSetIOFactory.get_reader_writer_pair()
@@ -125,7 +131,7 @@ data_set_producer = DataSet(storage_writer=io_writer)
 ```
 
 #### MongoDataSetIOWriter
-Provides a connection to a mongo database that needs to be pre-installed. All updates to a DataSet are stored in the 
+Provides a connection to a mongo database that needs to be pre-installed. All updates to a DataSet are stored in the
 mongodb database as events that are collapsed, to represent the complete DataSet, when the `finalize()` method is called
 on the DataSet. Data can not be written to the database on a finalized DataSet.
 ```
@@ -135,18 +141,18 @@ data_set = DataSet(storage_writer=writer, name=data_set_name)
 ```
 
 ### DataSetIOReader
-Classes that implement the DataSetIOReader interface allow a DataSet to subscribe to data, and data changes, in an 
-underlying storage. To sync from storage the `sync_from_storage(timeout)` method on a DataSet has to be called. There 
-are two implementations of the DataSetIOReader, the MemoryDataSetIOReader and MongoDataSetIOReader. 
+Classes that implement the DataSetIOReader interface allow a DataSet to subscribe to data, and data changes, in an
+underlying storage. To sync from storage the `sync_from_storage(timeout)` method on a DataSet has to be called. There
+are two implementations of the DataSetIOReader, the MemoryDataSetIOReader and MongoDataSetIOReader.
 
 #### MemoryDataSetIOReader
-Provides a way to subscribe to data that is put on a storage queue by a paired MemoryDataSetIOWriter created by the 
+Provides a way to subscribe to data that is put on a storage queue by a paired MemoryDataSetIOWriter created by the
 MemoryDataSetIOFactory.
 
 #### MongoDataSetIOReader
 The MongoDataSetIOReader creates a connection to a mongodb and subscribes to changes in the underlying document. To
 update a DataSet that has been instantiated with a MongoDataSetIOReader a call on the DataSet's `sync_from_storage(timeout)`
-method has to be made. To load a DataSet from the underlying mongodb a static method `load(name, document_id)` can be 
+method has to be made. To load a DataSet from the underlying mongodb a static method `load(name, document_id)` can be
 called with either the DataSet name or _id or both.
 
 In the example below, a DataSet is instantiated with MongoDataSetIOReader, synced from storage and the data plotted:
@@ -210,10 +216,10 @@ In this example one script creates a new DataSet with MongoDataSetIOWriter that 
 underlying mongodb which needs to be pre-installed as described above. By instantiating the DataSet with a
 MongoDataSetWriter all updates and additions to the DataSet are reflected in the database. To fetch the data set from
 the database the static method `load(name, document_id)` provided in MongoDataSetIOReader is used. The method returns a
-new DataSet object that subscribes to all changes in the underlying data set and can be updated with the 
+new DataSet object that subscribes to all changes in the underlying data set and can be updated with the
 `sync_from_storage` method.
 
-In one console run script __A__ and __B__ in another one. Make sure start script __A__ before __B__ as the former 
+In one console run script __A__ and __B__ in another one. Make sure start script __A__ before __B__ as the former
 creates the data set in the database that the latter attempts to load.
 
 ##### A
