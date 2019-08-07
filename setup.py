@@ -21,12 +21,12 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 from setuptools import setup
 
 
-def get_version_number():
+def get_version_number(module):
     """ Extract the version number from the source code.
         Returns:
             Str: the version number.
     """
-    with open('version.py', 'r') as file_stream:
+    with open(f'src/{module}/version.py', 'r') as file_stream:
         line = file_stream.readline().split()
         version_number = line[2].replace('\'', '')
     return version_number
@@ -45,7 +45,7 @@ setup(name='qilib',
       description='Quantum Library for the Quantum Inspire platform',
       long_description=get_long_description(),
       long_description_content_type='text/markdown',
-      version=get_version_number(),
+      version=get_version_number('qilib'),
       author='QuantumInspire',
       python_requires='>=3.6',
       package_dir={'': 'src'},
