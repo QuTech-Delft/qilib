@@ -19,12 +19,12 @@ $ git clone git@github.com:QuTech-Delft/qilib.git
 $ cd qilib
 $ python3 -m venv env
 $ . ./env/bin/activate
-(env) $ pip install -r requirements.txt .
+(env) $ pip install .
 ```
 
 For development install in editable mode:
 ```
-(env) $ pip install -r requirements.txt -e .
+(env) $ pip install -e .[dev]
 ```
 
 ### Install Mongo database

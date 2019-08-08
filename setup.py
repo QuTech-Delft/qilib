@@ -59,4 +59,8 @@ setup(name='qilib',
       license='Other/Proprietary License',
 
       install_requires=['spirack>=0.1.8', 'numpy', 'serialize', 'zhinst',
-                        'pymongo', 'requests'])
+                        'pymongo', 'requests', 'qcodes'],
+      extras_require={
+          'dev': ['pytest>=3.3.1', 'coverage>=4.5.1', 'mongomock'],
+      }
+      )
