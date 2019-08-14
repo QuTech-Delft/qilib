@@ -18,61 +18,47 @@ COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER I
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 
-import numpy as np
-import base64
-import pickle
-import serialize as serialize_module
+from json import JSONEncoder, JSONDecoder, dumps, loads
 
 
-def __object_to_base64_encoded_pickle(u):
-    b = pickle.dumps(u)
-    return base64.b64encode(b).decode('ascii')
+class Encoder(JSONEncoder):
+    _encoders = {}
+
+    @classmethod
+    def register_encoder(cls, _type, encoder):
+        cls._encoders[_type] = encoder
+
+    def default(self, o):
+        if type(o) in self._encoders:
+            return self._encoders[type(o)](o)
+
+        return JSONEncoder.default(self, o)
 
 
-def __base64_encoded_pickle_to_object(c):
-    b = base64.b64decode(c.encode('ascii'))
-    return pickle.loads(b)
+class Decoder(JSONDecoder):
+    _decoders = {}
 
+    @classmethod
+    def register_decoder(cls, _type, decoder):
+        cls._decoders[_type] = decoder
 
-serialize_module.register_class(np.ndarray, __object_to_base64_encoded_pickle, __base64_encoded_pickle_to_object)
+    def __init__(self):
+        super().__init__(object_hook=self._object_hook)
 
+    def _object_hook(self, obj):
+        if isinstance(obj, dict):
+            if '__object__' in obj:
+                if obj['__object__'] in self._decoders:
+                    return self._decoders[obj['__object__']](obj)
+                else:
+                    raise ValueError()
 
-def _bytes_to_base64(b):
-    return base64.b64encode(b).decode('ascii')
-
-
-def _base64_to_bytes(c):
-    return base64.b64decode(c.encode('ascii'))
-
-
-serialize_module.register_class(bytes, _bytes_to_base64, _base64_to_bytes)
-
-__msgfmt = 'json'
+        return obj
 
 
 def serialize(data):
-    """ Serialize a Python object to JSON
-
-    Special objects might be serialized to a Python string.
-
-    Args:
-        data (object): object to be serialized
-    Returns:
-        blob (bytes)
-    Raises:
-        TypeError: If the object is not serializable
-    """
-    bdata = serialize_module.dumps(data, fmt=__msgfmt)
-    return bdata
+    return dumps(data, cls=Encoder)
 
 
-def unserialize(bdata):
-    """ Unserialize JSON data to a Python object
-
-    Args:
-        blob (bytes): data to be unserialized
-    Returns:
-        data (object): unserialized Python object
-    """
-    data = serialize_module.loads(bdata, fmt=__msgfmt)
-    return data
+def unserialize(data):
+    return loads(data, cls=Decoder)
