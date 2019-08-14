@@ -19,8 +19,8 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 """
 
 from json import JSONEncoder, JSONDecoder, dumps, loads
-
 from qilib.data_set import MongoDataSetIO
+import numpy as np
 
 
 class Encoder(JSONEncoder):
@@ -58,6 +58,29 @@ def unserialize(data):
     return loads(data, cls=Decoder)
 
 
+def _transform(data):
+    type_ = type(data)
+    if type_ in Encoder.encoders:
+        return Encoder.encoders[type_](data)
+
+    return data
+
+
+def transform_data(data):
+    if isinstance(data, dict):
+        for key, value in data.items():
+            if isinstance(value, (dict, list, tuple)):
+                transform_data(_transform(value))
+            else:
+                data[key] = _transform(value)
+
+    elif isinstance(data, (list, tuple)):
+        for item in data:
+            transform_data(item)
+
+    return data
+
+
 def encode_bytes(data):
     return {'__object__': bytes.__name__, '__content__': data.decode('utf-8')}
 
@@ -66,17 +89,16 @@ def decode_bytes(data):
     return data['__content__'].encode('utf-8')
 
 
-def register_encoder(_type, encoder):
-    Encoder.encoders[_type] = encoder
+def register_encoder(type_, encode_func):
+    Encoder.encoders[type_] = encode_func
 
 
-def register_decoder(_type, decoder):
-    Decoder.decoders[_type] = decoder
+def register_decoder(type_name, decode_func):
+    Decoder.decoders[type_name] = decode_func
 
 
 register_encoder(bytes, encode_bytes)
 register_decoder(bytes.__name__, decode_bytes)
-import numpy as np
 
 register_encoder(np.ndarray, MongoDataSetIO.encode_numpy_array)
 register_decoder(np.array.__name__, MongoDataSetIO.decode_numpy_array)
