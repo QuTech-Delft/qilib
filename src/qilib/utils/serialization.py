@@ -19,12 +19,18 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 """
 
 from json import JSONEncoder, JSONDecoder, dumps, loads
+from typing import Any, Dict, Callable, ClassVar
+
 from qilib.data_set import MongoDataSetIO
 import numpy as np
 
+TransformFunction = Callable[[Any], Any]
+
 
 class Encoder(JSONEncoder):
-    encoders = {}
+    """ A JSON encoder """
+
+    encoders: ClassVar[Dict[type, TransformFunction]] = {}
 
     def default(self, o):
         if type(o) in self.encoders:
@@ -34,7 +40,9 @@ class Encoder(JSONEncoder):
 
 
 class Decoder(JSONDecoder):
-    decoders = {}
+    """ A JSON dncoder """
+
+    decoders: ClassVar[Dict[type, TransformFunction]] = {}
 
     def __init__(self):
         super().__init__(object_hook=self._object_hook)
@@ -50,11 +58,30 @@ class Decoder(JSONDecoder):
         return obj
 
 
-def serialize(data):
+def serialize(data: Any) -> str:
+    """ Serializes a Python object to JSON
+
+    Args:
+        data: Any Python object
+
+    Returns:
+        JSON encoded string
+
+    """
+
     return dumps(data, cls=Encoder)
 
 
-def unserialize(data):
+def unserialize(data: str) -> Any:
+    """ Unserializes a JSON string to a Python object
+
+    Args:
+        data: The JSON encoded string
+
+    Returns:
+        A Python object decoded from the JSON string
+    """
+
     return loads(data, cls=Decoder)
 
 
@@ -66,7 +93,16 @@ def _transform(data):
     return data
 
 
-def transform_data(data):
+def transform_data(data: Any) -> Any:
+    """ Recursively transfer a Python object and apply transform functions to it
+
+    Args:
+        data: Any Python object
+
+    Returns:
+        The transformed data
+    """
+
     if isinstance(data, dict):
         for key, value in data.items():
             if isinstance(value, (dict, list, tuple)):
@@ -89,11 +125,26 @@ def decode_bytes(data):
     return data['__content__'].encode('utf-8')
 
 
-def register_encoder(type_, encode_func):
+def register_encoder(type_: type, encode_func: TransformFunction) -> None:
+    """ Registers an encoder for a given type
+
+    Args:
+        type_: The type
+        encode_func: The transform function
+
+    """
+
     Encoder.encoders[type_] = encode_func
 
 
-def register_decoder(type_name, decode_func):
+def register_decoder(type_name: str, decode_func: TransformFunction) -> None:
+    """ Registers a decoder for a given type
+
+    Args:
+        type_name: The type name
+        decode_func: The transform function
+    """
+
     Decoder.decoders[type_name] = decode_func
 
 
