@@ -21,11 +21,15 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 import unittest
 import numpy as np
 
-from qilib.utils.serialization import serialize, unserialize
+from qilib.utils.serialization import serialize, unserialize, register_encoder, transform_data
+
+
+class CustomType:
+    def __init__(self, x, y):
+        self.x, self.y = x, y
 
 
 class TestSerialization(unittest.TestCase):
-
     def setUp(self):
         self.testdata = [10, 3.14, 'string', b'bytes', {'a': 1, 'b': 2}, [1, 2], [1, [2, 3]]]
         self.testdata_arrays = [np.array([1, 2, 3]), np.array([1.0, 2.0]), np.array([[1.0, 0], [0, -.2], [0.123, .0]])]
@@ -43,3 +47,20 @@ class TestSerialization(unittest.TestCase):
     def test_non_serializable_objects(self):
         with self.assertRaisesRegex(TypeError, 'is not JSON serializable'):
             serialize(object())
+
+    def test_transform_data_unknown_type(self):
+        data = {'test': CustomType(13, 37)}
+        transformed = transform_data(data)
+
+        self.assertNotEqual(transformed, {'test': {'x': 13, 'y': 37}})
+
+    def test_transform_data_with_registerd_type(self):
+        def dummy_transform(obj):
+            return {'x': obj.x, 'y': obj.y}
+
+        register_encoder(CustomType, dummy_transform)
+
+        data = {'test': CustomType(13, 37)}
+        transformed = transform_data(data)
+
+        self.assertEqual(transformed, {'test': {'x': 13, 'y': 37}})
