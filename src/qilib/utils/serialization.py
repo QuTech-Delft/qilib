@@ -20,27 +20,21 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 
 from json import JSONEncoder, JSONDecoder, dumps, loads
 
+from qilib.data_set import MongoDataSetIO
+
 
 class Encoder(JSONEncoder):
-    _encoders = {}
-
-    @classmethod
-    def register_encoder(cls, _type, encoder):
-        cls._encoders[_type] = encoder
+    encoders = {}
 
     def default(self, o):
-        if type(o) in self._encoders:
-            return self._encoders[type(o)](o)
+        if type(o) in self.encoders:
+            return self.encoders[type(o)](o)
 
         return JSONEncoder.default(self, o)
 
 
 class Decoder(JSONDecoder):
-    _decoders = {}
-
-    @classmethod
-    def register_decoder(cls, _type, decoder):
-        cls._decoders[_type] = decoder
+    decoders = {}
 
     def __init__(self):
         super().__init__(object_hook=self._object_hook)
@@ -48,8 +42,8 @@ class Decoder(JSONDecoder):
     def _object_hook(self, obj):
         if isinstance(obj, dict):
             if '__object__' in obj:
-                if obj['__object__'] in self._decoders:
-                    return self._decoders[obj['__object__']](obj)
+                if obj['__object__'] in self.decoders:
+                    return self.decoders[obj['__object__']](obj)
                 else:
                     raise ValueError()
 
@@ -62,3 +56,27 @@ def serialize(data):
 
 def unserialize(data):
     return loads(data, cls=Decoder)
+
+
+def encode_bytes(data):
+    return {'__object__': bytes.__name__, '__content__': data.decode('utf-8')}
+
+
+def decode_bytes(data):
+    return data['__content__'].encode('utf-8')
+
+
+def register_encoder(_type, encoder):
+    Encoder.encoders[_type] = encoder
+
+
+def register_decoder(_type, decoder):
+    Decoder.decoders[_type] = decoder
+
+
+register_encoder(bytes, encode_bytes)
+register_decoder(bytes.__name__, decode_bytes)
+import numpy as np
+
+register_encoder(np.ndarray, MongoDataSetIO.encode_numpy_array)
+register_decoder(np.array.__name__, MongoDataSetIO.decode_numpy_array)
