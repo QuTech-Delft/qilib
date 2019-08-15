@@ -106,7 +106,7 @@ def transform_data(data: Any) -> Any:
     if isinstance(data, dict):
         for key, value in data.items():
             if isinstance(value, (dict, list, tuple)):
-                transform_data(_transform(value))
+                data[key] = transform_data(_transform(value))
             else:
                 data[key] = _transform(value)
 
