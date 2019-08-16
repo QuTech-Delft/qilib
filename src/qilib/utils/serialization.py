@@ -69,7 +69,7 @@ def serialize(data: Any) -> str:
 
     """
 
-    return dumps(data, cls=Encoder)
+    return dumps(transform_data(data), cls=Encoder)
 
 
 def unserialize(data: str) -> Any:
@@ -104,17 +104,24 @@ def transform_data(data: Any) -> Any:
     """
 
     if isinstance(data, dict):
+        new = {}
         for key, value in data.items():
-            if isinstance(value, (dict, list, tuple)):
-                data[key] = transform_data(_transform(value))
-            else:
-                data[key] = _transform(value)
+            new[key] = _transform(value)
+            # if isinstance(value, (dict, list, tuple)):
+            #     new[key] = transform_data(_transform(value))
+            # else:
+            #     new[key] = _transform(value)
 
-    elif isinstance(data, (list, tuple)):
+        return new
+
+    elif isinstance(data, (list,)):
+        new = []
         for item in data:
-            transform_data(item)
+            new.append(transform_data(_transform(item)))
 
-    return data
+        return new
+
+    return _transform(data)
 
 
 def encode_bytes(data):
