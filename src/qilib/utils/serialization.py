@@ -27,6 +27,12 @@ import numpy as np
 TransformFunction = Callable[[Any], Any]
 
 
+class JsonSerializeKey:
+    """ The custum value types for the JSON serializer."""
+    OBJECT = '__object__'
+    CONTENT = '__content__'
+
+
 class Encoder(JSONEncoder):
     """ A JSON encoder """
 
@@ -49,9 +55,9 @@ class Decoder(JSONDecoder):
 
     def _object_hook(self, obj):
         if isinstance(obj, dict):
-            if '__object__' in obj:
-                if obj['__object__'] in self.decoders:
-                    return self.decoders[obj['__object__']](obj)
+            if JsonSerializeKey.OBJECT in obj:
+                if obj[JsonSerializeKey.OBJECT] in self.decoders:
+                    return self.decoders[obj[JsonSerializeKey.OBJECT]](obj)
                 else:
                     raise ValueError()
 
@@ -106,11 +112,10 @@ def transform_data(data: Any) -> Any:
     if isinstance(data, dict):
         new = {}
         for key, value in data.items():
-            new[key] = _transform(value)
-            # if isinstance(value, (dict, list, tuple)):
-            #     new[key] = transform_data(_transform(value))
-            # else:
-            #     new[key] = _transform(value)
+            if isinstance(value, (dict, list, tuple)):
+                new[key] = transform_data(value)
+            else:
+                new[key] = _transform(value)
 
         return new
 
@@ -125,11 +130,11 @@ def transform_data(data: Any) -> Any:
 
 
 def encode_bytes(data):
-    return {'__object__': bytes.__name__, '__content__': data.decode('utf-8')}
+    return {JsonSerializeKey.OBJECT: bytes.__name__, JsonSerializeKey.CONTENT: data.decode('utf-8')}
 
 
 def decode_bytes(data):
-    return data['__content__'].encode('utf-8')
+    return data[JsonSerializeKey.CONTENT].encode('utf-8')
 
 
 def register_encoder(type_: type, encode_func: TransformFunction) -> None:

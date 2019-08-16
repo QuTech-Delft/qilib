@@ -179,8 +179,12 @@ class MongoDataSetIO:
             The decoded array.
         """
         content = encoded_array[NumpyKeys.CONTENT]
-        return np.frombuffer(base64.b64decode(content[NumpyKeys.ARRAY]),
-                             dtype=np.dtype(content[NumpyKeys.DATA_TYPE])).reshape(content[NumpyKeys.SHAPE])
+        array = np.frombuffer(base64.b64decode(content[NumpyKeys.ARRAY]),
+                              dtype=np.dtype(content[NumpyKeys.DATA_TYPE])).reshape(content[NumpyKeys.SHAPE])
+        # recreate the array to make it writable
+        array = np.array(array)
+
+        return array
 
     def _assert_name_field_is_unique(self) -> None:
         """ The field 'name' should be unique in the database.
