@@ -21,7 +21,7 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 import unittest
 import numpy as np
 
-from qilib.utils.serialization import serializer, serialize, unserialize
+from qilib.utils.serialization import serializer, serialize, unserialize, Encoder, Decoder
 
 
 class CustomType:
@@ -64,3 +64,14 @@ class TestSerialization(unittest.TestCase):
         transformed = serializer.transform_data(data)
 
         self.assertEqual(transformed, {'test': {'x': 13, 'y': 37}})
+
+    def test_json_encode_external_type(self):
+        encoder = Encoder()
+        encoder.encoders[CustomType] = lambda data: (data.x, data.y)
+
+        encoded = encoder.encode({'test': CustomType(13, 37)})
+        self.assertEqual(encoded, '{"test": [13, 37]}')
+
+    def test_json_decode_unknown_type(self):
+        decoder = Decoder()
+        self.assertRaises(ValueError, decoder.decode, '{"__object__": "CustomType", "__content__": [1, 2, 3]}')

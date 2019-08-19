@@ -123,7 +123,7 @@ class Serializer:
 
         """
 
-        return self.encoder.encode(data)
+        return self.encoder.encode(self.transform_data(data))
 
     def unserialize(self, data):
         """ Unserializes a JSON string to a Python object
