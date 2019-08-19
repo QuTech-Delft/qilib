@@ -21,7 +21,7 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 import unittest
 import numpy as np
 
-from qilib.utils.serialization import serialize, unserialize, register_encoder, transform_data
+from qilib.utils.serialization import serializer, serialize, unserialize
 
 
 class CustomType:
@@ -50,7 +50,7 @@ class TestSerialization(unittest.TestCase):
 
     def test_transform_data_unknown_type(self):
         data = {'test': CustomType(13, 37)}
-        transformed = transform_data(data)
+        transformed = serializer.transform_data(data)
 
         self.assertNotEqual(transformed, {'test': {'x': 13, 'y': 37}})
 
@@ -58,9 +58,9 @@ class TestSerialization(unittest.TestCase):
         def dummy_transform(obj):
             return {'x': obj.x, 'y': obj.y}
 
-        register_encoder(CustomType, dummy_transform)
+        serializer.register_encoder(CustomType, dummy_transform)
 
         data = {'test': CustomType(13, 37)}
-        transformed = transform_data(data)
+        transformed = serializer.transform_data(data)
 
         self.assertEqual(transformed, {'test': {'x': 13, 'y': 37}})

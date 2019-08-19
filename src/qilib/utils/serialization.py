@@ -18,9 +18,8 @@ COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER I
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 
-from json import JSONEncoder, JSONDecoder, dumps, loads
+from json import JSONEncoder, JSONDecoder
 from typing import Any, Dict, Callable, ClassVar
-
 from qilib.data_set import MongoDataSetIO
 import numpy as np
 
@@ -28,7 +27,7 @@ TransformFunction = Callable[[Any], Any]
 
 
 class JsonSerializeKey:
-    """ The custum value types for the JSON serializer."""
+    """ The custum value types for the JSON serializer """
     OBJECT = '__object__'
     CONTENT = '__content__'
 
@@ -36,7 +35,10 @@ class JsonSerializeKey:
 class Encoder(JSONEncoder):
     """ A JSON encoder """
 
-    encoders: ClassVar[Dict[type, TransformFunction]] = {}
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+        self.encoders: ClassVar[Dict[type, TransformFunction]] = {}
 
     def default(self, o):
         if type(o) in self.encoders:
@@ -48,10 +50,10 @@ class Encoder(JSONEncoder):
 class Decoder(JSONDecoder):
     """ A JSON dncoder """
 
-    decoders: ClassVar[Dict[type, TransformFunction]] = {}
-
     def __init__(self):
         super().__init__(object_hook=self._object_hook)
+
+        self.decoders: ClassVar[Dict[type, TransformFunction]] = {}
 
     def _object_hook(self, obj):
         if isinstance(obj, dict):
@@ -64,104 +66,136 @@ class Decoder(JSONDecoder):
         return obj
 
 
+def _encode_bytes(data: Any) -> Dict[str, Any]:
+    return {JsonSerializeKey.OBJECT: bytes.__name__, JsonSerializeKey.CONTENT: data.decode('utf-8')}
+
+
+def _decode_bytes(data: Dict[str, Any]) -> bytes:
+    return data[JsonSerializeKey.CONTENT].encode('utf-8')
+
+
+class Serializer:
+    def __init__(self, encoders=None, decoders=None):
+        self.encoder = Encoder()
+        self.decoder = Decoder()
+
+        if encoders is None:
+            encoders = {}
+        self.encoder.encoders = encoders
+        if decoders is None:
+            decoders = {}
+        self.decoder.decoders = decoders
+
+        self.register_encoder(bytes, _encode_bytes)
+        self.register_decoder(bytes.__name__, _decode_bytes)
+        self.register_encoder(np.ndarray, MongoDataSetIO.encode_numpy_array)
+        self.register_decoder(np.array.__name__, MongoDataSetIO.decode_numpy_array)
+
+    def register_encoder(self, type_: type, encode_func: TransformFunction):
+        """ Registers an encoder for a given type
+
+        Args:
+            type_: The type
+            encode_func: The transform function
+
+        """
+
+        self.encoder.encoders[type_] = encode_func
+
+    def register_decoder(self, type_name: str, decode_func: TransformFunction):
+        """ Registers a decoder for a given type
+
+        Args:
+            type_name: The type name
+            decode_func: The transform function
+        """
+
+        self.decoder.decoders[type_name] = decode_func
+
+    def serialize(self, data):
+        """ Serializes a Python object to JSON
+
+        Args:
+            data: Any Python object
+
+        Returns:
+            JSON encoded string
+
+        """
+
+        return self.encoder.encode(data)
+
+    def unserialize(self, data):
+        """ Unserializes a JSON string to a Python object
+
+        Args:
+            data: The JSON encoded string
+
+        Returns:
+            A Python object decoded from the JSON string
+        """
+
+        return self.decoder.decode(data)
+
+    def transform_data(self, data: Any) -> Any:
+        """ Recursively transfer a Python object and apply transform functions to it
+
+        Args:
+            data: Any Python object
+
+        Returns:
+            The transformed data
+        """
+
+        if isinstance(data, dict):
+            new = {}
+            for key, value in data.items():
+                if isinstance(value, (dict, list, tuple)):
+                    new[key] = self.transform_data(value)
+                else:
+                    new[key] = self._transform(value)
+
+            return new
+
+        elif isinstance(data, (list,)):
+            new = []
+            for item in data:
+                new.append(self.transform_data(self._transform(item)))
+
+            return new
+
+        return self._transform(data)
+
+    def _transform(self, data):
+        type_ = type(data)
+        if type_ in self.encoder.encoders:
+            return self.encoder.encoders[type_](data)
+
+        return data
+
+
 def serialize(data: Any) -> str:
-    """ Serializes a Python object to JSON
+    """ Serializes a Python object to JSON using the default serializer
 
     Args:
         data: Any Python object
-
     Returns:
         JSON encoded string
-
     """
 
-    return dumps(transform_data(data), cls=Encoder)
+    return serializer.serialize(data)
 
 
 def unserialize(data: str) -> Any:
-    """ Unserializes a JSON string to a Python object
+    """ Unserializes a JSON string to a Python object using the default serializer
 
     Args:
         data: The JSON encoded string
-
     Returns:
         A Python object decoded from the JSON string
     """
 
-    return loads(data, cls=Decoder)
+    return serializer.unserialize(data)
 
 
-def _transform(data):
-    type_ = type(data)
-    if type_ in Encoder.encoders:
-        return Encoder.encoders[type_](data)
-
-    return data
-
-
-def transform_data(data: Any) -> Any:
-    """ Recursively transfer a Python object and apply transform functions to it
-
-    Args:
-        data: Any Python object
-
-    Returns:
-        The transformed data
-    """
-
-    if isinstance(data, dict):
-        new = {}
-        for key, value in data.items():
-            if isinstance(value, (dict, list, tuple)):
-                new[key] = transform_data(value)
-            else:
-                new[key] = _transform(value)
-
-        return new
-
-    elif isinstance(data, (list,)):
-        new = []
-        for item in data:
-            new.append(transform_data(_transform(item)))
-
-        return new
-
-    return _transform(data)
-
-
-def encode_bytes(data):
-    return {JsonSerializeKey.OBJECT: bytes.__name__, JsonSerializeKey.CONTENT: data.decode('utf-8')}
-
-
-def decode_bytes(data):
-    return data[JsonSerializeKey.CONTENT].encode('utf-8')
-
-
-def register_encoder(type_: type, encode_func: TransformFunction) -> None:
-    """ Registers an encoder for a given type
-
-    Args:
-        type_: The type
-        encode_func: The transform function
-
-    """
-
-    Encoder.encoders[type_] = encode_func
-
-
-def register_decoder(type_name: str, decode_func: TransformFunction) -> None:
-    """ Registers a decoder for a given type
-
-    Args:
-        type_name: The type name
-        decode_func: The transform function
-    """
-
-    Decoder.decoders[type_name] = decode_func
-
-
-register_encoder(bytes, encode_bytes)
-register_decoder(bytes.__name__, decode_bytes)
-
-register_encoder(np.ndarray, MongoDataSetIO.encode_numpy_array)
-register_decoder(np.array.__name__, MongoDataSetIO.decode_numpy_array)
+serializer = Serializer()
