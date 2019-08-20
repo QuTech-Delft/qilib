@@ -23,6 +23,7 @@ from typing import Any, Dict, Callable, ClassVar
 from qilib.data_set import MongoDataSetIO
 import numpy as np
 
+""" A callable type for transforming a given argument with a type to another type """
 TransformFunction = Callable[[Any], Any]
 
 
@@ -36,8 +37,10 @@ class Encoder(JSONEncoder):
     """ A JSON encoder """
 
     def __init__(self, **kwargs):
+        """ Constructs a JSON Encoder """
         super().__init__(**kwargs)
 
+        # creates a new transform table
         self.encoders: ClassVar[Dict[type, TransformFunction]] = {}
 
     def default(self, o):
@@ -48,11 +51,13 @@ class Encoder(JSONEncoder):
 
 
 class Decoder(JSONDecoder):
-    """ A JSON dncoder """
+    """ A JSON decoder """
 
     def __init__(self):
+        """ Constructs a JSON Decoder """
         super().__init__(object_hook=self._object_hook)
 
+        # creates a new transform table
         self.decoders: ClassVar[Dict[type, TransformFunction]] = {}
 
     def _object_hook(self, obj):
@@ -75,7 +80,18 @@ def _decode_bytes(data: Dict[str, Any]) -> bytes:
 
 
 class Serializer:
-    def __init__(self, encoders=None, decoders=None):
+    """ A general serializer to serialize data to JSON and vice versa. It allows
+     extending the types with a custom encoder and decoder"""
+
+    def __init__(self, encoders: ClassVar[Dict[type, TransformFunction]] = None,
+                 decoders: ClassVar[Dict[type, TransformFunction]] = None):
+        """ Creates a serializer
+
+        Args:
+            encoders: The default encoders if any
+            decoders: The default decoders if any
+        """
+
         self.encoder = Encoder()
         self.decoder = Decoder()
 
@@ -112,7 +128,7 @@ class Serializer:
 
         self.decoder.decoders[type_name] = decode_func
 
-    def serialize(self, data):
+    def serialize(self, data: Any) -> str:
         """ Serializes a Python object to JSON
 
         Args:
@@ -120,12 +136,11 @@ class Serializer:
 
         Returns:
             JSON encoded string
-
         """
 
         return self.encoder.encode(self.transform_data(data))
 
-    def unserialize(self, data):
+    def unserialize(self, data: str) -> Any:
         """ Unserializes a JSON string to a Python object
 
         Args:
@@ -141,7 +156,7 @@ class Serializer:
         """ Recursively transfer a Python object and apply transform functions to it
 
         Args:
-            data: Any Python object
+            data: Any Python object that can be handled by an encode/transform function for that type
 
         Returns:
             The transformed data
