@@ -31,7 +31,7 @@ class CustomType:
 
 class TestSerialization(unittest.TestCase):
     def setUp(self):
-        self.testdata = [10, 3.14, 'string', b'bytes', {'a': 1, 'b': 2}, [1, 2], [1, [2, 3]]]
+        self.testdata = [(1, 2, 3), 10, 3.14, 'string', b'bytes', {'a': 1, 'b': 2}, [1, 2], [1, [2, 3]]]
         self.testdata_arrays = [np.array([1, 2, 3]), np.array([1.0, 2.0]), np.array([[1.0, 0], [0, -.2], [0.123, .0]])]
 
     def test_serialization_default_types(self):
@@ -54,7 +54,7 @@ class TestSerialization(unittest.TestCase):
 
         self.assertNotEqual(transformed, {'test': {'x': 13, 'y': 37}})
 
-    def test_transform_data_with_registerd_type(self):
+    def test_transform_data_with_registered_type(self):
         def dummy_transform(obj):
             return {'x': obj.x, 'y': obj.y}
 

@@ -79,6 +79,17 @@ def _decode_bytes(data: Dict[str, Any]) -> bytes:
     return data[JsonSerializeKey.CONTENT].encode('utf-8')
 
 
+def _encode_tuple(item):
+    return {
+        JsonSerializeKey.OBJECT: tuple.__name__,
+        JsonSerializeKey.CONTENT: [serializer.transform_data(value) for value in item]
+    }
+
+
+def _decode_tuple(data: Dict[str, Any]) -> tuple:
+    return tuple(data[JsonSerializeKey.CONTENT])
+
+
 class Serializer:
     """ A general serializer to serialize data to JSON and vice versa. It allows
      extending the types with a custom encoder and decoder"""
@@ -106,6 +117,8 @@ class Serializer:
         self.register_decoder(bytes.__name__, _decode_bytes)
         self.register_encoder(np.ndarray, MongoDataSetIO.encode_numpy_array)
         self.register_decoder(np.array.__name__, MongoDataSetIO.decode_numpy_array)
+        self.register_encoder(tuple, _encode_tuple)
+        self.register_decoder(tuple.__name__, _decode_tuple)
 
     def register_encoder(self, type_: type, encode_func: TransformFunction):
         """ Registers an encoder for a given type
@@ -165,14 +178,14 @@ class Serializer:
         if isinstance(data, dict):
             new = {}
             for key, value in data.items():
-                if isinstance(value, (dict, list, tuple)):
+                if isinstance(value, dict):
                     new[key] = self.transform_data(value)
                 else:
                     new[key] = self._transform(value)
 
             return new
 
-        elif isinstance(data, (list,)):
+        elif isinstance(data, list):
             new = []
             for item in data:
                 new.append(self.transform_data(self._transform(item)))
