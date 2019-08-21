@@ -52,6 +52,62 @@ class NumpyArrayCodec(TypeCodec):  # type: ignore
         return value
 
 
+def _encode_int(value: int):
+    return f'_integer[{value}]'
+
+
+def _is_encoded_int(value: str):
+    if not value.startswith('_integer[') or not value.endswith(']'):
+        return False
+
+    return value[len('_integer['):-1].isdigit()
+
+
+def _decode_int(value: str):
+    if not _is_encoded_int(value):
+        raise ValueError()
+
+    return int(value[len('_integer['):-1])
+
+
+def _encode_str(value: str):
+    return value.replace('.', '\\u002e')
+
+
+def _decode_str(value: str):
+    return value.replace('\\u002e', '.')
+
+
+def _encode_data(data):
+    if isinstance(data, dict):
+        new = {}
+
+        for key, value in data.items():
+            if isinstance(key, int):
+                key = _encode_int(key)
+            key = _encode_str(key)
+            new[key] = _encode_data(value)
+
+        return new
+
+    return data
+
+
+def _decode_data(data):
+    if isinstance(data, dict):
+        new = {}
+
+        for key, value in data.items():
+            key = _decode_str(key)
+            if _is_encoded_int(key):
+                key = _decode_int(key)
+            new[key] = _decode_data(value)
+
+        return new
+
+    return data
+
+
 class StorageMongoDb(StorageInterface):
     """ Reference implementation of StorageInterface with an mongodb backend
 
