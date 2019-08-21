@@ -58,7 +58,7 @@ class TestSerialization(unittest.TestCase):
         def dummy_transform(obj):
             return {'x': obj.x, 'y': obj.y}
 
-        serializer.register_encoder(CustomType, dummy_transform)
+        serializer.register(CustomType, dummy_transform, '', None)
 
         data = {'test': CustomType(13, 37)}
         transformed = serializer.transform_data(data)

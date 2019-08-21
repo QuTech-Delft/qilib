@@ -23,7 +23,7 @@ from typing import Any, Dict, Callable, ClassVar
 from qilib.data_set import MongoDataSetIO
 import numpy as np
 
-""" A callable type for transforming a given argument with a type to another type """
+# A callable type for transforming a given argument with a type to another type
 TransformFunction = Callable[[Any], Any]
 
 
@@ -94,8 +94,8 @@ class Serializer:
     """ A general serializer to serialize data to JSON and vice versa. It allows
      extending the types with a custom encoder and decoder"""
 
-    def __init__(self, encoders: ClassVar[Dict[type, TransformFunction]] = None,
-                 decoders: ClassVar[Dict[type, TransformFunction]] = None):
+    def __init__(self, encoders: Dict[type, TransformFunction] = None,
+                 decoders: Dict[str, TransformFunction] = None):
         """ Creates a serializer
 
         Args:
@@ -113,32 +113,23 @@ class Serializer:
             decoders = {}
         self.decoder.decoders = decoders
 
-        self.register_encoder(bytes, _encode_bytes)
-        self.register_decoder(bytes.__name__, _decode_bytes)
-        self.register_encoder(np.ndarray, MongoDataSetIO.encode_numpy_array)
-        self.register_decoder(np.array.__name__, MongoDataSetIO.decode_numpy_array)
-        self.register_encoder(tuple, _encode_tuple)
-        self.register_decoder(tuple.__name__, _decode_tuple)
+        self.register(bytes, _encode_bytes, bytes.__name__, _decode_bytes)
+        self.register(np.ndarray, MongoDataSetIO.encode_numpy_array, np.array.__name__,
+                      MongoDataSetIO.decode_numpy_array)
+        self.register(tuple, _encode_tuple, tuple.__name__, _decode_tuple)
 
-    def register_encoder(self, type_: type, encode_func: TransformFunction):
-        """ Registers an encoder for a given type
+    def register(self, type_: type, encode_func: TransformFunction, type_name: str,
+                 decode_func: TransformFunction) -> None:
+        """ Registers an encoder and decoder for a given type
 
         Args:
-            type_: The type
-            encode_func: The transform function
-
+            type_: The type to encode
+            encode_func: The transform function for encoding that type
+            type_name: The type name to decode
+            decode_func: The transform function for decoding
         """
 
         self.encoder.encoders[type_] = encode_func
-
-    def register_decoder(self, type_name: str, decode_func: TransformFunction):
-        """ Registers a decoder for a given type
-
-        Args:
-            type_name: The type name
-            decode_func: The transform function
-        """
-
         self.decoder.decoders[type_name] = decode_func
 
     def serialize(self, data: Any) -> str:
@@ -226,4 +217,5 @@ def unserialize(data: str) -> Any:
     return serializer.unserialize(data)
 
 
+# The default Serializer to use
 serializer = Serializer()
