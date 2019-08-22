@@ -18,61 +18,204 @@ COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER I
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 
+from json import JSONEncoder, JSONDecoder
+from typing import Any, Dict, Callable, ClassVar
+from qilib.data_set import MongoDataSetIO
 import numpy as np
-import base64
-import pickle
-import serialize as serialize_module
+
+# A callable type for transforming a given argument with a type to another type
+TransformFunction = Callable[[Any], Any]
 
 
-def __object_to_base64_encoded_pickle(u):
-    b = pickle.dumps(u)
-    return base64.b64encode(b).decode('ascii')
+class JsonSerializeKey:
+    """ The custum value types for the JSON serializer """
+    OBJECT = '__object__'
+    CONTENT = '__content__'
 
 
-def __base64_encoded_pickle_to_object(c):
-    b = base64.b64decode(c.encode('ascii'))
-    return pickle.loads(b)
+class Encoder(JSONEncoder):
+    """ A JSON encoder """
+
+    def __init__(self, **kwargs):
+        """ Constructs a JSON Encoder """
+        super().__init__(**kwargs)
+
+        # creates a new transform table
+        self.encoders: ClassVar[Dict[type, TransformFunction]] = {}
+
+    def default(self, o):
+        if type(o) in self.encoders:
+            return self.encoders[type(o)](o)
+
+        return JSONEncoder.default(self, o)
 
 
-serialize_module.register_class(np.ndarray, __object_to_base64_encoded_pickle, __base64_encoded_pickle_to_object)
+class Decoder(JSONDecoder):
+    """ A JSON decoder """
+
+    def __init__(self):
+        """ Constructs a JSON Decoder """
+        super().__init__(object_hook=self._object_hook)
+
+        # creates a new transform table
+        self.decoders: ClassVar[Dict[type, TransformFunction]] = {}
+
+    def _object_hook(self, obj):
+        if isinstance(obj, dict):
+            if JsonSerializeKey.OBJECT in obj:
+                if obj[JsonSerializeKey.OBJECT] in self.decoders:
+                    return self.decoders[obj[JsonSerializeKey.OBJECT]](obj)
+                else:
+                    raise ValueError()
+
+        return obj
 
 
-def _bytes_to_base64(b):
-    return base64.b64encode(b).decode('ascii')
+def _encode_bytes(data: Any) -> Dict[str, Any]:
+    return {JsonSerializeKey.OBJECT: bytes.__name__, JsonSerializeKey.CONTENT: data.decode('utf-8')}
 
 
-def _base64_to_bytes(c):
-    return base64.b64decode(c.encode('ascii'))
+def _decode_bytes(data: Dict[str, Any]) -> bytes:
+    return data[JsonSerializeKey.CONTENT].encode('utf-8')
 
 
-serialize_module.register_class(bytes, _bytes_to_base64, _base64_to_bytes)
+def _encode_tuple(item):
+    return {
+        JsonSerializeKey.OBJECT: tuple.__name__,
+        JsonSerializeKey.CONTENT: [serializer.transform_data(value) for value in item]
+    }
 
-__msgfmt = 'json'
+
+def _decode_tuple(data: Dict[str, Any]) -> tuple:
+    return tuple(data[JsonSerializeKey.CONTENT])
 
 
-def serialize(data):
-    """ Serialize a Python object to JSON
+class Serializer:
+    """ A general serializer to serialize data to JSON and vice versa. It allows
+     extending the types with a custom encoder and decoder"""
 
-    Special objects might be serialized to a Python string.
+    def __init__(self, encoders: Dict[type, TransformFunction] = None,
+                 decoders: Dict[str, TransformFunction] = None):
+        """ Creates a serializer
+
+        Args:
+            encoders: The default encoders if any
+            decoders: The default decoders if any
+        """
+
+        self.encoder = Encoder()
+        self.decoder = Decoder()
+
+        if encoders is None:
+            encoders = {}
+        self.encoder.encoders = encoders
+        if decoders is None:
+            decoders = {}
+        self.decoder.decoders = decoders
+
+        self.register(bytes, _encode_bytes, bytes.__name__, _decode_bytes)
+        self.register(np.ndarray, MongoDataSetIO.encode_numpy_array, np.array.__name__,
+                      MongoDataSetIO.decode_numpy_array)
+        self.register(tuple, _encode_tuple, tuple.__name__, _decode_tuple)
+
+    def register(self, type_: type, encode_func: TransformFunction, type_name: str,
+                 decode_func: TransformFunction) -> None:
+        """ Registers an encoder and decoder for a given type
+
+        Args:
+            type_: The type to encode
+            encode_func: The transform function for encoding that type
+            type_name: The type name to decode
+            decode_func: The transform function for decoding
+        """
+
+        self.encoder.encoders[type_] = encode_func
+        self.decoder.decoders[type_name] = decode_func
+
+    def serialize(self, data: Any) -> str:
+        """ Serializes a Python object to JSON
+
+        Args:
+            data: Any Python object
+
+        Returns:
+            JSON encoded string
+        """
+
+        return self.encoder.encode(self.transform_data(data))
+
+    def unserialize(self, data: str) -> Any:
+        """ Unserializes a JSON string to a Python object
+
+        Args:
+            data: The JSON encoded string
+
+        Returns:
+            A Python object decoded from the JSON string
+        """
+
+        return self.decoder.decode(data)
+
+    def transform_data(self, data: Any) -> Any:
+        """ Recursively transfer a Python object and apply transform functions to it
+
+        Args:
+            data: Any Python object that can be handled by an encode/transform function for that type
+
+        Returns:
+            The transformed data
+        """
+
+        if isinstance(data, dict):
+            new = {}
+            for key, value in data.items():
+                if isinstance(value, dict):
+                    new[key] = self.transform_data(value)
+                else:
+                    new[key] = self._transform(value)
+
+            return new
+
+        elif isinstance(data, list):
+            new = []
+            for item in data:
+                new.append(self.transform_data(self._transform(item)))
+
+            return new
+
+        return self._transform(data)
+
+    def _transform(self, data):
+        type_ = type(data)
+        if type_ in self.encoder.encoders:
+            return self.encoder.encoders[type_](data)
+
+        return data
+
+
+def serialize(data: Any) -> str:
+    """ Serializes a Python object to JSON using the default serializer. Dictionary keys should be hashable.
 
     Args:
-        data (object): object to be serialized
+        data: Any Python object
     Returns:
-        blob (bytes)
-    Raises:
-        TypeError: If the object is not serializable
+        JSON encoded string
     """
-    bdata = serialize_module.dumps(data, fmt=__msgfmt)
-    return bdata
+
+    return serializer.serialize(data)
 
 
-def unserialize(bdata):
-    """ Unserialize JSON data to a Python object
+def unserialize(data: str) -> Any:
+    """ Unserializes a JSON string to a Python object using the default serializer
 
     Args:
-        blob (bytes): data to be unserialized
+        data: The JSON encoded string
     Returns:
-        data (object): unserialized Python object
+        A Python object decoded from the JSON string
     """
-    data = serialize_module.loads(bdata, fmt=__msgfmt)
-    return data
+
+    return serializer.unserialize(data)
+
+
+# The default Serializer to use
+serializer = Serializer()
