@@ -141,3 +141,38 @@ class TestStorageMongo(unittest.TestCase):
         self.storage.save_data('some-dat', ['some-other-tag'])
         tag_in_storage = self.storage.tag_in_storage(['some-other-tag'])
         self.assertTrue(tag_in_storage)
+
+    def test_store_keys_with_integer(self):
+        data = {1: 'key with integer'}
+        self.storage.save_data(data, ['data'])
+        self.assertEqual(data, self.storage.load_data(['data']))
+
+    def test_store_keys_with_dots(self):
+        data = {'key.with': 'dots!'}
+        self.storage.save_data(data, ['data'])
+        self.assertEqual(data, self.storage.load_data(['data']))
+
+    def test_store_keys_with_integers_and_dots(self):
+        data = {
+            1: 'integer_value',
+            '1': 'string_value',
+            'dict': {
+                1: 'another_integer_value',
+                '1': {
+                    1: 'last_integer_value',
+                    'something.with.dot': 'another.key.with.dot'
+                }
+            },
+            'something.with.dot': 'key.with.dot',
+            'something.else.with.dots': {
+                'key.dot': 123
+            },
+            'something': {
+                'with.dot': 'nested values',
+                'with': {
+                    'dot': 123
+                }
+            }
+        }
+        self.storage.save_data(data, ['data'])
+        self.assertEqual(data, self.storage.load_data(['data']))
