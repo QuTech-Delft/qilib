@@ -52,11 +52,29 @@ class NumpyArrayCodec(TypeCodec):  # type: ignore
         return value
 
 
-def _encode_int(value: int):
+def _encode_int(value: int) -> str:
+    """ Encodes an int value to a string
+
+    Args:
+        value: An integer
+
+    Returns:
+        An encoded integer
+    """
+
     return f'_integer[{value}]'
 
 
 def _is_encoded_int(value: str):
+    """ Checks if the given value is a properly encoded integer
+
+    Args:
+        value: The encoded value
+
+    Returns:
+        True if an integer can be decoded, False otherwise
+    """
+
     if not value.startswith('_integer[') or not value.endswith(']'):
         return False
 
@@ -64,6 +82,15 @@ def _is_encoded_int(value: str):
 
 
 def _decode_int(value: str):
+    """ Parses an integer from the encoded value
+
+    Args:
+        value: The encoded integer
+
+    Returns:
+        The decoded integer
+    """
+
     if not _is_encoded_int(value):
         raise ValueError()
 
@@ -71,14 +98,39 @@ def _decode_int(value: str):
 
 
 def _encode_str(value: str):
+    """ Encodes a (dotted) string
+    Args:
+        value: The value
+
+    Returns:
+        The encoded value
+    """
+
     return value.replace('.', '\\u002e')
 
 
 def _decode_str(value: str):
+    """ Decodes a (dotted) string
+
+    Args:
+        value: The value
+
+    Returns:
+        The decoded value
+    """
+
     return value.replace('\\u002e', '.')
 
 
 def _encode_data(data):
+    """ Recursively encode the data and apply dot replacement and integer encoding on the keys
+
+    Args:
+        data: The data
+    Returns:
+        The transformed data
+    """
+
     if isinstance(data, dict):
         new = {}
 
@@ -94,6 +146,14 @@ def _encode_data(data):
 
 
 def _decode_data(data):
+    """ Recursively decode the data and apply dot replacement and integer decoding on the keys
+
+    Args:
+        data: The data
+    Returns:
+        The transformed data
+    """
+
     if isinstance(data, dict):
         new = {}
 
