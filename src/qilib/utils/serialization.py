@@ -194,7 +194,7 @@ class Serializer:
 
 
 def serialize(data: Any) -> str:
-    """ Serializes a Python object to JSON using the default serializer
+    """ Serializes a Python object to JSON using the default serializer. Dictionary keys should be hashable.
 
     Args:
         data: Any Python object

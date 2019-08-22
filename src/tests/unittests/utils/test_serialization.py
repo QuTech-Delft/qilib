@@ -21,6 +21,7 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 import unittest
 import numpy as np
 
+from qilib.utils import PythonJsonStructure
 from qilib.utils.serialization import serializer, serialize, unserialize, Encoder, Decoder
 
 
@@ -75,3 +76,14 @@ class TestSerialization(unittest.TestCase):
     def test_json_decode_unknown_type(self):
         decoder = Decoder()
         self.assertRaises(ValueError, decoder.decode, '{"__object__": "CustomType", "__content__": [1, 2, 3]}')
+
+    def test_serialize_non_string_keys(self):
+        data = PythonJsonStructure({'a': 1, 1: 'a'})
+        self.assertDictEqual(unserialize(serialize(data)), {'a': 1, '1': 'a'})
+
+    def test_serialize_subclass(self):
+        class SubClass(np.ndarray):
+            pass
+
+        data = SubClass([1, 2, 3, 4, 5])
+        self.assertRaises(TypeError, serialize, data)
