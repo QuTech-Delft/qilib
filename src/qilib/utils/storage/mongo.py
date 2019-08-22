@@ -188,7 +188,7 @@ class StorageMongoDb(StorageInterface):
             elif 'value' not in doc:
                 raise NoDataAtKeyError(f'Tag "{tag[0]}" is not a leaf')
             else:
-                return doc['value']
+                return _decode_data(doc['value'])
 
         else:
             doc = self._collection.find_one({'parent': parent, 'tag': tag[0], 'value': {'$exists': False}})
@@ -212,9 +212,10 @@ class StorageMongoDb(StorageInterface):
                 if 'value' not in doc:
                     raise NodeAlreadyExistsError(f'Tag "{tag[0]}" is not a leaf')
                 else:
-                    self._collection.update_one({'parent': parent, 'tag': tag[0]}, {'$set': {'value': data}})
+                    self._collection.update_one({'parent': parent, 'tag': tag[0]},
+                                                {'$set': {'value': _encode_data(data)}})
             else:
-                self._collection.insert_one({'parent': parent, 'tag': tag[0], 'value': data})
+                self._collection.insert_one({'parent': parent, 'tag': tag[0], 'value': _encode_data(data)})
 
         else:
             doc = self._collection.find_one({'parent': parent, 'tag': tag[0]})
@@ -230,7 +231,7 @@ class StorageMongoDb(StorageInterface):
 
     def load_data(self, tag: List[str]) -> Any:
         if not isinstance(tag, list):
-            raise TypeError('tag should be a list of strings')
+            raise TypeError('Tag should be a list of strings')
 
         if len(tag) == 0:
             raise NoDataAtKeyError('Tag cannot be empty')
