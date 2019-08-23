@@ -81,7 +81,7 @@ def _is_encoded_int(value: str):
     return value[len('_integer['):-1].isdigit()
 
 
-def _decode_int(value: str):
+def _decode_int(value: str) -> int:
     """ Parses an integer from the encoded value
 
     Args:
@@ -97,7 +97,7 @@ def _decode_int(value: str):
     return int(value[len('_integer['):-1])
 
 
-def _encode_str(value: str):
+def _encode_str(value: str) -> str:
     """ Encodes a (dotted) string
     Args:
         value: The value
@@ -109,7 +109,7 @@ def _encode_str(value: str):
     return value.replace('.', '\\u002e')
 
 
-def _decode_str(value: str):
+def _decode_str(value: str) -> str:
     """ Decodes a (dotted) string
 
     Args:
@@ -122,7 +122,7 @@ def _decode_str(value: str):
     return value.replace('\\u002e', '.')
 
 
-def _encode_data(data):
+def _encode_data(data: Any) -> Any:
     """ Recursively encode the data and apply dot replacement and integer encoding on the keys
 
     Args:
@@ -142,10 +142,18 @@ def _encode_data(data):
 
         return new
 
+    elif isinstance(data, list):
+        new = []
+
+        for item in data:
+            new.append(_encode_data(item))
+
+        return new
+
     return data
 
 
-def _decode_data(data):
+def _decode_data(data: Any) -> Any:
     """ Recursively decode the data and apply dot replacement and integer decoding on the keys
 
     Args:
@@ -162,6 +170,14 @@ def _decode_data(data):
             if _is_encoded_int(key):
                 key = _decode_int(key)
             new[key] = _decode_data(value)
+
+        return new
+
+    elif isinstance(data, list):
+        new = []
+
+        for item in data:
+            new.append(_decode_data(item))
 
         return new
 

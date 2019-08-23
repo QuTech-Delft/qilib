@@ -172,7 +172,8 @@ class TestStorageMongo(unittest.TestCase):
                 'with': {
                     'dot': 123
                 }
-            }
+            },
+            'li.st': ['is', {'a': 'list', 12: 34}]
         }
         self.storage.save_data(data, ['data'])
         self.assertEqual(data, self.storage.load_data(['data']))
