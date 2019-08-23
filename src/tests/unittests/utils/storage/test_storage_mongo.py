@@ -9,7 +9,7 @@ from mongomock import MongoClient
 
 from qilib.utils.storage import StorageMongoDb
 from qilib.utils.storage.interface import NoDataAtKeyError, NodeAlreadyExistsError
-from qilib.utils.storage.mongo import NumpyArrayCodec
+from qilib.utils.storage.mongo import NumpyArrayCodec, _decode_int, _encode_str, _decode_str, _encode_int
 
 
 class TestStorageMongo(unittest.TestCase):
@@ -177,3 +177,18 @@ class TestStorageMongo(unittest.TestCase):
         }
         self.storage.save_data(data, ['data'])
         self.assertEqual(data, self.storage.load_data(['data']))
+
+    def test_encode_int(self):
+        self.assertEqual(_encode_int(7), '_integer[7]')
+
+    def test_decode_int(self):
+        self.assertEqual(_decode_int('_integer[7]'), 7)
+
+    def test_decode_int_incorrect(self):
+        self.assertRaises(ValueError, _decode_int, '_int[7]')
+
+    def test_encode_str(self):
+        self.assertEqual(_encode_str('hello.world'), 'hello\\u002eworld')
+
+    def test_decode_str(self):
+        self.assertEqual(_decode_str('hello.world'), 'hello.world')
