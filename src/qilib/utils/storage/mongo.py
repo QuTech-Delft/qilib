@@ -52,138 +52,6 @@ class NumpyArrayCodec(TypeCodec):  # type: ignore
         return value
 
 
-def _encode_int(value: int) -> str:
-    """ Encodes an int value to a string
-
-    Args:
-        value: An integer
-
-    Returns:
-        An encoded integer
-    """
-
-    return f'_integer[{value}]'
-
-
-def _is_encoded_int(value: str):
-    """ Checks if the given value is a properly encoded integer
-
-    Args:
-        value: The encoded value
-
-    Returns:
-        True if an integer can be decoded, False otherwise
-    """
-
-    if not value.startswith('_integer[') or not value.endswith(']'):
-        return False
-
-    return value[len('_integer['):-1].isdigit()
-
-
-def _decode_int(value: str) -> int:
-    """ Parses an integer from the encoded value
-
-    Args:
-        value: The encoded integer
-
-    Returns:
-        The decoded integer
-    """
-
-    if not _is_encoded_int(value):
-        raise ValueError()
-
-    return int(value[len('_integer['):-1])
-
-
-def _encode_str(value: str) -> str:
-    """ Encodes a (dotted) string
-    Args:
-        value: The value
-
-    Returns:
-        The encoded value
-    """
-
-    return value.replace('.', '\\u002e')
-
-
-def _decode_str(value: str) -> str:
-    """ Decodes a (dotted) string
-
-    Args:
-        value: The value
-
-    Returns:
-        The decoded value
-    """
-
-    return value.replace('\\u002e', '.')
-
-
-def _encode_data(data: Any) -> Any:
-    """ Recursively encode the data and apply dot replacement and integer encoding on the keys
-
-    Args:
-        data: The data
-    Returns:
-        The transformed data
-    """
-
-    if isinstance(data, dict):
-        new = {}
-
-        for key, value in data.items():
-            if isinstance(key, int):
-                key = _encode_int(key)
-            key = _encode_str(key)
-            new[key] = _encode_data(value)
-
-        return new
-
-    elif isinstance(data, list):
-        new = []
-
-        for item in data:
-            new.append(_encode_data(item))
-
-        return new
-
-    return data
-
-
-def _decode_data(data: Any) -> Any:
-    """ Recursively decode the data and apply dot replacement and integer decoding on the keys
-
-    Args:
-        data: The data
-    Returns:
-        The transformed data
-    """
-
-    if isinstance(data, dict):
-        new = {}
-
-        for key, value in data.items():
-            key = _decode_str(key)
-            if _is_encoded_int(key):
-                key = _decode_int(key)
-            new[key] = _decode_data(value)
-
-        return new
-
-    elif isinstance(data, list):
-        new = []
-
-        for item in data:
-            new.append(_decode_data(item))
-
-        return new
-
-    return data
-
-
 class StorageMongoDb(StorageInterface):
     """ Reference implementation of StorageInterface with an mongodb backend
 
@@ -264,7 +132,7 @@ class StorageMongoDb(StorageInterface):
             elif 'value' not in doc:
                 raise NoDataAtKeyError(f'Tag "{tag[0]}" is not a leaf')
             else:
-                return _decode_data(doc['value'])
+                return self._decode_data(doc['value'])
 
         else:
             doc = self._collection.find_one({'parent': parent, 'tag': tag[0], 'value': {'$exists': False}})
@@ -289,9 +157,9 @@ class StorageMongoDb(StorageInterface):
                     raise NodeAlreadyExistsError(f'Tag "{tag[0]}" is not a leaf')
                 else:
                     self._collection.update_one({'parent': parent, 'tag': tag[0]},
-                                                {'$set': {'value': _encode_data(data)}})
+                                                {'$set': {'value': self._encode_data(data)}})
             else:
-                self._collection.insert_one({'parent': parent, 'tag': tag[0], 'value': _encode_data(data)})
+                self._collection.insert_one({'parent': parent, 'tag': tag[0], 'value': self._encode_data(data)})
 
         else:
             doc = self._collection.find_one({'parent': parent, 'tag': tag[0]})
@@ -347,3 +215,118 @@ class StorageMongoDb(StorageInterface):
             else:
                 parent = doc['_id']
         return True
+
+    @staticmethod
+    def _encode_int(value: int) -> str:
+        """ Encodes an int value to a string
+
+        Args:
+            value: An integer
+
+        Returns:
+            An encoded integer
+        """
+
+        return f'_integer[{value}]'
+
+    @staticmethod
+    def _is_encoded_int(value: str):
+        """ Checks if the given value is a properly encoded integer
+
+        Args:
+            value: The encoded value
+
+        Returns:
+            True if an integer can be decoded, False otherwise
+        """
+
+        if not value.startswith('_integer[') or not value.endswith(']'):
+            return False
+
+        return value[len('_integer['):-1].isdigit()
+
+    @staticmethod
+    def _decode_int(value: str) -> int:
+        """ Parses an integer from the encoded value
+
+        Args:
+            value: The encoded integer
+
+        Returns:
+            The decoded integer
+        """
+
+        if not StorageMongoDb._is_encoded_int(value):
+            raise ValueError()
+
+        return int(value[len('_integer['):-1])
+
+    @staticmethod
+    def _encode_str(value: str) -> str:
+        """ Encodes a (dotted) string
+        Args:
+            value: The value
+
+        Returns:
+            The encoded value
+        """
+
+        return value.replace('.', '\\u002e')
+
+    @staticmethod
+    def _decode_str(value: str) -> str:
+        """ Decodes a (dotted) string
+
+        Args:
+            value: The value
+
+        Returns:
+            The decoded value
+        """
+
+        return value.replace('\\u002e', '.')
+
+    @staticmethod
+    def _encode_data(data: Any) -> Any:
+        """ Recursively encode the data and apply dot replacement and integer encoding on the keys
+
+        Args:
+            data: The data
+        Returns:
+            The transformed data
+        """
+
+        if isinstance(data, dict):
+            return {
+                StorageMongoDb._encode_str(StorageMongoDb._encode_int(key) if isinstance(key, int) else key)
+                : StorageMongoDb._encode_data(value)
+                for key, value in data.items()
+            }
+
+        elif isinstance(data, list):
+            return [StorageMongoDb._encode_data(item) for item in data]
+
+        return data
+
+    @staticmethod
+    def _decode_data(data: Any) -> Any:
+        """ Recursively decode the data and apply dot replacement and integer decoding on the keys
+
+        Args:
+            data: The data
+        Returns:
+            The transformed data
+        """
+
+        if isinstance(data, dict):
+            return {
+                StorageMongoDb._decode_int(StorageMongoDb._decode_str(key))
+                if StorageMongoDb._is_encoded_int(key) else StorageMongoDb._decode_str(key)
+                : StorageMongoDb._decode_data(value)
+                for key, value in data.items()
+            }
+
+        elif isinstance(data, list):
+            return [StorageMongoDb._decode_data(item) for item in data]
+
+        return data
