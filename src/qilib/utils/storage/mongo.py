@@ -53,13 +53,13 @@ class NumpyArrayCodec(TypeCodec):  # type: ignore
 
 
 class StorageMongoDb(StorageInterface):
-    """ Reference implementation of StorageInterface with an mongodb backend
+    """Reference implementation of StorageInterface with an mongodb backend
 
     Implements a storage tree in a MongoDB collection
     """
 
     def __init__(self, name: str, host: str = 'localhost', port: int = 27017, database: str = ''):
-        """ MongoDB implementation of storage class
+        """MongoDB implementation of storage class
 
         See also: `StorageInterface`
 
@@ -78,7 +78,7 @@ class StorageMongoDb(StorageInterface):
         self._collection = self._db.get_collection('storage', codec_options=codec_options)
 
     def _get_root(self) -> ObjectId:
-        """ Get or create a root node if it doesn't exist yet
+        """Get or create a root node if it doesn't exist yet
 
         Returns:
             An ObjectID of the root node
@@ -92,7 +92,7 @@ class StorageMongoDb(StorageInterface):
             return self._collection.insert_one({'tag': ''}).inserted_id
 
     def _retrieve_nodes_by_tag(self, tag: List[str], parent: ObjectId) -> List[str]:
-        """ Traverse the tree and list the children of a given tag
+        """Traverse the tree and list the children of a given tag
 
         Args:
             tag: The node tag
@@ -115,7 +115,7 @@ class StorageMongoDb(StorageInterface):
                 return self._retrieve_nodes_by_tag(tag[1:], doc['_id'])
 
     def _retrieve_value_by_tag(self, tag: List[str], parent: ObjectId) -> Any:
-        """ Traverse the tree and give the value a given leaf tag
+        """Traverse the tree and give the value a given leaf tag
 
         Args:
             tag: The leaf tag
@@ -184,7 +184,7 @@ class StorageMongoDb(StorageInterface):
 
     def save_data(self, data: Any, tag: List[str]) -> None:
         if not isinstance(tag, list):
-            raise TypeError('tag should be a list of strings')
+            raise TypeError('Tag should be a list of strings')
 
         self._store_value_by_tag(tag, self._serialize(data), self._get_root())
 
@@ -218,7 +218,7 @@ class StorageMongoDb(StorageInterface):
 
     @staticmethod
     def _encode_int(value: int) -> str:
-        """ Encodes an int value to a string
+        """Encodes an int value to a string
 
         Args:
             value: An integer
@@ -230,8 +230,8 @@ class StorageMongoDb(StorageInterface):
         return f'_integer[{value}]'
 
     @staticmethod
-    def _is_encoded_int(value: str):
-        """ Checks if the given value is a properly encoded integer
+    def _is_encoded_int(value: str) -> bool:
+        """Checks if the given value is a properly encoded integer
 
         Args:
             value: The encoded value
@@ -247,7 +247,7 @@ class StorageMongoDb(StorageInterface):
 
     @staticmethod
     def _decode_int(value: str) -> int:
-        """ Parses an integer from the encoded value
+        """Parses an integer from the encoded value
 
         Args:
             value: The encoded integer
@@ -263,7 +263,7 @@ class StorageMongoDb(StorageInterface):
 
     @staticmethod
     def _encode_str(value: str) -> str:
-        """ Encodes a (dotted) string
+        """Encodes a (dotted) string
         Args:
             value: The value
 
@@ -275,7 +275,7 @@ class StorageMongoDb(StorageInterface):
 
     @staticmethod
     def _decode_str(value: str) -> str:
-        """ Decodes a (dotted) string
+        """Decodes a (dotted) string
 
         Args:
             value: The value
@@ -288,7 +288,7 @@ class StorageMongoDb(StorageInterface):
 
     @staticmethod
     def _encode_data(data: Any) -> Any:
-        """ Recursively encode the data and apply dot replacement and integer encoding on the keys
+        """Recursively encode the data and apply dot replacement and integer encoding on the keys
 
         Args:
             data: The data
@@ -310,7 +310,7 @@ class StorageMongoDb(StorageInterface):
 
     @staticmethod
     def _decode_data(data: Any) -> Any:
-        """ Recursively decode the data and apply dot replacement and integer decoding on the keys
+        """Recursively decode the data and apply dot replacement and integer decoding on the keys
 
         Args:
             data: The data
