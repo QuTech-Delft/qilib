@@ -53,13 +53,13 @@ class NumpyArrayCodec(TypeCodec):  # type: ignore
 
 
 class StorageMongoDb(StorageInterface):
-    """ Reference implementation of StorageInterface with an mongodb backend
+    """Reference implementation of StorageInterface with an mongodb backend
 
     Implements a storage tree in a MongoDB collection
     """
 
     def __init__(self, name: str, host: str = 'localhost', port: int = 27017, database: str = ''):
-        """ MongoDB implementation of storage class
+        """MongoDB implementation of storage class
 
         See also: `StorageInterface`
 
@@ -78,7 +78,7 @@ class StorageMongoDb(StorageInterface):
         self._collection = self._db.get_collection('storage', codec_options=codec_options)
 
     def _get_root(self) -> ObjectId:
-        """ Get or create a root node if it doesn't exist yet
+        """Get or create a root node if it doesn't exist yet
 
         Returns:
             An ObjectID of the root node
@@ -92,7 +92,7 @@ class StorageMongoDb(StorageInterface):
             return self._collection.insert_one({'tag': ''}).inserted_id
 
     def _retrieve_nodes_by_tag(self, tag: List[str], parent: ObjectId) -> List[str]:
-        """ Traverse the tree and list the children of a given tag
+        """Traverse the tree and list the children of a given tag
 
         Args:
             tag: The node tag
@@ -115,7 +115,7 @@ class StorageMongoDb(StorageInterface):
                 return self._retrieve_nodes_by_tag(tag[1:], doc['_id'])
 
     def _retrieve_value_by_tag(self, tag: List[str], parent: ObjectId) -> Any:
-        """ Traverse the tree and give the value a given leaf tag
+        """Traverse the tree and give the value a given leaf tag
 
         Args:
             tag: The leaf tag
@@ -132,7 +132,7 @@ class StorageMongoDb(StorageInterface):
             elif 'value' not in doc:
                 raise NoDataAtKeyError(f'Tag "{tag[0]}" is not a leaf')
             else:
-                return doc['value']
+                return self._decode_data(doc['value'])
 
         else:
             doc = self._collection.find_one({'parent': parent, 'tag': tag[0], 'value': {'$exists': False}})
@@ -156,9 +156,10 @@ class StorageMongoDb(StorageInterface):
                 if 'value' not in doc:
                     raise NodeAlreadyExistsError(f'Tag "{tag[0]}" is not a leaf')
                 else:
-                    self._collection.update_one({'parent': parent, 'tag': tag[0]}, {'$set': {'value': data}})
+                    self._collection.update_one({'parent': parent, 'tag': tag[0]},
+                                                {'$set': {'value': self._encode_data(data)}})
             else:
-                self._collection.insert_one({'parent': parent, 'tag': tag[0], 'value': data})
+                self._collection.insert_one({'parent': parent, 'tag': tag[0], 'value': self._encode_data(data)})
 
         else:
             doc = self._collection.find_one({'parent': parent, 'tag': tag[0]})
@@ -174,7 +175,7 @@ class StorageMongoDb(StorageInterface):
 
     def load_data(self, tag: List[str]) -> Any:
         if not isinstance(tag, list):
-            raise TypeError('tag should be a list of strings')
+            raise TypeError('Tag should be a list of strings')
 
         if len(tag) == 0:
             raise NoDataAtKeyError('Tag cannot be empty')
@@ -183,7 +184,7 @@ class StorageMongoDb(StorageInterface):
 
     def save_data(self, data: Any, tag: List[str]) -> None:
         if not isinstance(tag, list):
-            raise TypeError('tag should be a list of strings')
+            raise TypeError('Tag should be a list of strings')
 
         self._store_value_by_tag(tag, self._serialize(data), self._get_root())
 
@@ -214,3 +215,118 @@ class StorageMongoDb(StorageInterface):
             else:
                 parent = doc['_id']
         return True
+
+    @staticmethod
+    def _encode_int(value: int) -> str:
+        """Encodes an int value to a string
+
+        Args:
+            value: An integer
+
+        Returns:
+            An encoded integer
+        """
+
+        return f'_integer[{value}]'
+
+    @staticmethod
+    def _is_encoded_int(value: str) -> bool:
+        """Checks if the given value is a properly encoded integer
+
+        Args:
+            value: The encoded value
+
+        Returns:
+            True if an integer can be decoded, False otherwise
+        """
+
+        if not value.startswith('_integer[') or not value.endswith(']'):
+            return False
+
+        return value[len('_integer['):-1].isdigit()
+
+    @staticmethod
+    def _decode_int(value: str) -> int:
+        """Parses an integer from the encoded value
+
+        Args:
+            value: The encoded integer
+
+        Returns:
+            The decoded integer
+        """
+
+        if not StorageMongoDb._is_encoded_int(value):
+            raise ValueError()
+
+        return int(value[len('_integer['):-1])
+
+    @staticmethod
+    def _encode_str(value: str) -> str:
+        """Encodes a (dotted) string
+        Args:
+            value: The value
+
+        Returns:
+            The encoded value
+        """
+
+        return value.replace('.', '\\u002e')
+
+    @staticmethod
+    def _decode_str(value: str) -> str:
+        """Decodes a (dotted) string
+
+        Args:
+            value: The value
+
+        Returns:
+            The decoded value
+        """
+
+        return value.replace('\\u002e', '.')
+
+    @staticmethod
+    def _encode_data(data: Any) -> Any:
+        """Recursively encode the data and apply dot replacement and integer encoding on the keys
+
+        Args:
+            data: The data
+        Returns:
+            The transformed data
+        """
+
+        if isinstance(data, dict):
+            return {
+                StorageMongoDb._encode_str(StorageMongoDb._encode_int(key) if isinstance(key, int) else key)
+                : StorageMongoDb._encode_data(value)
+                for key, value in data.items()
+            }
+
+        elif isinstance(data, list):
+            return [StorageMongoDb._encode_data(item) for item in data]
+
+        return data
+
+    @staticmethod
+    def _decode_data(data: Any) -> Any:
+        """Recursively decode the data and apply dot replacement and integer decoding on the keys
+
+        Args:
+            data: The data
+        Returns:
+            The transformed data
+        """
+
+        if isinstance(data, dict):
+            return {
+                StorageMongoDb._decode_int(StorageMongoDb._decode_str(key))
+                if StorageMongoDb._is_encoded_int(key) else StorageMongoDb._decode_str(key)
+                : StorageMongoDb._decode_data(value)
+                for key, value in data.items()
+            }
+
+        elif isinstance(data, list):
+            return [StorageMongoDb._decode_data(item) for item in data]
+
+        return data
