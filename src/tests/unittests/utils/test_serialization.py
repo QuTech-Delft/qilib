@@ -51,7 +51,7 @@ class TestSerialization(unittest.TestCase):
 
     def test_transform_data_unknown_type(self):
         data = {'test': CustomType(13, 37)}
-        transformed = serializer.transform_data(data)
+        transformed = serializer.encode_data(data)
 
         self.assertNotEqual(transformed, {'test': {'x': 13, 'y': 37}})
 
@@ -62,7 +62,7 @@ class TestSerialization(unittest.TestCase):
         serializer.register(CustomType, dummy_transform, '', None)
 
         data = {'test': CustomType(13, 37)}
-        transformed = serializer.transform_data(data)
+        transformed = serializer.encode_data(data)
 
         self.assertEqual(transformed, {'test': {'x': 13, 'y': 37}})
 
@@ -87,3 +87,8 @@ class TestSerialization(unittest.TestCase):
 
         data = SubClass([1, 2, 3, 4, 5])
         self.assertRaises(TypeError, serialize, data)
+
+    def test_encode_decode_complex(self):
+        data = {'results': [{'result_1': np.array([1, 2, 3, 4, 5])}]}
+        new_data = serializer.decode_data(serializer.encode_data(data))
+        self.assertTrue(np.array_equal(data['results'][0]['result_1'], new_data['results'][0]['result_1']))

@@ -19,7 +19,7 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 """
 
 from operator import itemgetter
-from typing import Any, List, Optional
+from typing import Any, List, Optional, Union
 
 import numpy as np
 from bson import ObjectId
@@ -27,6 +27,7 @@ from bson.codec_options import TypeCodec, CodecOptions, TypeRegistry
 from pymongo import MongoClient
 
 from qilib.data_set.mongo_data_set_io import MongoDataSetIO, NumpyKeys
+from qilib.utils.serialization import Serializer, serializer as _serializer
 from qilib.utils.storage.interface import (NoDataAtKeyError,
                                            NodeAlreadyExistsError,
                                            StorageInterface)
@@ -58,7 +59,8 @@ class StorageMongoDb(StorageInterface):
     Implements a storage tree in a MongoDB collection
     """
 
-    def __init__(self, name: str, host: str = 'localhost', port: int = 27017, database: str = ''):
+    def __init__(self, name: str, host: str = 'localhost', port: int = 27017, database: str = '',
+                 serializer: Union[Serializer, None] = None):
         """MongoDB implementation of storage class
 
         See also: `StorageInterface`
@@ -76,6 +78,11 @@ class StorageMongoDb(StorageInterface):
         type_registry = TypeRegistry([NumpyArrayCodec()])
         codec_options = CodecOptions(type_registry=type_registry)
         self._collection = self._db.get_collection('storage', codec_options=codec_options)
+
+        if serializer is None:
+            serializer = _serializer
+        self._serialize = serializer.encode_data
+        self._unserialize = serializer.decode_data
 
     def _get_root(self) -> ObjectId:
         """Get or create a root node if it doesn't exist yet
@@ -132,7 +139,7 @@ class StorageMongoDb(StorageInterface):
             elif 'value' not in doc:
                 raise NoDataAtKeyError(f'Tag "{tag[0]}" is not a leaf')
             else:
-                return self._decode_data(doc['value'])
+                return doc['value']
 
         else:
             doc = self._collection.find_one({'parent': parent, 'tag': tag[0], 'value': {'$exists': False}})
@@ -157,9 +164,9 @@ class StorageMongoDb(StorageInterface):
                     raise NodeAlreadyExistsError(f'Tag "{tag[0]}" is not a leaf')
                 else:
                     self._collection.update_one({'parent': parent, 'tag': tag[0]},
-                                                {'$set': {'value': self._encode_data(data)}})
+                                                {'$set': {'value': data}})
             else:
-                self._collection.insert_one({'parent': parent, 'tag': tag[0], 'value': self._encode_data(data)})
+                self._collection.insert_one({'parent': parent, 'tag': tag[0], 'value': data})
 
         else:
             doc = self._collection.find_one({'parent': parent, 'tag': tag[0]})
@@ -180,13 +187,13 @@ class StorageMongoDb(StorageInterface):
         if len(tag) == 0:
             raise NoDataAtKeyError('Tag cannot be empty')
 
-        return self._unserialize(self._retrieve_value_by_tag(tag, self._get_root()))
+        return self._decode_data(self._unserialize(self._retrieve_value_by_tag(tag, self._get_root())))
 
     def save_data(self, data: Any, tag: List[str]) -> None:
         if not isinstance(tag, list):
             raise TypeError('Tag should be a list of strings')
 
-        self._store_value_by_tag(tag, self._serialize(data), self._get_root())
+        self._store_value_by_tag(tag, self._serialize(self._encode_data(data)), self._get_root())
 
     def get_latest_subtag(self, tag: List[str]) -> Optional[List[str]]:
         child_tags = sorted(self.list_data_subtags(tag))

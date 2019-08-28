@@ -164,7 +164,7 @@ class MongoDataSetIO:
             NumpyKeys.CONTENT: {
                 NumpyKeys.ARRAY: base64.b64encode(array.tobytes()).decode('ascii'),
                 NumpyKeys.DATA_TYPE: array.dtype.str,
-                NumpyKeys.SHAPE: array.shape,
+                NumpyKeys.SHAPE: list(array.shape),
             }
         }
 
