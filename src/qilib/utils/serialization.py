@@ -122,6 +122,9 @@ class Serializer:
                  decode_func: TransformFunction) -> None:
         """ Registers an encoder and decoder for a given type
 
+        An encode function is expected to return a JSON valid type or a dictionary with the keys
+        `JsonSerializeKey.OBJECT` (the name of the type) and `JsonSerializeKey.CONTENT` (the JSON valid encoded content)
+
         Args:
             type_: The type to encode
             encode_func: The transform function for encoding that type
