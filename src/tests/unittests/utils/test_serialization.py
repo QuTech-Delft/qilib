@@ -45,6 +45,16 @@ class TestSerialization(unittest.TestCase):
             xx = unserialize(s)
             self.assertSequenceEqual(x.tolist(), xx.tolist())
 
+    def test_serialization_default_types_2(self):
+        for x in self.testdata:
+            s = serializer.encode_data(x)
+            xx = serializer.decode_data(s)
+            self.assertEqual(x, xx)
+        for x in self.testdata_arrays:
+            s = serializer.encode_data(x)
+            xx = serializer.decode_data(s)
+            self.assertSequenceEqual(x.tolist(), xx.tolist())
+
     def test_non_serializable_objects(self):
         with self.assertRaisesRegex(TypeError, 'is not JSON serializable'):
             serialize(object())
@@ -92,3 +102,6 @@ class TestSerialization(unittest.TestCase):
         data = {'results': [{'result_1': np.array([1, 2, 3, 4, 5])}]}
         new_data = serializer.decode_data(serializer.encode_data(data))
         self.assertTrue(np.array_equal(data['results'][0]['result_1'], new_data['results'][0]['result_1']))
+
+    def test_decode_unknown_type(self):
+        self.assertRaises(ValueError, serializer.decode_data, {'__object__': 'CustomType', '__content__': [1, 2, 3]})
