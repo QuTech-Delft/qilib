@@ -28,3 +28,20 @@ class TestInstrumentAdapter(unittest.TestCase):
         adapter = TestAdapter('fake')
         adapter.close_instrument()
         instrument.close.assert_called_once_with()
+
+    def test_instrument_representation(self):
+        instrument = MagicMock()
+
+        class TestAdapter(InstrumentAdapter):
+            def __init__(self, address: str):
+                super().__init__(address)
+
+            def apply(self, config: PythonJsonStructure) -> None:
+                pass
+
+            def _filter_parameters(self, parameters: PythonJsonStructure) -> PythonJsonStructure:
+                pass
+
+        address = 'fake'
+        adapter = TestAdapter(address)
+        self.assertEqual(f'{adapter.__class__.__name__}_{address}', adapter.__str__())

@@ -100,3 +100,11 @@ class InstrumentAdapter(ABC):
 
         """
         visitor.visit(self)
+
+    def __str__(self):
+        """Returns string representation for the InstrumentAdapter.
+
+        Returns:
+            String representation for the InstrumentAdapter.
+        """
+        return self._name
