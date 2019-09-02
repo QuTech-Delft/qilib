@@ -187,13 +187,13 @@ class StorageMongoDb(StorageInterface):
         if len(tag) == 0:
             raise NoDataAtKeyError('Tag cannot be empty')
 
-        return self._decode_data(self._unserialize(self._retrieve_value_by_tag(tag, self._get_root())))
+        return self._unserialize(self._decode_data(self._retrieve_value_by_tag(tag, self._get_root())))
 
     def save_data(self, data: Any, tag: List[str]) -> None:
         if not isinstance(tag, list):
             raise TypeError('Tag should be a list of strings')
 
-        self._store_value_by_tag(tag, self._serialize(self._encode_data(data)), self._get_root())
+        self._store_value_by_tag(tag, self._encode_data(self._serialize(data)), self._get_root())
 
     def get_latest_subtag(self, tag: List[str]) -> Optional[List[str]]:
         child_tags = sorted(self.list_data_subtags(tag))
