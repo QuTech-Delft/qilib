@@ -33,7 +33,7 @@ class InstrumentAdapter(ABC):
         Args:
             address: The address/ID of the QCoDeS instrument.
         """
-        self._name = '{0}_{1}'.format(self.__class__.__name__, address)
+        self._name = f'{self.__class__.__name__}_{address}'
         self._address = address
         self._instrument: Instrument = None
 
