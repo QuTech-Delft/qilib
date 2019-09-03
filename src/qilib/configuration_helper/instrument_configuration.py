@@ -148,3 +148,11 @@ class InstrumentConfiguration:
         """
         visitor.visit(self)
         self._instrument.accept(visitor)
+
+    def __str__(self):
+        """Returns string representation for the underlying InstrumentAdapter.
+
+        Returns:
+            String representation for the underlying InstrumentAdapter.
+        """
+        return self._instrument.__str__()
