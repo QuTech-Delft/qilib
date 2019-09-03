@@ -58,7 +58,7 @@ class Decoder(JSONDecoder):
         super().__init__(object_hook=self._object_hook)
 
         # creates a new transform table
-        self.decoders: ClassVar[Dict[type, TransformFunction]] = {}
+        self.decoders: ClassVar[Dict[str, TransformFunction]] = {}
 
     def _object_hook(self, obj):
         if isinstance(obj, dict):
@@ -82,7 +82,7 @@ def _decode_bytes(data: Dict[str, Any]) -> bytes:
 def _encode_tuple(item):
     return {
         JsonSerializeKey.OBJECT: tuple.__name__,
-        JsonSerializeKey.CONTENT: [serializer.transform_data(value) for value in item]
+        JsonSerializeKey.CONTENT: [serializer.encode_data(value) for value in item]
     }
 
 
@@ -122,6 +122,9 @@ class Serializer:
                  decode_func: TransformFunction) -> None:
         """ Registers an encoder and decoder for a given type
 
+        An encode function is expected to return a JSON valid type or a dictionary with the keys
+        `JsonSerializeKey.OBJECT` (the name of the type) and `JsonSerializeKey.CONTENT` (the JSON valid encoded content)
+
         Args:
             type_: The type to encode
             encode_func: The transform function for encoding that type
@@ -142,7 +145,7 @@ class Serializer:
             JSON encoded string
         """
 
-        return self.encoder.encode(self.transform_data(data))
+        return self.encoder.encode(self.encode_data(data))
 
     def unserialize(self, data: str) -> Any:
         """ Unserializes a JSON string to a Python object
@@ -156,8 +159,8 @@ class Serializer:
 
         return self.decoder.decode(data)
 
-    def transform_data(self, data: Any) -> Any:
-        """ Recursively transfer a Python object and apply transform functions to it
+    def encode_data(self, data: Any) -> Any:
+        """ Recursively transform a Python object and apply transform functions to it
 
         Args:
             data: Any Python object that can be handled by an encode/transform function for that type
@@ -167,28 +170,61 @@ class Serializer:
         """
 
         if isinstance(data, dict):
-            new = {}
-            for key, value in data.items():
-                if isinstance(value, dict):
-                    new[key] = self.transform_data(value)
-                else:
-                    new[key] = self._transform(value)
+            new_dict = {}
 
-            return new
+            for key, value in data.items():
+                new_dict[key] = self.encode_data(value)
+
+            return new_dict
 
         elif isinstance(data, list):
-            new = []
+            new_list = []
             for item in data:
-                new.append(self.transform_data(self._transform(item)))
+                new_list.append(self.encode_data(self._encode(item)))
 
-            return new
+            return new_list
 
-        return self._transform(data)
+        return self._encode(data)
 
-    def _transform(self, data):
+    def _encode(self, data: Any) -> Any:
         type_ = type(data)
         if type_ in self.encoder.encoders:
             return self.encoder.encoders[type_](data)
+
+        return data
+
+    def decode_data(self, data: Any) -> Any:
+        """ Recursively transform an object and apply transform functions to it
+
+        Args:
+            data: Any Python object that can be handled by an decode/transform function for that type
+
+        Returns:
+            The transformed data
+        """
+
+        if isinstance(data, dict):
+            new_dict = {}
+            for key, value in data.items():
+                new_dict[key] = self.decode_data(value)
+
+            return self._decode(new_dict)
+
+        if isinstance(data, list):
+            new_list = []
+            for item in data:
+                new_list.append(self.decode_data(item))
+            return new_list
+
+        return data
+
+    def _decode(self, data: Any) -> Any:
+        if isinstance(data, dict):
+            if JsonSerializeKey.OBJECT in data:
+                if data[JsonSerializeKey.OBJECT] in self.decoder.decoders:
+                    return self.decoder.decoders[data[JsonSerializeKey.OBJECT]](data)
+                else:
+                    raise ValueError()
 
         return data
 
