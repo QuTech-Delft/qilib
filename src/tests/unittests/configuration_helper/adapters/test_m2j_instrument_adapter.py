@@ -13,6 +13,7 @@ class TestM2jInstrumentAdapter(unittest.TestCase):
         InstrumentAdapterFactory.instrument_adapters.clear()
 
         self.mock_config = {
+            'name': 'M2jInstrumentAdapter_spirack1_module3',
             'gain': {
                 'value': 35,
                 'ts': '2019-01-03 16:09:19',
@@ -89,7 +90,7 @@ class TestM2jInstrumentAdapter(unittest.TestCase):
 
             identity = 'IDN'
             self.mock_config[identity] = 'version_test'
-            mocked_snapshot = {'parameters': self.mock_config}
+            mocked_snapshot = {'name': 'some_m2j', 'parameters': self.mock_config}
             m2j_adapter.instrument.snapshot = MagicMock(return_value=mocked_snapshot)
 
             config = m2j_adapter.read()

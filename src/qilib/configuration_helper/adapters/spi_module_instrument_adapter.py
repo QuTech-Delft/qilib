@@ -18,7 +18,7 @@ COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER I
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 import re
-from typing import Tuple
+from typing import Tuple, Optional
 
 from qilib.configuration_helper import SerialPortResolver
 from qilib.configuration_helper.adapters import SpiRackInstrumentAdapter, CommonInstrumentAdapter
@@ -27,7 +27,7 @@ from qilib.utils import PythonJsonStructure
 
 class SpiModuleInstrumentAdapter(CommonInstrumentAdapter):
 
-    def __init__(self, address: str) -> None:
+    def __init__(self, address: str, instrument_name: Optional[str] = None) -> None:
         """ The base instrument adapter for each SPI rack module.
 
         Each module is identified using the name of the spirack the module number. The address is
@@ -37,8 +37,9 @@ class SpiModuleInstrumentAdapter(CommonInstrumentAdapter):
             address: The unique identifier of the SPI rack module, which should be of the form
                      <spi_name>_module<module_number>, where spi_name is the name of the spi rack
                      and module_number the integer module number.
+            instrument_name: An optional name for the underlying instrument.
         """
-        super().__init__(address)
+        super().__init__(address, instrument_name)
         identifier, self._module_number = SpiModuleInstrumentAdapter.__collect_settings(address)
         adapter = SerialPortResolver.get_serial_port_adapter('SpiRackInstrumentAdapter', identifier)
         self._spi_rack: SpiRackInstrumentAdapter = adapter.instrument

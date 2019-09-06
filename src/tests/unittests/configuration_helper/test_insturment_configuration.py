@@ -36,9 +36,12 @@ class TestInstrumentConfiguration(unittest.TestCase):
 
         test_adapter = TestAdapter('fake-address')
 
-        with patch('qilib.configuration_helper.instrument_configuration.InstrumentAdapterFactory.get_instrument_adapter', return_value=test_adapter):
+        with patch(
+                'qilib.configuration_helper.instrument_configuration.InstrumentAdapterFactory.get_instrument_adapter',
+                return_value=test_adapter):
             instrument_configuration = InstrumentConfiguration('DummyClass', 'fake-address', self._storage)
-        self.assertEqual(instrument_configuration.__str__(), 'TestAdapter_fake-address')
+        self.assertEqual(instrument_configuration.__str__(),
+                         'Configuration for InstrumentAdapter: TestAdapter_fake-address')
 
     def test_constructor_full(self):
         config = PythonJsonStructure(voltage='low', current='lower', frequency='high-enough')

@@ -18,7 +18,7 @@ COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER I
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 from types import ModuleType
-from typing import Dict, Tuple, cast
+from typing import Dict, Tuple, cast, Optional
 
 import qilib
 from qilib.configuration_helper import InstrumentAdapter
@@ -46,12 +46,15 @@ class InstrumentAdapterFactory:
         InstrumentAdapterFactory._external_adapters.update(vars(package))
 
     @classmethod
-    def get_instrument_adapter(cls, instrument_adapter_class_name: str, address: str) -> InstrumentAdapter:
+    def get_instrument_adapter(cls, instrument_adapter_class_name: str, address: str,
+                               instrument_name: Optional[str] = None) -> InstrumentAdapter:
         """ Factory method for creating an InstrumentAdapter with QCoDeS instrument.
 
         Args:
             instrument_adapter_class_name: Name of the InstrumentAdapter subclass.
             address: Address of the physical instrument.
+            instrument_name: An optional name for the underlying instrument.
+
         Returns:
              An instance of the requested InstrumentAdapter.
 
@@ -69,6 +72,7 @@ class InstrumentAdapterFactory:
         if adapter is None:
             raise ValueError(f"No such InstrumentAdapter {instrument_adapter_class_name}")
         else:
-            adapter = cast(InstrumentAdapter, adapter(address))
+            args = (address, instrument_name) if instrument_name is not None else address,
+            adapter = cast(InstrumentAdapter, adapter(*args))
             cls.instrument_adapters[instrument_adapter_key] = adapter
             return adapter

@@ -18,7 +18,7 @@ COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER I
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 import logging
-from abc import ABC
+from abc import ABC, abstractmethod
 
 from qilib.configuration_helper import InstrumentAdapter
 from qilib.utils import PythonJsonStructure
@@ -29,19 +29,40 @@ class CommonInstrumentAdapter(InstrumentAdapter, ABC):
     def apply(self, config: PythonJsonStructure) -> None:
         """ Applies the given instrument configuration settings onto the adapters instrument.
 
-        Only the setter commands will be updated. Note that setter only parameters which have
-        not been set yield a None when reading the configuration from the instrument adapter.
-        These None parameter values in the configuration will not be set. A warning will be
+        Apart from the underlying instrument's name, only the setter commands will be updated.
+        Note that setter only parameters which have not been set yield a None when reading the configuration from the
+        instrument adapter. These None parameter values in the configuration will not be set. A warning will be
         given if any of the configuration parameter values are None.
 
         Args:
             config: The configuration with settings for the adapters instrument.
 
         """
-        parameters = [parameter for parameter in config if hasattr(self._instrument.parameters[parameter], 'set')]
+        if 'name' in config:
+            self._instrument.name = config['name']
+        parameters = []
+        for parameter in config:
+            if parameter in self._instrument.parameters and hasattr(self._instrument.parameters[parameter], 'set'):
+                parameters.append(parameter)
+
         if any(config[parameter]['value'] is None for parameter in parameters):
             error_message = 'Some parameter values of {0} are None and will not be set!'.format(self._instrument.name)
             logging.warning(error_message)
         for parameter in parameters:
             if 'value' in config[parameter] and config[parameter]['value'] is not None:
                 self._instrument.set(parameter, config[parameter]['value'])
+
+    @abstractmethod
+    def _filter_parameters(self, parameters: PythonJsonStructure) -> PythonJsonStructure:
+        """ Filters out parameters that are not used for instrument configuration storage.
+
+        This function should be overwritten in the subclasses for each specific instrument,
+        if needed when reading the configuration.
+
+        Args:
+            parameters: A complete snapshot from an instrument.
+
+        Returns:
+            PythonJsonStructure: Contains the instrument snapshot without the instrument
+                                 parameters which are filtered out by this function.
+        """

@@ -14,8 +14,8 @@ class TestKeithley6500InstrumentAdapter(unittest.TestCase):
             mock_requests.get.assert_called_once_with('http://192.168.1.127/')
 
     def test_read(self):
-        fake_parameters = {'fake_parameter': {'value': 'not_relevant'}}
-        fake_snapshot = {'parameters': fake_parameters}
+        fake_parameters = {'name': 'fake_name', 'fake_parameter': {'value': 'not_relevant'}}
+        fake_snapshot = {'name': 'fake_name', 'parameters': fake_parameters}
         instrument_instance = Mock()
         instrument_instance.snapshot.return_value = fake_snapshot
         with patch('qilib.configuration_helper.adapters.keithley_dmm6500_adapter.requests'), \

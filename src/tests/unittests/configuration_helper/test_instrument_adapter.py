@@ -3,6 +3,7 @@ from unittest.mock import MagicMock
 
 from qilib.configuration_helper import InstrumentAdapter
 from qilib.utils import PythonJsonStructure
+from tests.test_data.dummy_instrument_adapter import DummyInstrumentAdapter
 
 
 class TestInstrumentAdapter(unittest.TestCase):
@@ -29,19 +30,9 @@ class TestInstrumentAdapter(unittest.TestCase):
         adapter.close_instrument()
         instrument.close.assert_called_once_with()
 
-    def test_instrument_representation(self):
-        instrument = MagicMock()
+    def test_instrument_string_representation(self):
+        adapter = DummyInstrumentAdapter('some_address', 'some_dummy')
+        adapter_str = str(adapter)
+        self.assertEqual('InstrumentAdapter: DummyInstrumentAdapter_some_address', adapter_str)
+        adapter.close_instrument()
 
-        class TestAdapter(InstrumentAdapter):
-            def __init__(self, address: str):
-                super().__init__(address)
-
-            def apply(self, config: PythonJsonStructure) -> None:
-                pass
-
-            def _filter_parameters(self, parameters: PythonJsonStructure) -> PythonJsonStructure:
-                pass
-
-        address = 'fake'
-        adapter = TestAdapter(address)
-        self.assertEqual(f'{adapter.__class__.__name__}_{address}', adapter.__str__())

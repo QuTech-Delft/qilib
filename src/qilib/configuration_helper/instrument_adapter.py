@@ -18,6 +18,7 @@ COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER I
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 from abc import ABC, abstractmethod
+from typing import Optional
 
 from qcodes import Instrument
 
@@ -27,7 +28,7 @@ from qilib.utils import PythonJsonStructure
 
 class InstrumentAdapter(ABC):
 
-    def __init__(self, address: str) -> None:
+    def __init__(self, address: str, instrument_name: Optional[str] = None) -> None:
         """ A template for an adapter to the QCoDeS instrument interface.
 
         Args:
@@ -36,6 +37,7 @@ class InstrumentAdapter(ABC):
         self._name = f'{self.__class__.__name__}_{address}'
         self._address = address
         self._instrument: Instrument = None
+        self._instrument_name = instrument_name if instrument_name is not None else self.name
 
     @property
     def name(self) -> str:
@@ -63,14 +65,15 @@ class InstrumentAdapter(ABC):
         """ Obtains a full set of settings from the instrument.
 
         Returns:
-            Contains the instrument snapshot without the
-            instrument parameters which are filtered out.
+            Part of the instrument snapshot, i.e., parameter values, without the instrument's parameters which are
+            explicitly filtered out, and the instrument name.
         """
-        parameters = PythonJsonStructure()
+        configuration = PythonJsonStructure()
         if self._instrument is not None:
             snapshot = self._instrument.snapshot(update)
-            parameters.update(self._filter_parameters(snapshot['parameters']))
-        return parameters
+            configuration['name'] = snapshot['name']
+            configuration.update(self._filter_parameters(snapshot['parameters']))
+        return configuration
 
     @abstractmethod
     def _filter_parameters(self, parameters: PythonJsonStructure) -> PythonJsonStructure:
@@ -107,4 +110,4 @@ class InstrumentAdapter(ABC):
         Returns:
             String representation for the InstrumentAdapter.
         """
-        return self._name
+        return f'InstrumentAdapter: {self.name}'

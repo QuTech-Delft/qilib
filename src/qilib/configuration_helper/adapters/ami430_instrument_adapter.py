@@ -18,7 +18,7 @@ COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER I
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 import math
-from typing import Any
+from typing import Any, Optional
 
 from qcodes.instrument_drivers.american_magnetics.AMI430 import AMI430
 
@@ -33,20 +33,22 @@ class ConfigurationError(Exception):
 class AMI430InstrumentAdapter(InstrumentAdapter):
     """ Adapter for the AMI430 QCoDeS driver."""
 
-    def __init__(self, address: str) -> None:
+    def __init__(self, address: str, instrument_name: Optional[str] = None) -> None:
         """ Instantiate a new AMI430 instrument adapter.
 
         Args:
             address: IP address and port number separated by a column, 'x.x.x.x:xxxx'
+            instrument_name: An optional name for the underlying instrument.
 
         """
         super().__init__(address)
         ip_and_port = address.split(':')
-        self._instrument = AMI430(name=self.name, address=ip_and_port[0], port=int(ip_and_port[1]))
+        name = instrument_name if instrument_name is not None else self.name
+        self._instrument = AMI430(name=name, address=ip_and_port[0], port=int(ip_and_port[1]))
         self.field_variation_tolerance = 0.01
 
     def apply(self, config: PythonJsonStructure) -> None:
-        """ Does not apply config to device, but compares config to device settings.
+        """ Does not apply config, except for instrument name, to device, but compares config to device settings.
 
         Args:
             config: Containing the instrument configuration.
@@ -63,6 +65,8 @@ class AMI430InstrumentAdapter(InstrumentAdapter):
                 self._check_field_value(config[parameter]['value'], device_config[parameter]['value'])
             elif 'value' in config[parameter]:
                 self._assert_value_matches(config[parameter]['value'], device_config[parameter]['value'], parameter)
+        if 'name' in config:
+            self._instrument.name = config['name']
 
     def _filter_parameters(self, parameters: PythonJsonStructure) -> PythonJsonStructure:
         for values in parameters.values():

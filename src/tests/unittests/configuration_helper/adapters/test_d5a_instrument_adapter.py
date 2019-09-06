@@ -12,6 +12,7 @@ class TestD5aInstrumentAdapter(unittest.TestCase):
         InstrumentAdapterFactory.instrument_adapters.clear()
 
         self.mock_config = {
+            'name': 'd5a',
             'dac1': {
                 'value': 39.97802734375, 'ts': '2019-01-03 16:06:36',
                 'raw_value': 39.97802734375, '__class__': 'qcodes.instrument.parameter.Parameter',
@@ -71,7 +72,7 @@ class TestD5aInstrumentAdapter(unittest.TestCase):
 
             self.mock_config['dac1']['value'] = None
             d5a_adapter.apply(self.mock_config)
-            warning_text = 'Some parameter values of {} are None and will not be set!'.format(instrument_name)
+            warning_text = 'Some parameter values of d5a are None and will not be set!'
             logger_mock.warning.assert_called_once_with(warning_text)
 
             d5a_adapter.instrument.close()
@@ -102,7 +103,7 @@ class TestD5aInstrumentAdapter(unittest.TestCase):
 
             identity = 'IDN'
             self.mock_config[identity] = 'version_test'
-            mocked_snapshot = {'parameters': self.mock_config}
+            mocked_snapshot = {'name': 'd5a', 'parameters': self.mock_config}
             d5a_adapter.instrument.snapshot = MagicMock(return_value=mocked_snapshot)
 
             config = d5a_adapter.read()

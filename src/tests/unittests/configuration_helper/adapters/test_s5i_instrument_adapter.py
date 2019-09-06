@@ -4,12 +4,13 @@ from unittest.mock import patch, MagicMock
 from qilib.configuration_helper import InstrumentAdapterFactory, SerialPortResolver
 
 
-class TestM2jInstrumentAdapter(unittest.TestCase):
+class TestS5iInstrumentAdapter(unittest.TestCase):
 
     def setUp(self):
         InstrumentAdapterFactory.instrument_adapters.clear()
 
         self.mock_config = {
+            'name': 'S5iInstrumentAdapter_spirack1_module3',
             'output_enabled': {
                 'value': True,
                 'ts': '2019-01-03 16:08:02',
@@ -124,7 +125,7 @@ class TestM2jInstrumentAdapter(unittest.TestCase):
 
             identity = 'IDN'
             self.mock_config[identity] = 'version_test'
-            mocked_snapshot = {'parameters': self.mock_config}
+            mocked_snapshot = {'name': 'some_s5i', 'parameters': self.mock_config}
             s5i_adapter.instrument.snapshot = MagicMock(return_value=mocked_snapshot)
 
             config = s5i_adapter.read()

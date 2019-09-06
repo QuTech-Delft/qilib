@@ -48,7 +48,7 @@ class TestInstrumentAdapterFactory(unittest.TestCase):
         reload(instrument_adapter_factory)
         self.assertRaises(ValueError, InstrumentAdapterFactory.get_instrument_adapter, 'DummyInstrumentAdapter', '')
 
-    def test_external_adapters_add_is_called___yolo(self):
+    def test_external_adapters_add_is_called(self):
         InstrumentAdapterFactory.add_instrument_adapters(sys.modules[__name__])
 
         adapter = InstrumentAdapterFactory.get_instrument_adapter('DummyInstrumentAdapter', '')
