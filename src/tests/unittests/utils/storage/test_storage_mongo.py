@@ -17,7 +17,8 @@ class TestStorageMongo(unittest.TestCase):
         with patch('qilib.utils.storage.mongo.MongoClient', return_value=MongoClient()):
             self.storage = StorageMongoDb('test')
             self.test_data = [10, 3.14, 'string', {'a': 1, 'b': 2}, [1, 2], [1, [2, 3]], {'test': {'test': 2}},
-                              {'tuple': (1, 2, 3, 4, 5)}, (1, 2, 3, 4, 5), (1, 2, {'he.llo': 'world'},)]
+                              {'tuple': (1, 2, 3, 4, 5)}, (1, 2, 3, 4, 5), (1, 2, {'he.llo': 'world'}),
+                              {'int64': np.int64(3.)}]
 
     def tearDown(self) -> None:
         self.storage._collection.drop()
