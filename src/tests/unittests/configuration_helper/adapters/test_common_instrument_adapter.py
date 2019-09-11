@@ -19,3 +19,4 @@ class TestCommonInstrumentAdapter(unittest.TestCase):
         adapter.apply(config)
         self.assertEqual('DummyInstrumentAdapter_dummy_address', adapter.name)
         self.assertEqual('new_name', adapter.instrument.name)
+        adapter.close_instrument()
