@@ -132,7 +132,7 @@ class Serializer:
         self.register(np.ndarray, MongoDataSetIO.encode_numpy_array, np.array.__name__,
                       MongoDataSetIO.decode_numpy_array)
         self.register(tuple, _encode_tuple, tuple.__name__, _decode_tuple)
-        for numpy_integer_type in [np.int32, np.int64, np.float32, np.float64, np.bool_]:
+        for numpy_integer_type in [np.int16, np.int32, np.int64, np.float16, np.float32, np.float64, np.bool_]:
             self.register(numpy_integer_type, _encode_numpy_number, '__npnumber__', _decode_numpy_number)
 
     def register(self, type_: type, encode_func: TransformFunction, type_name: str,
