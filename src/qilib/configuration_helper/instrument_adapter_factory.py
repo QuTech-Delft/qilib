@@ -72,7 +72,7 @@ class InstrumentAdapterFactory:
         if adapter is None:
             raise ValueError(f"No such InstrumentAdapter {instrument_adapter_class_name}")
         else:
-            args = (address, instrument_name) if instrument_name is not None else address,
+            args = (address, instrument_name) if instrument_name is not None else (address,)
             adapter = cast(InstrumentAdapter, adapter(*args))
             cls.instrument_adapters[instrument_adapter_key] = adapter
             return adapter
