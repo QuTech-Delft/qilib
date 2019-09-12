@@ -105,3 +105,14 @@ class TestSerialization(unittest.TestCase):
 
     def test_decode_unknown_type(self):
         self.assertRaises(ValueError, serializer.decode_data, {'__object__': 'CustomType', '__content__': [1, 2, 3]})
+
+    def test_serialize(self):
+        data = {'hello': 'world'}
+        serialized = serialize(data)
+        self.assertEqual(type(serialized), bytes)
+        self.assertEqual(data, unserialize(serialize(data)))
+
+    def test_unserialize(self):
+        data = b'{"hello":"world"}'
+        unserialized = unserialize(data)
+        self.assertDictEqual(unserialized, {'hello': 'world'})
