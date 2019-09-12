@@ -229,7 +229,7 @@ class Serializer:
         return data
 
 
-def serialize(data: Any) -> str:
+def serialize(data: Any) -> bytes:
     """ Serializes a Python object to JSON using the default serializer. Dictionary keys should be hashable.
 
     Args:
@@ -238,10 +238,10 @@ def serialize(data: Any) -> str:
         JSON encoded string
     """
 
-    return serializer.serialize(data)
+    return serializer.serialize(data).encode('utf8')
 
 
-def unserialize(data: str) -> Any:
+def unserialize(data: bytes) -> Any:
     """ Unserializes a JSON string to a Python object using the default serializer
 
     Args:
@@ -250,7 +250,7 @@ def unserialize(data: str) -> Any:
         A Python object decoded from the JSON string
     """
 
-    return serializer.unserialize(data)
+    return serializer.unserialize(data.decode('utf8'))
 
 
 # The default Serializer to use
