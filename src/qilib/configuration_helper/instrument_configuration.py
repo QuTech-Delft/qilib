@@ -20,8 +20,8 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 from typing import List, Union
 
 from qilib.configuration_helper import InstrumentAdapterFactory
-from qilib.configuration_helper.visitor import Visitor
 from qilib.configuration_helper.exceptions import DuplicateTagError
+from qilib.configuration_helper.visitor import Visitor
 from qilib.utils import PythonJsonStructure
 from qilib.utils.storage.interface import StorageInterface
 
@@ -155,4 +155,4 @@ class InstrumentConfiguration:
         Returns:
             String representation for the underlying InstrumentAdapter.
         """
-        return self._instrument.__str__()
+        return f'Configuration for {self._instrument}'

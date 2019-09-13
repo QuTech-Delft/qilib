@@ -17,6 +17,8 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
+from typing import Optional
+
 from qcodes.instrument_drivers.QuTech.D5a import D5a
 
 from qilib.configuration_helper.adapters import SpiModuleInstrumentAdapter
@@ -35,9 +37,10 @@ MV = True
 
 class D5aInstrumentAdapter(SpiModuleInstrumentAdapter):
 
-    def __init__(self, address: str) -> None:
-        super().__init__(address)
-        self._instrument = D5a(self._name, self._spi_rack, self._module_number, mV=MV, inter_delay=INTER_DELAY,
+    def __init__(self, address: str, instrument_name: Optional[str] = None) -> None:
+        super().__init__(address, instrument_name)
+        self._instrument = D5a(self._instrument_name, self._spi_rack, self._module_number, mV=MV,
+                               inter_delay=INTER_DELAY,
                                reset_voltages=RESET_VOLTAGE, dac_step=DAC_STEP)
         if self._instrument.span3() != '4v bi':
             raise SpanValueError('D5a instrument has span unequal to "4v bi"')

@@ -17,6 +17,8 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
+from typing import Optional
+
 import numpy as np
 from qcodes.instrument_drivers.ZI.ZIUHFLI import ZIUHFLI
 
@@ -25,9 +27,9 @@ from qilib.utils import PythonJsonStructure
 
 
 class ZIUHFLIInstrumentAdapter(CommonInstrumentAdapter):
-    def __init__(self, address: str) -> None:
-        super().__init__(address)
-        self._instrument: ZIUHFLI = ZIUHFLI(self.name, device_ID=address)
+    def __init__(self, address: str, instrument_name: Optional[str] = None) -> None:
+        super().__init__(address, instrument_name)
+        self._instrument: ZIUHFLI = ZIUHFLI(self._instrument_name, device_ID=address)
 
     def _filter_parameters(self, parameters: PythonJsonStructure) -> PythonJsonStructure:
         for values in parameters.values():

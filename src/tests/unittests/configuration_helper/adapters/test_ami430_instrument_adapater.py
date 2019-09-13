@@ -22,6 +22,19 @@ class TestAMI430InstrumentAdapter(unittest.TestCase):
         adapter.apply(snapshot['parameters'])
         mock_ami430.snapshot.assert_called_once_with(True)
 
+    def test_apply_with_name(self):
+        mock_ami430 = MagicMock()
+        mock_ami430.snapshot.return_value = snapshot
+        mock_ami430.name = 'no-good-name'
+        config = snapshot['parameters']
+        config['name'] = 'a_good_name'
+        with patch('qilib.configuration_helper.adapters.ami430_instrument_adapter.AMI430', return_value=mock_ami430):
+            address = '192.168.1.128:7180'
+            adapter = AMI430InstrumentAdapter(address)
+        self.assertEqual('no-good-name', adapter.instrument.name)
+        adapter.apply(config)
+        self.assertEqual('a_good_name', adapter.instrument.name)
+
     def test_apply_raises_error(self):
         mock_ami430 = MagicMock()
         mock_ami430.snapshot.return_value = snapshot
@@ -33,7 +46,7 @@ class TestAMI430InstrumentAdapter(unittest.TestCase):
 
     def test_field_difference_raises_error(self):
         mock_ami430 = MagicMock()
-        mock_ami430.snapshot.return_value = {'parameters': {'field': {'value': -0.0001205}}}
+        mock_ami430.snapshot.return_value = {'name': 'magnet', 'parameters': {'field': {'value': -0.0001205}}}
         with patch('qilib.configuration_helper.adapters.ami430_instrument_adapter.AMI430', return_value=mock_ami430):
             address = '192.168.1.128:7180'
             adapter = AMI430InstrumentAdapter(address)
@@ -46,7 +59,7 @@ class TestAMI430InstrumentAdapter(unittest.TestCase):
         config = {'field': {'value': -0.0101206}}
         self.assertRaisesRegex(ConfigurationError, error_msg, adapter.apply, config)
 
-        mock_ami430.snapshot.return_value = {'parameters': {'field': {'value': 0.0001205}}}
+        mock_ami430.snapshot.return_value = {'name': 'magnet', 'parameters': {'field': {'value': 0.0001205}}}
         error_msg = "Target value for field does not match device value: -0.0098796T != 0.0001205T"
         config = {'field': {'value': -0.0098796}}
         self.assertRaisesRegex(ConfigurationError, error_msg, adapter.apply, config)

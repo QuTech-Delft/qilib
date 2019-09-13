@@ -71,7 +71,7 @@ class TestZIHDAWG8InstrumentAdapter(unittest.TestCase):
 
     def test_apply(self):
         with patch.object(zhinst.utils, 'create_api_session', return_value=3 * (MagicMock(),)) as daq, \
-        patch.object(qilib.configuration_helper.adapters.hdawg8_instrument_adapter.ZIHDAWG8,
+                patch.object(qilib.configuration_helper.adapters.hdawg8_instrument_adapter.ZIHDAWG8,
                              'download_device_node_tree', return_value=self.node_tree) as ddnt, \
                 patch('qilib.configuration_helper.adapters.common_instrument_adapter.logging') as logger_mock:
             address = 'test_dev1'
@@ -152,14 +152,16 @@ class TestZIHDAWG8InstrumentAdapter(unittest.TestCase):
             # Apply original config and assert parameters have been updated
             hdawg_adapter.apply(config_original)
             for parameter in config_original:
-                if hasattr(hdawg_adapter.instrument.parameters[parameter], 'set'):
+                if parameter in hdawg_adapter.instrument.parameters and hasattr(
+                        hdawg_adapter.instrument.parameters[parameter], 'set'):
                     self.assertIn(hdawg_adapter.instrument.parameters[parameter].raw_value,
                                   [1, 0.5, "Test String", [0.1, 0.2, 0.3, 0.4]])
 
             # Apply new config and assert parameters are updated
             hdawg_adapter.apply(config_new)
             for parameter in config_new:
-                if hasattr(hdawg_adapter.instrument.parameters[parameter], 'set'):
+                if parameter in hdawg_adapter.instrument.parameters and hasattr(
+                        hdawg_adapter.instrument.parameters[parameter], 'set'):
                     self.assertIn(hdawg_adapter.instrument.parameters[parameter].raw_value,
                                   [0, 0.7, "New String", [0.5, 0.6, 0.7, 0.8]])
                     self.assertNotIn(hdawg_adapter.instrument.parameters[
@@ -169,7 +171,8 @@ class TestZIHDAWG8InstrumentAdapter(unittest.TestCase):
             # Apply original config again and check if updated
             hdawg_adapter.apply(config_original)
             for parameter in config_original:
-                if hasattr(hdawg_adapter.instrument.parameters[parameter], 'set'):
+                if parameter in hdawg_adapter.instrument.parameters and hasattr(
+                        hdawg_adapter.instrument.parameters[parameter], 'set'):
                     self.assertIn(hdawg_adapter.instrument.parameters[parameter].raw_value,
                                   [1, 0.5, "Test String", [0.1, 0.2, 0.3, 0.4]])
                     self.assertNotIn(hdawg_adapter.instrument.parameters[parameter].raw_value,
@@ -195,7 +198,8 @@ class TestZIHDAWG8InstrumentAdapter(unittest.TestCase):
 
     def test_close_instrument(self):
         dawg_instance = MagicMock()
-        with patch('qilib.configuration_helper.adapters.hdawg8_instrument_adapter.ZIHDAWG8', return_value=dawg_instance):
+        with patch('qilib.configuration_helper.adapters.hdawg8_instrument_adapter.ZIHDAWG8',
+                   return_value=dawg_instance):
             adapter_name = 'ZIHDAWG8InstrumentAdapter'
             hdawg_adapter = InstrumentAdapterFactory.get_instrument_adapter(adapter_name, 'dev43')
         hdawg_adapter.close_instrument()

@@ -10,6 +10,7 @@ class TestD5aInstrumentAdapter(unittest.TestCase):
         InstrumentAdapterFactory.instrument_adapters.clear()
 
         self.mock_config = {
+            'name': 'F1dInstrumentAdapter_spirack1_module3',
             'remote_settings': {
                 'value': 64,
                 'ts': '2019-01-03 16:08:34',
@@ -155,7 +156,7 @@ class TestD5aInstrumentAdapter(unittest.TestCase):
 
             identity = 'IDN'
             self.mock_config[identity] = 'version_test'
-            mocked_snapshot = {'parameters': self.mock_config}
+            mocked_snapshot = {'name': 'f1d', 'parameters': self.mock_config}
             f1d_adapter.instrument.snapshot = MagicMock(return_value=mocked_snapshot)
 
             config = f1d_adapter.read()
