@@ -1,41 +1,31 @@
 import sys
 import unittest
 
-from qilib.configuration_helper import InstrumentAdapterFactory, InstrumentAdapter
-from qilib.configuration_helper import adapters
-from qilib.utils import PythonJsonStructure
-
-
-class DummyInstrumentAdapter(InstrumentAdapter):
-    def apply(self, config: PythonJsonStructure) -> None:
-        pass
-
-    def _filter_parameters(self, parameters: PythonJsonStructure) -> PythonJsonStructure:
-        pass
+import tests
+from qilib.configuration_helper import InstrumentAdapterFactory
+from tests.test_data.dummy_instrument_adapter import DummyInstrumentAdapter
 
 
 class TestInstrumentAdapterFactory(unittest.TestCase):
-    class DummyAdapter(InstrumentAdapter):
-        def _filter_parameters(self, parameters: PythonJsonStructure) -> PythonJsonStructure:
-            pass
-
-        def apply(self, config: PythonJsonStructure) -> None:
-            pass
 
     def setUp(self):
-        adapters.InstrumentAdapter = TestInstrumentAdapterFactory.DummyAdapter
+        InstrumentAdapterFactory.add_instrument_adapters(tests.test_data.dummy_instrument_adapter)
 
     def test_factory_creates_single_instance(self):
-        dummy_adapter1 = InstrumentAdapterFactory.get_instrument_adapter('InstrumentAdapter', 'dev1')
-        dummy_adapter2 = InstrumentAdapterFactory.get_instrument_adapter('InstrumentAdapter', 'dev1')
+        dummy_adapter1 = InstrumentAdapterFactory.get_instrument_adapter('DummyInstrumentAdapter', 'dev1')
+        dummy_adapter2 = InstrumentAdapterFactory.get_instrument_adapter('DummyInstrumentAdapter', 'dev1')
         self.assertIs(dummy_adapter1, dummy_adapter2)
+        dummy_adapter1.close_instrument()
 
     def test_factory_new_instance(self):
-        dummy_adapter1 = InstrumentAdapterFactory.get_instrument_adapter('InstrumentAdapter', 'dev1')
-        dummy_adapter2 = InstrumentAdapterFactory.get_instrument_adapter('InstrumentAdapter', 'dev2')
+        dummy_adapter1 = InstrumentAdapterFactory.get_instrument_adapter('DummyInstrumentAdapter', 'dev1')
+        dummy_adapter2 = InstrumentAdapterFactory.get_instrument_adapter('DummyInstrumentAdapter', 'dev2')
         self.assertIsNot(dummy_adapter1, dummy_adapter2)
-        dummy_adapter3 = InstrumentAdapterFactory.get_instrument_adapter('InstrumentAdapter', 'dev1')
+        dummy_adapter3 = InstrumentAdapterFactory.get_instrument_adapter('DummyInstrumentAdapter', 'dev1')
         self.assertIs(dummy_adapter1, dummy_adapter3)
+
+        dummy_adapter1.close_instrument()
+        dummy_adapter2.close_instrument()
 
     def test_raise_value_error(self):
         with self.assertRaises(ValueError):
@@ -51,7 +41,16 @@ class TestInstrumentAdapterFactory(unittest.TestCase):
     def test_external_adapters_add_is_called(self):
         InstrumentAdapterFactory.add_instrument_adapters(sys.modules[__name__])
 
-        adapter = InstrumentAdapterFactory.get_instrument_adapter('DummyInstrumentAdapter', '')
-        self.assertIsInstance(adapter, DummyInstrumentAdapter)
+        dummy_adapter = InstrumentAdapterFactory.get_instrument_adapter('DummyInstrumentAdapter', '')
+        self.assertIsInstance(dummy_adapter, DummyInstrumentAdapter)
 
         InstrumentAdapterFactory.instrument_adapters.pop(('DummyInstrumentAdapter', ''))
+        dummy_adapter.close_instrument()
+
+    def test_different_instrument_name_raises_error(self):
+        dummy_adapter = InstrumentAdapterFactory.get_instrument_adapter('DummyInstrumentAdapter', 'dev12', 'some_name')
+        self.assertEqual('some_name', dummy_adapter.instrument.name)
+        error_msg = 'An adapter exist with different instrument name \'some_name\' != \'other_name\''
+        self.assertRaisesRegex(ValueError, error_msg, InstrumentAdapterFactory.get_instrument_adapter,
+                               'DummyInstrumentAdapter', 'dev12', 'other_name')
+        dummy_adapter.close_instrument()

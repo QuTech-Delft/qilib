@@ -59,12 +59,16 @@ class InstrumentAdapterFactory:
              An instance of the requested InstrumentAdapter.
 
         Raises:
-            ValueError: If adapter is not found or error occurred while importing the adapter.
+            ValueError: If adapter is not found or adapter exist but with a different instrument name.
 
         """
         instrument_adapter_key = instrument_adapter_class_name, str(address)
         if instrument_adapter_key in cls.instrument_adapters:
-            return cls.instrument_adapters[instrument_adapter_key]
+            adapter = cls.instrument_adapters[instrument_adapter_key]
+            if instrument_name is not None and instrument_name != adapter.instrument.name:
+                raise ValueError(f'An adapter exist with different instrument name'
+                                 f' \'{adapter.instrument.name}\' != \'{instrument_name}\'')
+            return adapter
 
         adapter = vars(qilib.configuration_helper.adapters).get(instrument_adapter_class_name,
                                                                 InstrumentAdapterFactory._external_adapters.get(
