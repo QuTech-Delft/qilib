@@ -21,16 +21,18 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 from setuptools import setup
 
 
-def get_version_number(module):
+def get_version_number(module: str) -> str:
     """ Extract the version number from the source code.
-        Returns:
-            Str: the version number.
+    Pass the source module that contains the version.py file. This version
+    number will be returned as a string.
+    Args:
+        module: module containing the version.py file
+    Returns:
+        the version number.
     """
-    with open(f'src/{module}/version.py', 'r') as file_stream:
-        line = file_stream.readline().split()
-        version_number = line[2].replace('\'', '')
-    return version_number
-
+    from importlib import import_module
+    module = import_module(f'src.{module}.version')
+    return module.__version__
 
 def get_long_description():
     """ Extract the long description from the README file """

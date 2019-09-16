@@ -1,1 +1,4 @@
-from qilib.version import __version__
+try:
+    from qilib.version import __version__
+except:
+    pass
