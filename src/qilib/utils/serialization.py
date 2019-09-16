@@ -17,11 +17,11 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
-
 from json import JSONEncoder, JSONDecoder
 from typing import Any, Dict, Callable, ClassVar
 from qilib.data_set import MongoDataSetIO
 import numpy as np
+import base64
 
 # A callable type for transforming a given argument with a type to another type
 TransformFunction = Callable[[Any], Any]
@@ -90,6 +90,21 @@ def _decode_tuple(data: Dict[str, Any]) -> tuple:
     return tuple(data[JsonSerializeKey.CONTENT])
 
 
+def _encode_numpy_number(item):
+    return {
+        JsonSerializeKey.OBJECT: '__npnumber__',
+        JsonSerializeKey.CONTENT: {
+            '__npnumber__': base64.b64encode(item.tobytes()).decode('ascii'),
+            '__data_type__': item.dtype.str,
+        }
+    }
+
+
+def _decode_numpy_number(item):
+    obj = item[JsonSerializeKey.CONTENT]
+    return np.frombuffer(base64.b64decode(obj['__npnumber__']), dtype=np.dtype(obj['__data_type__']))[0]
+
+
 class Serializer:
     """ A general serializer to serialize data to JSON and vice versa. It allows
      extending the types with a custom encoder and decoder"""
@@ -117,6 +132,8 @@ class Serializer:
         self.register(np.ndarray, MongoDataSetIO.encode_numpy_array, np.array.__name__,
                       MongoDataSetIO.decode_numpy_array)
         self.register(tuple, _encode_tuple, tuple.__name__, _decode_tuple)
+        for numpy_integer_type in [np.int16, np.int32, np.int64, np.float16, np.float32, np.float64, np.bool_]:
+            self.register(numpy_integer_type, _encode_numpy_number, '__npnumber__', _decode_numpy_number)
 
     def register(self, type_: type, encode_func: TransformFunction, type_name: str,
                  decode_func: TransformFunction) -> None:

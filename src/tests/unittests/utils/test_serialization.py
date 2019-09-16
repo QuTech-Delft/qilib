@@ -32,7 +32,9 @@ class CustomType:
 
 class TestSerialization(unittest.TestCase):
     def setUp(self):
-        self.testdata = [(1, 2, 3), 10, 3.14, 'string', b'bytes', {'a': 1, 'b': 2}, [1, 2], [1, [2, 3]]]
+        self.testdata = [(1, 2, 3), 10, 3.14, 'string', b'bytes', {'a': 1, 'b': 2}, [1, 2], [1, [2, 3]],
+                         np.int16(1), np.int32(2), np.int64(3), np.float16(3.3), np.float32(4.4), np.float64(5.5),
+                         np.bool_(True)]
         self.testdata_arrays = [np.array([1, 2, 3]), np.array([1.0, 2.0]), np.array([[1.0, 0], [0, -.2], [0.123, .0]])]
 
     def test_serialization_default_types(self):
