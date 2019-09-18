@@ -55,8 +55,7 @@ class D5aInstrumentAdapter(SpiModuleInstrumentAdapter):
             config: Containing the instrument configuration.
 
         Raises:
-            ConfigurationError: If config does not match device configuration or difference in field value is greater
-                than the field_variation_tolerance.
+            ConfigurationError: If config does not match device configuration .
 
         """
         unit = config['dac1']['unit']
