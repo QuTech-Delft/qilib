@@ -17,7 +17,7 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
-from typing import Optional
+from typing import Any, Optional
 
 from qcodes.instrument_drivers.QuTech.D5a import D5a
 
@@ -27,6 +27,9 @@ from qilib.utils import PythonJsonStructure
 
 class SpanValueError(Exception):
     """ Error when dacs have misconfigured span values."""
+
+class ConfigurationError(Exception):
+    """ Error to raise if configuration does not match."""
 
 
 DAC_STEP = 10e-3
@@ -46,11 +49,35 @@ class D5aInstrumentAdapter(SpiModuleInstrumentAdapter):
             raise SpanValueError('D5a instrument has span unequal to "4v bi"')
 
     def apply(self, config: PythonJsonStructure) -> None:
-        """ Step values for dacs should be part of configuration."""
-        super().apply(config)
+        """ Does not apply config, except for instrument name, to device, but compares config to device settings.
+
+        Args:
+            config: Containing the instrument configuration.
+
+        Raises:
+            ConfigurationError: If config does not match device configuration or difference in field value is greater
+                than the field_variation_tolerance.
+
+        """
         unit = config['dac1']['unit']
         self._instrument.set_dac_unit(unit)
         dac_parameters = {param: values for param, values in config.items() if param[0:3] == 'dac'}
         for dac, values in dac_parameters.items():
             self._instrument[dac].step = values['step']
             self._instrument[dac].inter_delay = values['inter_delay']
+
+        device_config = self.read(True)
+
+        for parameter in config:
+            if parameter in self._instrument.parameters and hasattr(self._instrument.parameters[parameter], 'set'):
+                if 'value' in config[parameter]:
+                    self._assert_value_matches(config[parameter]['value'], device_config[parameter]['value'], parameter)
+
+        if 'name' in config:
+            self._instrument.name = config['name']
+
+    @staticmethod
+    def _assert_value_matches(config_value: Any, device_value: Any, parameter: str) -> None:
+        if config_value != device_value:
+            raise ConfigurationError(
+                "Configuration for {} does not match: '{}' != '{}'".format(parameter, config_value, device_value))
