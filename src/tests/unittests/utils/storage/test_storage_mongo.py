@@ -188,7 +188,15 @@ class TestStorageMongo(unittest.TestCase):
 
     def test_is_encoded_int(self):
         self.assertTrue(StorageMongoDb._is_encoded_int('_integer[1]'))
+
+    def test_is_encoded_int_negative(self):
         self.assertTrue(StorageMongoDb._is_encoded_int('_integer[-1]'))
+
+    def test_is_encoded_int_error_format(self):
+        self.assertFalse(StorageMongoDb._is_encoded_int('_int[1]'))
+
+    def test_is_encoded_int_error_integer(self):
+        self.assertFalse(StorageMongoDb._is_encoded_int('_integer[helloworld]'))
 
     def test_encode_int(self):
         self.assertEqual(StorageMongoDb._encode_int(7), '_integer[7]')
