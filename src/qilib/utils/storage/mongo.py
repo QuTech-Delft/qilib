@@ -250,7 +250,11 @@ class StorageMongoDb(StorageInterface):
         if not value.startswith('_integer[') or not value.endswith(']'):
             return False
 
-        return value[len('_integer['):-1].isdigit()
+        try:
+            int(value[len('_integer['):-1])
+            return True
+        except ValueError:
+            return False
 
     @staticmethod
     def _decode_int(value: str) -> int:
