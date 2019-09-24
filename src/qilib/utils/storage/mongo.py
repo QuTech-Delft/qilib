@@ -73,11 +73,11 @@ class StorageMongoDb(StorageInterface):
         """
         super().__init__(name)
 
-        self._client = MongoClient(host, port)
-        self._db = self._client.get_database(database or name)
         type_registry = TypeRegistry([NumpyArrayCodec()])
         codec_options = CodecOptions(type_registry=type_registry)
-        self._collection = self._db.get_collection('storage', codec_options=codec_options)
+        self._client = MongoClient(host, port)
+        self._db = self._client.get_database(database or name, codec_options=codec_options)
+        self._collection = self._db.get_collection('storage')
 
         if serializer is None:
             serializer = _serializer
