@@ -114,7 +114,7 @@ class StorageMongoDb(StorageInterface):
                             self._collection.find({'parent': parent, 'tag': {'$exists': True}}, {'value': 0})))
 
         else:
-            doc = self._collection.find_one({'parent': parent, 'tag': tag[0]}, {'value': 0})
+            doc = self._collection.find_one({'parent': parent, 'tag': tag[0]})
             if doc is None:
                 raise NoDataAtKeyError(f'Tag "{tag[0]}" cannot be found')
             elif 'value' in doc:
