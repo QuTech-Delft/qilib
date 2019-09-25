@@ -170,7 +170,7 @@ class StorageMongoDb(StorageInterface):
                 self._collection.insert_one({'parent': parent, 'tag': tag[0], 'value': data})
 
         else:
-            doc = self._collection.find_one({'parent': parent, 'tag': tag[0]}, {'value': 0})
+            doc = self._collection.find_one({'parent': parent, 'tag': tag[0]})
             if doc is None:
                 parent = self._collection.insert_one({'parent': parent, 'tag': tag[0]}).inserted_id
             else:
