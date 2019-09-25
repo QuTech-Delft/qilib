@@ -110,7 +110,8 @@ class StorageMongoDb(StorageInterface):
         """
 
         if len(tag) == 0:
-            return list(map(itemgetter('tag'), self._collection.find({'parent': parent, 'tag': {'$exists': True}})))
+            return list(map(itemgetter('tag'),
+                            self._collection.find({'parent': parent, 'tag': {'$exists': True}}, {'value': 0})))
 
         else:
             doc = self._collection.find_one({'parent': parent, 'tag': tag[0]})
@@ -216,7 +217,7 @@ class StorageMongoDb(StorageInterface):
     def tag_in_storage(self, tag: List[str]) -> bool:
         parent = self._get_root()
         for tag_part in tag:
-            doc = self._collection.find_one({'parent': parent, 'tag': tag_part})
+            doc = self._collection.find_one({'parent': parent, 'tag': tag_part}, {'value': 0})
             if doc is None:
                 return False
             else:
