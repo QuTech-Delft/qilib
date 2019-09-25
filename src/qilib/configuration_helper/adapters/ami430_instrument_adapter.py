@@ -22,15 +22,11 @@ from typing import Any, Optional
 
 from qcodes.instrument_drivers.american_magnetics.AMI430 import AMI430
 
-from qilib.configuration_helper import InstrumentAdapter
+from qilib.configuration_helper.adapters.common_instrument_adapter import CommonInstrumentAdapter
 from qilib.utils import PythonJsonStructure
 
 
-class ConfigurationError(Exception):
-    """ Error to raise if configuration does not match."""
-
-
-class AMI430InstrumentAdapter(InstrumentAdapter):
+class AMI430InstrumentAdapter(CommonInstrumentAdapter):
     """ Adapter for the AMI430 QCoDeS driver."""
 
     def __init__(self, address: str, instrument_name: Optional[str] = None) -> None:
@@ -53,33 +49,12 @@ class AMI430InstrumentAdapter(InstrumentAdapter):
         Args:
             config: Containing the instrument configuration.
 
-        Raises:
-            ConfigurationError: If config does not match device configuration or difference in field value is greater
-                than the field_variation_tolerance.
-
         """
-        device_config = self.read(True)
-        parameters = [parameter for parameter in config if hasattr(self._instrument.parameters[parameter], 'set')]
-        for parameter in parameters:
-            if parameter == 'field':
-                self._check_field_value(config[parameter]['value'], device_config[parameter]['value'])
-            elif 'value' in config[parameter]:
-                self._assert_value_matches(config[parameter]['value'], device_config[parameter]['value'], parameter)
+        parameter_argument= {'field': self.field_variation_tolerance}
+        super().compare_config_on_apply(config, parameter_argument)
 
     def _filter_parameters(self, parameters: PythonJsonStructure) -> PythonJsonStructure:
         for values in parameters.values():
             if 'val_mapping' in values:
                 values.pop('val_mapping')
         return parameters
-
-    def _check_field_value(self, config_value: float, device_value: float) -> None:
-        delta = math.fabs(config_value - device_value)
-        if delta > self.field_variation_tolerance:
-            raise ConfigurationError(
-                "Target value for field does not match device value: {}T != {}T".format(config_value, device_value))
-
-    @staticmethod
-    def _assert_value_matches(config_value: Any, device_value: Any, parameter: str) -> None:
-        if config_value != device_value:
-            raise ConfigurationError(
-                "Configuration for {} does not match: '{}' != '{}'".format(parameter, config_value, device_value))

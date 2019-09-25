@@ -18,6 +18,7 @@ COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER I
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 import logging
+import  math
 from typing import Any, Optional
 from abc import ABC, abstractmethod
 
@@ -55,11 +56,12 @@ class CommonInstrumentAdapter(InstrumentAdapter, ABC):
             if 'value' in config[parameter] and config[parameter]['value'] is not None:
                 self._instrument.set(parameter, config[parameter]['value'])
 
-    def compare_config_on_apply(self, config: PythonJsonStructure) -> None:
+    def compare_config_on_apply(self, config: PythonJsonStructure, param_arg: Any = {}) -> None:
         """ Does comparison for config values with set parameter.
 
         Args:
             config: The configuration with settings for the adapters instrument.
+            param_arg: dictionary with parameter name and argument ( if applicable)
 
         Raises:
             ConfigurationError: If config does not match device configuration .
@@ -69,7 +71,9 @@ class CommonInstrumentAdapter(InstrumentAdapter, ABC):
 
         for parameter in config:
             if parameter in self._instrument.parameters and hasattr(self._instrument.parameters[parameter], 'set'):
-                if 'value' in config[parameter]:
+                if parameter in param_arg and  parameter == 'field':
+                    self._check_field_value(config[parameter]['value'], device_config[parameter]['value'], param_arg['parameter'])
+                elif 'value' in config[parameter]:
                     self._assert_value_matches(config[parameter]['value'], device_config[parameter]['value'], parameter)
 
     @abstractmethod
@@ -92,3 +96,9 @@ class CommonInstrumentAdapter(InstrumentAdapter, ABC):
         if config_value != device_value:
             raise ConfigurationError(
                 "Configuration for {} does not match: '{}' != '{}'".format(parameter, config_value, device_value))
+
+    def _check_field_value(self, config_value: float, device_value: float, arugment: float) -> None:
+        delta = math.fabs(config_value - device_value)
+        if delta > self.field_variation_tolerance:
+            raise ConfigurationError(
+                "Target value for field does not match device value: {}T != {}T".format(config_value, device_value))
