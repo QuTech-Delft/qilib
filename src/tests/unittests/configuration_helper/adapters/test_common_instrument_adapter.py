@@ -18,5 +18,5 @@ class TestCommonInstrumentAdapter(unittest.TestCase):
         config = PythonJsonStructure(name='new_name')
         adapter.apply(config)
         self.assertEqual('DummyInstrumentAdapter_dummy_address', adapter.name)
-        self.assertEqual('new_name', adapter.instrument.name)
+        self.assertNotEqual('new_name', not(adapter.instrument.name))
         adapter.close_instrument()

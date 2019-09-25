@@ -49,7 +49,7 @@ class D5aInstrumentAdapter(SpiModuleInstrumentAdapter):
             raise SpanValueError('D5a instrument has span unequal to "4v bi"')
 
     def apply(self, config: PythonJsonStructure) -> None:
-        """ Does not apply config, except for instrument name, step and inter_delay but compares config to device settings.
+        """ Applies config only for  step and inter_delay and for others cofigs with set value does a comparison
 
         Args:
             config: Containing the instrument configuration.
@@ -71,9 +71,6 @@ class D5aInstrumentAdapter(SpiModuleInstrumentAdapter):
             if parameter in self._instrument.parameters and hasattr(self._instrument.parameters[parameter], 'set'):
                 if 'value' in config[parameter]:
                     self._assert_value_matches(config[parameter]['value'], device_config[parameter]['value'], parameter)
-
-        if 'name' in config:
-            self._instrument.name = config['name']
 
     @staticmethod
     def _assert_value_matches(config_value: Any, device_value: Any, parameter: str) -> None:

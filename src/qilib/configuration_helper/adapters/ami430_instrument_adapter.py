@@ -48,7 +48,7 @@ class AMI430InstrumentAdapter(InstrumentAdapter):
         self.field_variation_tolerance = 0.01
 
     def apply(self, config: PythonJsonStructure) -> None:
-        """ Does not apply config, except for instrument name, to device, but compares config to device settings.
+        """ Does not apply config only  compares config to device settings.
 
         Args:
             config: Containing the instrument configuration.
@@ -65,8 +65,6 @@ class AMI430InstrumentAdapter(InstrumentAdapter):
                 self._check_field_value(config[parameter]['value'], device_config[parameter]['value'])
             elif 'value' in config[parameter]:
                 self._assert_value_matches(config[parameter]['value'], device_config[parameter]['value'], parameter)
-        if 'name' in config:
-            self._instrument.name = config['name']
 
     def _filter_parameters(self, parameters: PythonJsonStructure) -> PythonJsonStructure:
         for values in parameters.values():

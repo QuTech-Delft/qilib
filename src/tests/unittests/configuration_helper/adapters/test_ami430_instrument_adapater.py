@@ -33,7 +33,7 @@ class TestAMI430InstrumentAdapter(unittest.TestCase):
             adapter = AMI430InstrumentAdapter(address)
         self.assertEqual('no-good-name', adapter.instrument.name)
         adapter.apply(config)
-        self.assertEqual('a_good_name', adapter.instrument.name)
+        self.assertNotEqual('a_good_name', adapter.instrument.name)
 
     def test_apply_raises_error(self):
         mock_ami430 = MagicMock()
