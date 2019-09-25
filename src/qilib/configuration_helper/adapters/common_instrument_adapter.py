@@ -18,10 +18,15 @@ COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER I
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 import logging
+from typing import Any, Optional
 from abc import ABC, abstractmethod
 
 from qilib.configuration_helper import InstrumentAdapter
 from qilib.utils import PythonJsonStructure
+
+
+class ConfigurationError(Exception):
+    """ Error to raise if configuration does not match."""
 
 
 class CommonInstrumentAdapter(InstrumentAdapter, ABC):
@@ -50,6 +55,23 @@ class CommonInstrumentAdapter(InstrumentAdapter, ABC):
             if 'value' in config[parameter] and config[parameter]['value'] is not None:
                 self._instrument.set(parameter, config[parameter]['value'])
 
+    def compare_config_on_apply(self, config: PythonJsonStructure) -> None:
+        """ Does comparison for config values with set parameter.
+
+        Args:
+            config: The configuration with settings for the adapters instrument.
+
+        Raises:
+            ConfigurationError: If config does not match device configuration .
+
+        """
+        device_config = self.read(True)
+
+        for parameter in config:
+            if parameter in self._instrument.parameters and hasattr(self._instrument.parameters[parameter], 'set'):
+                if 'value' in config[parameter]:
+                    self._assert_value_matches(config[parameter]['value'], device_config[parameter]['value'], parameter)
+
     @abstractmethod
     def _filter_parameters(self, parameters: PythonJsonStructure) -> PythonJsonStructure:
         """ Filters out parameters that are not used for instrument configuration storage.
@@ -64,3 +86,9 @@ class CommonInstrumentAdapter(InstrumentAdapter, ABC):
             PythonJsonStructure: Contains the instrument snapshot without the instrument
                                  parameters which are filtered out by this function.
         """
+
+    @staticmethod
+    def _assert_value_matches(config_value: Any, device_value: Any, parameter: str) -> None:
+        if config_value != device_value:
+            raise ConfigurationError(
+                "Configuration for {} does not match: '{}' != '{}'".format(parameter, config_value, device_value))

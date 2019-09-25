@@ -4,7 +4,8 @@ from unittest.mock import patch, MagicMock
 
 from qilib.configuration_helper import InstrumentAdapterFactory, SerialPortResolver
 from qilib.configuration_helper.adapters import D5aInstrumentAdapter
-from qilib.configuration_helper.adapters.d5a_instrument_adapter import SpanValueError, ConfigurationError
+from qilib.configuration_helper.adapters.common_instrument_adapter import ConfigurationError
+from qilib.configuration_helper.adapters.d5a_instrument_adapter import SpanValueError
 
 
 class TestD5aInstrumentAdapter(unittest.TestCase):

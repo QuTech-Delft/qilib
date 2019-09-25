@@ -17,7 +17,7 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
-from typing import Any, Optional
+from typing import Optional
 
 from qcodes.instrument_drivers.QuTech.D5a import D5a
 
@@ -27,10 +27,6 @@ from qilib.utils import PythonJsonStructure
 
 class SpanValueError(Exception):
     """ Error when dacs have misconfigured span values."""
-
-class ConfigurationError(Exception):
-    """ Error to raise if configuration does not match."""
-
 
 DAC_STEP = 10e-3
 INTER_DELAY = 0.1
@@ -54,9 +50,6 @@ class D5aInstrumentAdapter(SpiModuleInstrumentAdapter):
         Args:
             config: Containing the instrument configuration.
 
-        Raises:
-            ConfigurationError: If config does not match device configuration .
-
         """
         unit = config['dac1']['unit']
         self._instrument.set_dac_unit(unit)
@@ -65,15 +58,4 @@ class D5aInstrumentAdapter(SpiModuleInstrumentAdapter):
             self._instrument[dac].step = values['step']
             self._instrument[dac].inter_delay = values['inter_delay']
 
-        device_config = self.read(True)
-
-        for parameter in config:
-            if parameter in self._instrument.parameters and hasattr(self._instrument.parameters[parameter], 'set'):
-                if 'value' in config[parameter]:
-                    self._assert_value_matches(config[parameter]['value'], device_config[parameter]['value'], parameter)
-
-    @staticmethod
-    def _assert_value_matches(config_value: Any, device_value: Any, parameter: str) -> None:
-        if config_value != device_value:
-            raise ConfigurationError(
-                "Configuration for {} does not match: '{}' != '{}'".format(parameter, config_value, device_value))
+        super().compare_config_on_apply(config)
