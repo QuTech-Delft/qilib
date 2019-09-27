@@ -27,3 +27,26 @@ class DummyInstrument(Instrument):
         idn = {'vendor': 'QuTech', 'model': self.name,
                'serial': 42, 'firmware': '20-05-2019-RC'}
         return idn
+
+class DummyAMI430Instrument(Instrument):
+
+    def __init__(self, name, **kwargs):
+        """ Dummy AMI430 instrument used for testing."""
+        super().__init__(name, **kwargs)
+
+        self.add_parameter('field_ramp_limit',
+                           unit='T/min',
+                           get_cmd=None,
+                           set_cmd=None,
+                           label=name
+                           )
+        self.add_parameter('field',
+                           get_cmd=None,
+                           set_cmd=None,
+                           unit='T',
+                           label=name)
+
+    def get_idn(self):
+        idn = {'vendor': 'QuTech', 'model': self.name,
+               'serial': 52, 'firmware': '27-09-2019-RC'}
+        return idn

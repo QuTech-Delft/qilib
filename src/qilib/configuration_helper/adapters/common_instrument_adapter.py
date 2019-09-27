@@ -56,7 +56,7 @@ class CommonInstrumentAdapter(InstrumentAdapter, ABC):
             if 'value' in config[parameter] and config[parameter]['value'] is not None:
                 self._instrument.set(parameter, config[parameter]['value'])
 
-    def compare_config_on_apply(self, config: PythonJsonStructure, param_arg: Any = {}) -> None:
+    def compare_config_on_apply(self, config: PythonJsonStructure, param_arg: Any = None) -> None:
         """ Does comparison for config values with set parameter.
 
         Args:
@@ -71,8 +71,9 @@ class CommonInstrumentAdapter(InstrumentAdapter, ABC):
 
         for parameter in config:
             if parameter in self._instrument.parameters and hasattr(self._instrument.parameters[parameter], 'set'):
-                if parameter in param_arg and  parameter == 'field':
-                    self._check_field_value(config[parameter]['value'], device_config[parameter]['value'], param_arg['parameter'])
+                if param_arg is not None and parameter in param_arg and  parameter == 'field':
+                    self._check_field_value(config[parameter]['value'], device_config[parameter]['value'],
+                                            param_arg[parameter])
                 elif 'value' in config[parameter]:
                     self._assert_value_matches(config[parameter]['value'], device_config[parameter]['value'], parameter)
 
