@@ -21,6 +21,8 @@ from typing import Any, Optional
 
 from qcodes.instrument_drivers.QuTech.D5a import D5a
 
+from qilib.configuration_helper.adapters.common_config_check_instrument_adapter import \
+    CommonConfigCheckInstrumentAdapter
 from qilib.configuration_helper.adapters import SpiModuleInstrumentAdapter
 from qilib.utils import PythonJsonStructure
 
@@ -35,7 +37,7 @@ RESET_VOLTAGE = False
 MV = True
 
 
-class D5aInstrumentAdapter(SpiModuleInstrumentAdapter):
+class D5aInstrumentAdapter(SpiModuleInstrumentAdapter, CommonConfigCheckInstrumentAdapter):
 
     def __init__(self, address: str, instrument_name: Optional[str] = None) -> None:
         super().__init__(address, instrument_name)

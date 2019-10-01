@@ -17,7 +17,6 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
-from typing import Any
 from spirack import SPI_rack
 
 from qilib.configuration_helper import InstrumentAdapter
@@ -44,6 +43,3 @@ class SpiRackInstrumentAdapter(InstrumentAdapter):
 
     def _filter_parameters(self, parameters: PythonJsonStructure) -> PythonJsonStructure:
         return parameters
-
-    def _compare_config_values(self, config_value: Any, device_value: Any, parameter: str) -> bool:
-        pass

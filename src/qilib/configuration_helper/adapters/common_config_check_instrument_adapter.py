@@ -17,37 +17,37 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
-import logging
+from typing import Any
 from abc import ABC, abstractmethod
 
 from qilib.configuration_helper import InstrumentAdapter
 from qilib.utils import PythonJsonStructure
 
 
-class CommonInstrumentAdapter(InstrumentAdapter, ABC):
+class ConfigurationError(Exception):
+    """ Error to raise if configuration does not match."""
 
-    def apply(self, config: PythonJsonStructure) -> None:
-        """ Applies the given instrument configuration settings onto the adapters instrument.
 
-        Only the setter commands will be updated.
-        Note that setter only parameters which have not been set yield a None when reading the configuration from the
-        instrument adapter. These None parameter values in the configuration will not be set. A warning will be
-        given if any of the configuration parameter values are None.
+class CommonConfigCheckInstrumentAdapter(InstrumentAdapter, ABC):
+
+    def _config_with_setter_command_mismatch_raises_error(self, config: PythonJsonStructure) -> None:
+        """ Does comparison for config values with set command.
 
         Args:
             config: The configuration with settings for the adapters instrument.
+
+        Raises:
+            ConfigurationError: If config does not match device configuration .
         """
-        parameters = []
+        device_config = self.read(True)
+
         for parameter in config:
             if parameter in self._instrument.parameters and hasattr(self._instrument.parameters[parameter], 'set'):
-                parameters.append(parameter)
-
-        if any(config[parameter]['value'] is None for parameter in parameters):
-            error_message = 'Some parameter values of {0} are None and will not be set!'.format(self._instrument.name)
-            logging.warning(error_message)
-        for parameter in parameters:
-            if 'value' in config[parameter] and config[parameter]['value'] is not None:
-                self._instrument.set(parameter, config[parameter]['value'])
+                result = self._compare_config_values(config[parameter]['value'],
+                                                     device_config[parameter]['value'], parameter)
+                if result:
+                    self._raise_configuration_error(config[parameter]['value'], device_config[parameter]['value'],
+                                                    parameter)
 
     @abstractmethod
     def _filter_parameters(self, parameters: PythonJsonStructure) -> PythonJsonStructure:
@@ -63,3 +63,24 @@ class CommonInstrumentAdapter(InstrumentAdapter, ABC):
             PythonJsonStructure: Contains the instrument snapshot without the instrument
                                  parameters which are filtered out by this function.
         """
+
+    @abstractmethod
+    def _compare_config_values(self, config_value: Any, device_value: Any, parameter: str) -> bool:
+        """ Comparison logic for  configuration parameter values.
+
+        This function should be overwritten in the subclasses for each specific instrument.
+        In case for an instrument the configuration can not be applied this method should define the comparison
+
+        Args:
+            config_value: Configuration value as supplied as argument to apply
+            device_value: Configuration value as read from the device
+            parameter: Name of the configuration parameter with setter command
+
+        Returns:
+            True or False based on the comparison result
+        """
+
+    @staticmethod
+    def _raise_configuration_error(config_value: Any, device_value: Any, parameter: str) -> None:
+        raise ConfigurationError(
+            "Configuration for {} does not match: '{}' != '{}'".format(parameter, config_value, device_value))
