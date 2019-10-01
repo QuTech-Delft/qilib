@@ -21,7 +21,7 @@ from typing import Optional
 
 from qcodes.instrument_drivers.ZI.ZIHDAWG8 import ZIHDAWG8
 
-from qilib.configuration_helper.adapters import CommonInstrumentAdapter
+from qilib.configuration_helper.adapters.common_instrument_adapter import CommonInstrumentAdapter
 from qilib.utils import PythonJsonStructure
 
 

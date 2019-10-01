@@ -21,7 +21,7 @@ from typing import Optional
 
 from qcodes.instrument_drivers.QuTech.S5i import S5i
 
-from qilib.configuration_helper.adapters import SpiModuleInstrumentAdapter
+from qilib.configuration_helper.adapters.spi_module_instrument_adapter import SpiModuleInstrumentAdapter
 
 
 class S5iInstrumentAdapter(SpiModuleInstrumentAdapter):

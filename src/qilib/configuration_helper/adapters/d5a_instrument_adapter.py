@@ -23,7 +23,7 @@ from qcodes.instrument_drivers.QuTech.D5a import D5a
 
 from qilib.configuration_helper.adapters.common_config_check_instrument_adapter import \
     CommonConfigCheckInstrumentAdapter
-from qilib.configuration_helper.adapters import SpiModuleInstrumentAdapter
+from qilib.configuration_helper.adapters.spi_module_instrument_adapter import SpiModuleInstrumentAdapter
 from qilib.utils import PythonJsonStructure
 
 
@@ -68,4 +68,4 @@ class D5aInstrumentAdapter(SpiModuleInstrumentAdapter, CommonConfigCheckInstrume
 
     def _compare_config_values(self, config_value: Any, device_value: Any, parameter: str) -> bool:
         del parameter
-        return config_value != device_value
+        return bool(config_value != device_value)

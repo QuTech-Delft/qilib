@@ -65,4 +65,4 @@ class AMI430InstrumentAdapter(CommonConfigCheckInstrumentAdapter):
             delta = math.fabs(config_value - device_value)
             return delta > self.field_variation_tolerance
         else:
-            return config_value != device_value
+            return bool(config_value != device_value)
