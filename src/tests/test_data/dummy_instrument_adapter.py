@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Any, Optional
 
 from qilib.configuration_helper.adapters import CommonInstrumentAdapter
 from tests.test_data.dummy_instrument import DummyInstrument
@@ -14,3 +14,6 @@ class DummyInstrumentAdapter(CommonInstrumentAdapter):
 
     def _filter_parameters(self, parameters):
         return parameters
+
+    def  _compare_config_values(self, config_value: Any, device_value: Any, parameter: str) -> bool:
+        return True

@@ -50,11 +50,18 @@ class AMI430InstrumentAdapter(CommonInstrumentAdapter):
             config: Containing the instrument configuration.
 
         """
-        parameter_argument= {'field': self.field_variation_tolerance}
-        super().compare_config_on_apply(config, parameter_argument)
+
+        super()._config_with_setter_command_mismatch_raises_error(config)
 
     def _filter_parameters(self, parameters: PythonJsonStructure) -> PythonJsonStructure:
         for values in parameters.values():
             if 'val_mapping' in values:
                 values.pop('val_mapping')
         return parameters
+
+    def _compare_config_values(self, config_value: Any, device_value: Any, parameter: str) -> bool:
+        if parameter == 'field':
+            delta = math.fabs(config_value - device_value)
+            return delta > self.field_variation_tolerance
+        else:
+            return config_value != device_value

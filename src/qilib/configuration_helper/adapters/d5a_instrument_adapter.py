@@ -17,7 +17,7 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
-from typing import Optional
+from typing import Any, Optional
 
 from qcodes.instrument_drivers.QuTech.D5a import D5a
 
@@ -27,6 +27,7 @@ from qilib.utils import PythonJsonStructure
 
 class SpanValueError(Exception):
     """ Error when dacs have misconfigured span values."""
+
 
 DAC_STEP = 10e-3
 INTER_DELAY = 0.1
@@ -45,7 +46,11 @@ class D5aInstrumentAdapter(SpiModuleInstrumentAdapter):
             raise SpanValueError('D5a instrument has span unequal to "4v bi"')
 
     def apply(self, config: PythonJsonStructure) -> None:
-        """ Applies config only for  step and inter_delay and for others cofigs with set value does a comparison
+        """ Applies configuration
+
+        Applies the configuration update to instrument for dac parameters (step, inter_delay and unit)
+        And, compares all other configuration value with setter command to the existing configuration
+        and raised error in case of mismatch
 
         Args:
             config: Containing the instrument configuration.
@@ -57,5 +62,8 @@ class D5aInstrumentAdapter(SpiModuleInstrumentAdapter):
         for dac, values in dac_parameters.items():
             self._instrument[dac].step = values['step']
             self._instrument[dac].inter_delay = values['inter_delay']
+        super()._config_with_setter_command_mismatch_raises_error(config)
 
-        super().compare_config_on_apply(config)
+    def _compare_config_values(self, config_value: Any, device_value: Any, parameter: str) -> bool:
+        del parameter
+        return config_value != device_value

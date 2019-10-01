@@ -18,8 +18,7 @@ COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER I
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 import logging
-import  math
-from typing import Any, Optional
+from typing import Any
 from abc import ABC, abstractmethod
 
 from qilib.configuration_helper import InstrumentAdapter
@@ -56,12 +55,11 @@ class CommonInstrumentAdapter(InstrumentAdapter, ABC):
             if 'value' in config[parameter] and config[parameter]['value'] is not None:
                 self._instrument.set(parameter, config[parameter]['value'])
 
-    def compare_config_on_apply(self, config: PythonJsonStructure, param_arg: Any = None) -> None:
-        """ Does comparison for config values with set parameter.
+    def _config_with_setter_command_mismatch_raises_error(self, config: PythonJsonStructure) -> None:
+        """ Does comparison for config values with set command.
 
         Args:
             config: The configuration with settings for the adapters instrument.
-            param_arg: dictionary with parameter name and argument ( if applicable)
 
         Raises:
             ConfigurationError: If config does not match device configuration .
@@ -71,11 +69,11 @@ class CommonInstrumentAdapter(InstrumentAdapter, ABC):
 
         for parameter in config:
             if parameter in self._instrument.parameters and hasattr(self._instrument.parameters[parameter], 'set'):
-                if param_arg is not None and parameter in param_arg and  parameter == 'field':
-                    self._check_field_value(config[parameter]['value'], device_config[parameter]['value'],
-                                            param_arg[parameter])
-                elif 'value' in config[parameter]:
-                    self._assert_value_matches(config[parameter]['value'], device_config[parameter]['value'], parameter)
+                result = self._compare_config_values(config[parameter]['value'],
+                                                              device_config[parameter]['value'], parameter)
+                if (result is not None and result):
+                    self._raise_configuration_error(config[parameter]['value'], device_config[parameter]['value'],
+                                                    parameter)
 
     @abstractmethod
     def _filter_parameters(self, parameters: PythonJsonStructure) -> PythonJsonStructure:
@@ -92,14 +90,24 @@ class CommonInstrumentAdapter(InstrumentAdapter, ABC):
                                  parameters which are filtered out by this function.
         """
 
+    @abstractmethod
+    def _compare_config_values(self, config_value: Any, device_value: Any, parameter: str) -> bool:
+        """ Comparison logic for  configuration parameter values.
+
+        This function should be overwritten in the subclasses for each specific instrument.
+        In case for an instrument the configuration can not be applied this method should define the comparison
+
+        Args:
+            config_value: Configuration value as supplied as argument to apply
+            device_value: Configuration value as read from the device
+            parameter: Name of the configuration parameter with setter command
+
+        Returns:
+            True or False based on the comparison result
+            None in case when there is no specific behavior needs to be implemented
+        """
+
     @staticmethod
-    def _assert_value_matches(config_value: Any, device_value: Any, parameter: str) -> None:
-        if config_value != device_value:
+    def _raise_configuration_error(config_value: Any, device_value: Any, parameter: str) -> None:
             raise ConfigurationError(
                 "Configuration for {} does not match: '{}' != '{}'".format(parameter, config_value, device_value))
-
-    def _check_field_value(self, config_value: float, device_value: float, arugment: float) -> None:
-        delta = math.fabs(config_value - device_value)
-        if delta > self.field_variation_tolerance:
-            raise ConfigurationError(
-                "Target value for field does not match device value: {}T != {}T".format(config_value, device_value))

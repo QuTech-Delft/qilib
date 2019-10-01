@@ -17,7 +17,7 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
-from typing import Optional
+from typing import Any, Optional
 
 from qcodes.instrument_drivers.ZI.ZIHDAWG8 import ZIHDAWG8
 
@@ -45,3 +45,6 @@ class ZIHDAWG8InstrumentAdapter(CommonInstrumentAdapter):
 
     def upload(self, sequence_program: str, awg_number: int) -> None:
         self._instrument.upload_sequence_program(awg_number, sequence_program)
+
+    def _compare_config_values(self, config_value: Any, device_value: Any, parameter: str) -> bool:
+        pass

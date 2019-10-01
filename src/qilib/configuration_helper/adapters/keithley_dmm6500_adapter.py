@@ -17,7 +17,7 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
-from typing import Optional
+from typing import Any, Optional
 
 import requests
 from qcodes.instrument_drivers.tektronix.Keithley_6500 import Keithley_6500
@@ -37,6 +37,9 @@ class Keithley6500InstrumentAdapter(CommonInstrumentAdapter):
 
     def _filter_parameters(self, parameters: PythonJsonStructure) -> PythonJsonStructure:
         return parameters
+
+    def _compare_config_values(self, config_value: Any, device_value: Any, parameter: str) -> bool:
+        pass
 
     @staticmethod
     def _send_request_to_instrument(address: str) -> None:

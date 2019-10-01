@@ -1,5 +1,6 @@
 import unittest
 from unittest.mock import patch, MagicMock
+from typing import Any
 
 from qilib.configuration_helper import InstrumentConfiguration
 from qilib.configuration_helper.exceptions import DuplicateTagError
@@ -33,6 +34,10 @@ class TestInstrumentConfiguration(unittest.TestCase):
 
             def _filter_parameters(self, parameters: PythonJsonStructure) -> PythonJsonStructure:
                 pass
+
+            def _compare_config_values(self, config_value: Any, device_value: Any, parameter: str) -> bool:
+                pass
+
 
         test_adapter = TestAdapter('fake-address')
 

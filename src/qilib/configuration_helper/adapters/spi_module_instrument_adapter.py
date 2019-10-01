@@ -18,7 +18,7 @@ COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER I
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 import re
-from typing import Tuple, Optional
+from typing import Any, Tuple, Optional
 
 from qilib.configuration_helper import SerialPortResolver
 from qilib.configuration_helper.adapters import SpiRackInstrumentAdapter, CommonInstrumentAdapter
@@ -85,3 +85,6 @@ class SpiModuleInstrumentAdapter(CommonInstrumentAdapter):
             error_message = "Invalid address format. ({} != <spi_name>_module<module_number>)".format(address)
             raise ValueError(error_message)
         return identifier, module
+
+    def _compare_config_values(self, config_value: Any, device_value: Any, parameter: str) -> bool:
+        pass

@@ -18,7 +18,7 @@ COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER I
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 from abc import ABC, abstractmethod
-from typing import Optional
+from typing import Any, Optional
 
 from qcodes import Instrument
 
@@ -110,3 +110,19 @@ class InstrumentAdapter(ABC):
             String representation for the InstrumentAdapter.
         """
         return f'InstrumentAdapter: {self.name}'
+
+    @abstractmethod
+    def _compare_config_values(self, config_value: Any, device_value: Any, parameter: str) -> bool:
+        """ Comparison logic for  configuration parameter values.
+
+        This function should be overwritten in the subclasses for each specific instrument.
+        In case for an instrument the configuration can not be applied this method should define the comparison
+
+        Args:
+            config_value: Configuration value as supplied as argument to apply
+            device_value: Configuration value as read from the device
+            parameter: Name of the configuration parameter with setter command
+
+        Returns:
+            True or False based on the comparison result
+        """

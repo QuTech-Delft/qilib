@@ -17,7 +17,7 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
-from typing import Optional
+from typing import Any, Optional
 
 from qcodes.instrument_drivers.Keysight.Keysight_E8267D import Keysight_E8267D
 
@@ -39,3 +39,6 @@ class KeysightE8267DInstrumentAdapter(CommonInstrumentAdapter):
             if 'on_off_mapping' in values:
                 values.pop('on_off_mapping')
         return parameters
+
+    def _compare_config_values(self, config_value: Any, device_value: Any, parameter: str) -> bool:
+        pass

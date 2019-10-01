@@ -42,7 +42,6 @@ class TestD5aInstrumentAdapter(unittest.TestCase):
             }
         }
 
-
     def test_apply_config_ok(self):
         with patch('qilib.configuration_helper.adapters.spi_rack_instrument_adapter.SPI_rack') as spi_mock, \
                 patch('qilib.configuration_helper.adapters.common_instrument_adapter.logging') as logger_mock, \
@@ -73,12 +72,10 @@ class TestD5aInstrumentAdapter(unittest.TestCase):
             self.assertEqual(d5a_adapter.instrument.parameters['dac1'].step, 20)
             self.assertEqual(d5a_adapter.instrument.parameters['dac1'].inter_delay, 0.05)
             self.assertEqual(d5a_adapter.instrument.parameters['dac1'].unit, 'V')
-
             d5a_adapter.instrument.close()
 
     def test_apply_config_raises_configuration_mismatch_error(self):
-        with patch('qilib.configuration_helper.adapters.spi_rack_instrument_adapter.SPI_rack') as spi_mock, \
-                patch('qcodes.instrument_drivers.QuTech.D5a.D5a_module') as d5a_module_mock:
+        with patch('qcodes.instrument_drivers.QuTech.D5a.D5a_module') as d5a_module_mock:
             range_4volt_bi = 2
             dac_value = 0.03997802734375
             d5a_module_mock.range_4V_bi = range_4volt_bi
@@ -88,11 +85,6 @@ class TestD5aInstrumentAdapter(unittest.TestCase):
             address = 'spirack1_module3'
             SerialPortResolver.serial_port_identifiers = {'spirack1': 'COMnumber_test'}
             d5a_adapter = InstrumentAdapterFactory.get_instrument_adapter('D5aInstrumentAdapter', address)
-
-            spi_mock.assert_called()
-            d5a_module_mock.assert_called()
-            self.assertEqual(address, d5a_adapter.address)
-            self.assertEqual(d5a_adapter.instrument.d5a, d5a_module_mock())
 
             update_config = copy.deepcopy(self.mock_config)
             update_config['dac1']['value'] = 49.978
