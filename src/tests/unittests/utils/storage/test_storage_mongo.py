@@ -149,6 +149,11 @@ class TestStorageMongo(unittest.TestCase):
         self.storage.save_data(data, ['data'])
         self.assertEqual(data, self.storage.load_data(['data']))
 
+    def test_store_keys_with_negative_integer(self):
+        data = {-1: 'key with negative integer'}
+        self.storage.save_data(data, ['data'])
+        self.assertEqual(data, self.storage.load_data(['data']))
+
     def test_store_keys_with_dots(self):
         data = {'key.with': 'dots!'}
         self.storage.save_data(data, ['data'])
@@ -180,6 +185,18 @@ class TestStorageMongo(unittest.TestCase):
         }
         self.storage.save_data(data, ['data'])
         self.assertEqual(data, self.storage.load_data(['data']))
+
+    def test_is_encoded_int(self):
+        self.assertTrue(StorageMongoDb._is_encoded_int('_integer[1]'))
+
+    def test_is_encoded_int_negative(self):
+        self.assertTrue(StorageMongoDb._is_encoded_int('_integer[-1]'))
+
+    def test_is_encoded_int_error_format(self):
+        self.assertFalse(StorageMongoDb._is_encoded_int('_int[1]'))
+
+    def test_is_encoded_int_error_integer(self):
+        self.assertFalse(StorageMongoDb._is_encoded_int('_integer[helloworld]'))
 
     def test_encode_int(self):
         self.assertEqual(StorageMongoDb._encode_int(7), '_integer[7]')

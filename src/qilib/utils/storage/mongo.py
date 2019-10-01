@@ -73,11 +73,11 @@ class StorageMongoDb(StorageInterface):
         """
         super().__init__(name)
 
-        self._client = MongoClient(host, port)
-        self._db = self._client.get_database(database or name)
         type_registry = TypeRegistry([NumpyArrayCodec()])
         codec_options = CodecOptions(type_registry=type_registry)
-        self._collection = self._db.get_collection('storage', codec_options=codec_options)
+        self._client = MongoClient(host, port)
+        self._db = self._client.get_database(database or name, codec_options=codec_options)
+        self._collection = self._db.get_collection('storage')
 
         if serializer is None:
             serializer = _serializer
@@ -110,7 +110,8 @@ class StorageMongoDb(StorageInterface):
         """
 
         if len(tag) == 0:
-            return list(map(itemgetter('tag'), self._collection.find({'parent': parent, 'tag': {'$exists': True}})))
+            return list(map(itemgetter('tag'),
+                            self._collection.find({'parent': parent, 'tag': {'$exists': True}}, {'value': 0})))
 
         else:
             doc = self._collection.find_one({'parent': parent, 'tag': tag[0]})
@@ -216,7 +217,7 @@ class StorageMongoDb(StorageInterface):
     def tag_in_storage(self, tag: List[str]) -> bool:
         parent = self._get_root()
         for tag_part in tag:
-            doc = self._collection.find_one({'parent': parent, 'tag': tag_part})
+            doc = self._collection.find_one({'parent': parent, 'tag': tag_part}, {'value': 0})
             if doc is None:
                 return False
             else:
@@ -250,7 +251,8 @@ class StorageMongoDb(StorageInterface):
         if not value.startswith('_integer[') or not value.endswith(']'):
             return False
 
-        return value[len('_integer['):-1].isdigit()
+        value = value[len('_integer['):-1]
+        return value[1:].isdigit() if value.startswith('-') else value.isdigit()
 
     @staticmethod
     def _decode_int(value: str) -> int:
