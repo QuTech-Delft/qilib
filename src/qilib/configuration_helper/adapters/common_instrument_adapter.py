@@ -41,7 +41,6 @@ class CommonInstrumentAdapter(InstrumentAdapter, ABC):
 
         Args:
             config: The configuration with settings for the adapters instrument.
-
         """
         parameters = []
         for parameter in config:
@@ -63,14 +62,13 @@ class CommonInstrumentAdapter(InstrumentAdapter, ABC):
 
         Raises:
             ConfigurationError: If config does not match device configuration .
-
         """
         device_config = self.read(True)
 
         for parameter in config:
             if parameter in self._instrument.parameters and hasattr(self._instrument.parameters[parameter], 'set'):
                 result = self._compare_config_values(config[parameter]['value'],
-                                                              device_config[parameter]['value'], parameter)
+                                                     device_config[parameter]['value'], parameter)
                 if (result is not None and result):
                     self._raise_configuration_error(config[parameter]['value'], device_config[parameter]['value'],
                                                     parameter)
@@ -109,5 +107,5 @@ class CommonInstrumentAdapter(InstrumentAdapter, ABC):
 
     @staticmethod
     def _raise_configuration_error(config_value: Any, device_value: Any, parameter: str) -> None:
-            raise ConfigurationError(
-                "Configuration for {} does not match: '{}' != '{}'".format(parameter, config_value, device_value))
+        raise ConfigurationError(
+            "Configuration for {} does not match: '{}' != '{}'".format(parameter, config_value, device_value))

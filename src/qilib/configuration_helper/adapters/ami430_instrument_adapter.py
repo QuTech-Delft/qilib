@@ -35,7 +35,6 @@ class AMI430InstrumentAdapter(CommonInstrumentAdapter):
         Args:
             address: IP address and port number separated by a column, 'x.x.x.x:xxxx'
             instrument_name: An optional name for the underlying instrument.
-
         """
         super().__init__(address)
         ip_and_port = address.split(':')
@@ -46,11 +45,12 @@ class AMI430InstrumentAdapter(CommonInstrumentAdapter):
     def apply(self, config: PythonJsonStructure) -> None:
         """ Does not apply config only  compares config to device settings.
 
+        Configuration Parameter with setter commands are matched for equality, on mismatch
+        error is raised
+
         Args:
             config: Containing the instrument configuration.
-
         """
-
         super()._config_with_setter_command_mismatch_raises_error(config)
 
     def _filter_parameters(self, parameters: PythonJsonStructure) -> PythonJsonStructure:

@@ -125,4 +125,5 @@ class InstrumentAdapter(ABC):
 
         Returns:
             True or False based on the comparison result
+            None in case when there is no specific behavior needs to be implemented
         """
