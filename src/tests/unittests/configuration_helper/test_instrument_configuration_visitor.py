@@ -1,6 +1,5 @@
 import unittest
 from unittest.mock import patch, Mock
-from typing import Any
 
 from qilib.configuration_helper import InstrumentConfiguration, InstrumentConfigurationSet
 from qilib.configuration_helper.adapters import CommonInstrumentAdapter
@@ -16,9 +15,6 @@ class DummyAdapter(CommonInstrumentAdapter):
 
     def _filter_parameters(self, parameters: PythonJsonStructure) -> PythonJsonStructure:
         return parameters
-
-    def _compare_config_values(self, config_value: Any, device_value: Any, parameter: str) -> bool:
-        pass
 
 
 class TestInstrumentConfigurationVisitor(unittest.TestCase):

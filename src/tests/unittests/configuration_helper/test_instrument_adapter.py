@@ -1,6 +1,5 @@
 import unittest
 from unittest.mock import MagicMock
-from typing import Any
 
 from qilib.configuration_helper import InstrumentAdapter
 from qilib.utils import PythonJsonStructure
@@ -27,8 +26,6 @@ class TestInstrumentAdapter(unittest.TestCase):
             def _filter_parameters(self, parameters: PythonJsonStructure) -> PythonJsonStructure:
                 pass
 
-            def _compare_config_values(self, config_value: Any, device_value: Any, parameter: str) -> bool:
-                pass
 
         adapter = TestAdapter('fake')
         adapter.close_instrument()

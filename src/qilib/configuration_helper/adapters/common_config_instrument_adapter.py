@@ -28,9 +28,9 @@ class ConfigurationError(Exception):
     """ Error to raise if configuration does not match."""
 
 
-class CommonConfigCheckInstrumentAdapter(InstrumentAdapter, ABC):
+class CommonConfigInstrumentAdapter(InstrumentAdapter, ABC):
 
-    def _config_with_setter_command_mismatch_raises_error(self, config: PythonJsonStructure) -> None:
+    def _apply(self, config: PythonJsonStructure) -> None:
         """ Does comparison for config values with set command.
 
         Args:
@@ -50,31 +50,14 @@ class CommonConfigCheckInstrumentAdapter(InstrumentAdapter, ABC):
                                                     parameter)
 
     @abstractmethod
-    def _filter_parameters(self, parameters: PythonJsonStructure) -> PythonJsonStructure:
-        """ Filters out parameters that are not used for instrument configuration storage.
-
-        This function should be overwritten in the subclasses for each specific instrument,
-        if needed when reading the configuration.
-
-        Args:
-            parameters: A complete snapshot from an instrument.
-
-        Returns:
-            PythonJsonStructure: Contains the instrument snapshot without the instrument
-                                 parameters which are filtered out by this function.
-        """
-
-    @abstractmethod
-    def _compare_config_values(self, config_value: Any, device_value: Any, parameter: str) -> bool:
+    def _compare_config_values(self, config_value: Any, device_value: Any, parameter: str = None) -> bool:
         """ Comparison logic for  configuration parameter values.
-
         This function should be overwritten in the subclasses for each specific instrument.
-        In case for an instrument the configuration can not be applied this method should define the comparison
 
         Args:
             config_value: Configuration value as supplied as argument to apply
             device_value: Configuration value as read from the device
-            parameter: Name of the configuration parameter with setter command
+            parameter: Name of the configuration parameter with setter command (Optional)
 
         Returns:
             True or False based on the comparison result

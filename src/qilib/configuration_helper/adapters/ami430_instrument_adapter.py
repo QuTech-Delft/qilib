@@ -22,12 +22,11 @@ from typing import Any, Optional
 
 from qcodes.instrument_drivers.american_magnetics.AMI430 import AMI430
 
-from qilib.configuration_helper.adapters.common_config_check_instrument_adapter import \
-    CommonConfigCheckInstrumentAdapter
+from qilib.configuration_helper.adapters.common_config_instrument_adapter import CommonConfigInstrumentAdapter
 from qilib.utils import PythonJsonStructure
 
 
-class AMI430InstrumentAdapter(CommonConfigCheckInstrumentAdapter):
+class AMI430InstrumentAdapter(CommonConfigInstrumentAdapter):
     """ Adapter for the AMI430 QCoDeS driver."""
 
     def __init__(self, address: str, instrument_name: Optional[str] = None) -> None:
@@ -52,7 +51,7 @@ class AMI430InstrumentAdapter(CommonConfigCheckInstrumentAdapter):
         Args:
             config: Containing the instrument configuration.
         """
-        super()._config_with_setter_command_mismatch_raises_error(config)
+        super()._apply(config)
 
     def _filter_parameters(self, parameters: PythonJsonStructure) -> PythonJsonStructure:
         for values in parameters.values():
@@ -60,7 +59,7 @@ class AMI430InstrumentAdapter(CommonConfigCheckInstrumentAdapter):
                 values.pop('val_mapping')
         return parameters
 
-    def _compare_config_values(self, config_value: Any, device_value: Any, parameter: str) -> bool:
+    def _compare_config_values(self, config_value: Any, device_value: Any, parameter: str = None) -> bool:
         if parameter == 'field':
             delta = math.fabs(config_value - device_value)
             return delta > self.field_variation_tolerance

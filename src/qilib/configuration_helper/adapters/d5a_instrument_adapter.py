@@ -21,8 +21,7 @@ from typing import Any, Optional
 
 from qcodes.instrument_drivers.QuTech.D5a import D5a
 
-from qilib.configuration_helper.adapters.common_config_check_instrument_adapter import \
-    CommonConfigCheckInstrumentAdapter
+from qilib.configuration_helper.adapters.common_config_instrument_adapter import CommonConfigInstrumentAdapter
 from qilib.configuration_helper.adapters.spi_module_instrument_adapter import SpiModuleInstrumentAdapter
 from qilib.utils import PythonJsonStructure
 
@@ -37,7 +36,7 @@ RESET_VOLTAGE = False
 MV = True
 
 
-class D5aInstrumentAdapter(SpiModuleInstrumentAdapter, CommonConfigCheckInstrumentAdapter):
+class D5aInstrumentAdapter(SpiModuleInstrumentAdapter, CommonConfigInstrumentAdapter):
 
     def __init__(self, address: str, instrument_name: Optional[str] = None) -> None:
         super().__init__(address, instrument_name)
@@ -64,8 +63,7 @@ class D5aInstrumentAdapter(SpiModuleInstrumentAdapter, CommonConfigCheckInstrume
         for dac, values in dac_parameters.items():
             self._instrument[dac].step = values['step']
             self._instrument[dac].inter_delay = values['inter_delay']
-        super()._config_with_setter_command_mismatch_raises_error(config)
+        super()._apply(config)
 
-    def _compare_config_values(self, config_value: Any, device_value: Any, parameter: str) -> bool:
-        del parameter
+    def _compare_config_values(self, config_value: Any, device_value: Any, parameter: str = None) -> bool:
         return bool(config_value != device_value)
