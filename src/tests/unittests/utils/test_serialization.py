@@ -19,10 +19,14 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 """
 
 import unittest
+
 import numpy as np
 
 from qilib.utils import PythonJsonStructure
-from qilib.utils.serialization import serializer, serialize, unserialize, Encoder, Decoder
+from qilib.utils.serialization import (Decoder, Encoder, JsonSerializeKey,
+                                       decode_json_dataclass,
+                                       encode_json_dataclass, serialize,
+                                       serializer, unserialize)
 
 
 class CustomType:
@@ -118,3 +122,21 @@ class TestSerialization(unittest.TestCase):
         data = b'{"hello":"world"}'
         unserialized = unserialize(data)
         self.assertDictEqual(unserialized, {'hello': 'world'})
+
+    def test_encode_json_dataclass(self):
+        tag = '123'
+        mock_object = unittest.mock.MagicMock()
+        mock_object.to_dict.return_value = 'mock_return_value'
+
+        encoded_object = encode_json_dataclass(tag, mock_object)
+        self.assertEqual(encoded_object[JsonSerializeKey.OBJECT], tag)
+        self.assertEqual(encoded_object[JsonSerializeKey.CONTENT], 'mock_return_value')
+
+    def test_decode_json_dataclass(self):
+        mock_class = unittest.mock.MagicMock()
+        mock_class.from_dict.return_value = 'decoded'
+        mock_object = unittest.mock.MagicMock()
+
+        decoded_object = decode_json_dataclass(mock_class, mock_object)
+        mock_class.from_dict.assert_called_once_with(mock_object[JsonSerializeKey.CONTENT])
+        self.assertEqual(decoded_object, 'decoded')

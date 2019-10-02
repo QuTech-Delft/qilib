@@ -33,6 +33,33 @@ class JsonSerializeKey:
     CONTENT = '__content__'
 
 
+def encode_json_dataclass(object_tag, item):
+    """ Encode a JSON dataclass object.
+
+    Args:
+        object_tag: Tag to be used in storage
+        item: Item to be encoded
+
+    Returns:
+        Dictionary that can be serialized
+    """
+    return {JsonSerializeKey.OBJECT: object_tag,
+            JsonSerializeKey.CONTENT: item.to_dict()}
+
+
+def decode_json_dataclass(class_type, data):
+    """ Decode a JSON dataclass object.
+
+    Args:
+        class_type: Type of class to be decoded
+        data: Decoded data
+
+    Returns
+        Object of specified type
+    """
+    return class_type.from_dict(data[JsonSerializeKey.CONTENT])
+
+
 class Encoder(JSONEncoder):
     """ A JSON encoder """
 
@@ -107,10 +134,10 @@ def _decode_numpy_number(item):
 
 class Serializer:
     """ A general serializer to serialize data to JSON and vice versa. It allows
-     extending the types with a custom encoder and decoder"""
+     extending the types with a custom encoder and decoder."""
 
-    def __init__(self, encoders: Dict[type, TransformFunction] = None,
-                 decoders: Dict[str, TransformFunction] = None):
+    def __init__(self, encoders: Dict[type, TransformFunction]=None,
+                 decoders: Dict[str, TransformFunction]=None):
         """ Creates a serializer
 
         Args:
