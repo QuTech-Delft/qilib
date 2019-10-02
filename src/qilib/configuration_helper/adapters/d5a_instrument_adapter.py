@@ -36,7 +36,7 @@ RESET_VOLTAGE = False
 MV = True
 
 
-class D5aInstrumentAdapter(SpiModuleInstrumentAdapter, CommonConfigInstrumentAdapter):
+class D5aInstrumentAdapter(CommonConfigInstrumentAdapter, SpiModuleInstrumentAdapter):
 
     def __init__(self, address: str, instrument_name: Optional[str] = None) -> None:
         super().__init__(address, instrument_name)
@@ -63,7 +63,7 @@ class D5aInstrumentAdapter(SpiModuleInstrumentAdapter, CommonConfigInstrumentAda
         for dac, values in dac_parameters.items():
             self._instrument[dac].step = values['step']
             self._instrument[dac].inter_delay = values['inter_delay']
-        super()._apply(config)
+        super().apply(config)
 
     def _compare_config_values(self, config_value: Any, device_value: Any, parameter: str = None) -> bool:
         return bool(config_value != device_value)

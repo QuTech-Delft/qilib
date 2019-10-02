@@ -30,7 +30,7 @@ class ConfigurationError(Exception):
 
 class CommonConfigInstrumentAdapter(InstrumentAdapter, ABC):
 
-    def _apply(self, config: PythonJsonStructure) -> None:
+    def apply(self, config: PythonJsonStructure) -> None:
         """ Does comparison for config values with set command.
 
         Args:

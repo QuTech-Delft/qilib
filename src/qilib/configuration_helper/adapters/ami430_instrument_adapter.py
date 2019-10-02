@@ -51,7 +51,7 @@ class AMI430InstrumentAdapter(CommonConfigInstrumentAdapter):
         Args:
             config: Containing the instrument configuration.
         """
-        super()._apply(config)
+        super().apply(config)
 
     def _filter_parameters(self, parameters: PythonJsonStructure) -> PythonJsonStructure:
         for values in parameters.values():
