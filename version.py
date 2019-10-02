@@ -1,3 +1,3 @@
-from src.qilib import version
+from qilib import version
 
 print(version.__version__)
