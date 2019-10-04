@@ -17,7 +17,7 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
-from typing import Any
+from typing import Any, Optional
 from abc import ABC, abstractmethod
 
 from qilib.configuration_helper import InstrumentAdapter
@@ -50,7 +50,7 @@ class CommonConfigInstrumentAdapter(InstrumentAdapter, ABC):
                                                     parameter)
 
     @abstractmethod
-    def _compare_config_values(self, config_value: Any, device_value: Any, parameter: str = None) -> bool:
+    def _compare_config_values(self, config_value: Any, device_value: Any, parameter: Optional[str] = None) -> bool:
         """ Comparison logic for  configuration parameter values.
         This function should be overwritten in the subclasses for each specific instrument.
 

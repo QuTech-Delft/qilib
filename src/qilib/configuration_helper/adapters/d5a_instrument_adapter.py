@@ -65,5 +65,5 @@ class D5aInstrumentAdapter(CommonConfigInstrumentAdapter, SpiModuleInstrumentAda
             self._instrument[dac].inter_delay = values['inter_delay']
         super().apply(config)
 
-    def _compare_config_values(self, config_value: Any, device_value: Any, parameter: str = None) -> bool:
+    def _compare_config_values(self, config_value: Any, device_value: Any, parameter: Optional[str] = None) -> bool:
         return bool(config_value != device_value)

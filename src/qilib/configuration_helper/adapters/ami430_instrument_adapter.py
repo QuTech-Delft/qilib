@@ -59,7 +59,7 @@ class AMI430InstrumentAdapter(CommonConfigInstrumentAdapter):
                 values.pop('val_mapping')
         return parameters
 
-    def _compare_config_values(self, config_value: Any, device_value: Any, parameter: str = None) -> bool:
+    def _compare_config_values(self, config_value: Any, device_value: Any, parameter: Optional[str] = None) -> bool:
         if parameter == 'field':
             delta = math.fabs(config_value - device_value)
             return delta > self.field_variation_tolerance
