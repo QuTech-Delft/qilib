@@ -29,17 +29,14 @@ class CommonInstrumentAdapter(InstrumentAdapter, ABC):
     def apply(self, config: PythonJsonStructure) -> None:
         """ Applies the given instrument configuration settings onto the adapters instrument.
 
-        Apart from the underlying instrument's name, only the setter commands will be updated.
+        Only the setter commands will be updated.
         Note that setter only parameters which have not been set yield a None when reading the configuration from the
         instrument adapter. These None parameter values in the configuration will not be set. A warning will be
         given if any of the configuration parameter values are None.
 
         Args:
             config: The configuration with settings for the adapters instrument.
-
         """
-        if 'name' in config:
-            self._instrument.name = config['name']
         parameters = []
         for parameter in config:
             if parameter in self._instrument.parameters and hasattr(self._instrument.parameters[parameter], 'set'):

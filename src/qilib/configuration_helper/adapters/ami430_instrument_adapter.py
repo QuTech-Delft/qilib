@@ -22,15 +22,11 @@ from typing import Any, Optional
 
 from qcodes.instrument_drivers.american_magnetics.AMI430 import AMI430
 
-from qilib.configuration_helper import InstrumentAdapter
+from qilib.configuration_helper.adapters.common_config_instrument_adapter import CommonConfigInstrumentAdapter
 from qilib.utils import PythonJsonStructure
 
 
-class ConfigurationError(Exception):
-    """ Error to raise if configuration does not match."""
-
-
-class AMI430InstrumentAdapter(InstrumentAdapter):
+class AMI430InstrumentAdapter(CommonConfigInstrumentAdapter):
     """ Adapter for the AMI430 QCoDeS driver."""
 
     def __init__(self, address: str, instrument_name: Optional[str] = None) -> None:
@@ -39,7 +35,6 @@ class AMI430InstrumentAdapter(InstrumentAdapter):
         Args:
             address: IP address and port number separated by a column, 'x.x.x.x:xxxx'
             instrument_name: An optional name for the underlying instrument.
-
         """
         super().__init__(address)
         ip_and_port = address.split(':')
@@ -48,25 +43,15 @@ class AMI430InstrumentAdapter(InstrumentAdapter):
         self.field_variation_tolerance = 0.01
 
     def apply(self, config: PythonJsonStructure) -> None:
-        """ Does not apply config, except for instrument name, to device, but compares config to device settings.
+        """ Does not apply config only  compares config to device settings.
+
+        Configuration Parameter with setter commands are matched for equality, on mismatch
+        error is raised
 
         Args:
             config: Containing the instrument configuration.
-
-        Raises:
-            ConfigurationError: If config does not match device configuration or difference in field value is greater
-                than the field_variation_tolerance.
-
         """
-        device_config = self.read(True)
-        parameters = [parameter for parameter in config if hasattr(self._instrument.parameters[parameter], 'set')]
-        for parameter in parameters:
-            if parameter == 'field':
-                self._check_field_value(config[parameter]['value'], device_config[parameter]['value'])
-            elif 'value' in config[parameter]:
-                self._assert_value_matches(config[parameter]['value'], device_config[parameter]['value'], parameter)
-        if 'name' in config:
-            self._instrument.name = config['name']
+        super().apply(config)
 
     def _filter_parameters(self, parameters: PythonJsonStructure) -> PythonJsonStructure:
         for values in parameters.values():
@@ -74,14 +59,9 @@ class AMI430InstrumentAdapter(InstrumentAdapter):
                 values.pop('val_mapping')
         return parameters
 
-    def _check_field_value(self, config_value: float, device_value: float) -> None:
-        delta = math.fabs(config_value - device_value)
-        if delta > self.field_variation_tolerance:
-            raise ConfigurationError(
-                "Target value for field does not match device value: {}T != {}T".format(config_value, device_value))
-
-    @staticmethod
-    def _assert_value_matches(config_value: Any, device_value: Any, parameter: str) -> None:
-        if config_value != device_value:
-            raise ConfigurationError(
-                "Configuration for {} does not match: '{}' != '{}'".format(parameter, config_value, device_value))
+    def _compare_config_values(self, config_value: Any, device_value: Any, parameter: Optional[str] = None) -> bool:
+        if parameter == 'field':
+            delta = math.fabs(config_value - device_value)
+            return delta > self.field_variation_tolerance
+        else:
+            return bool(config_value != device_value)
