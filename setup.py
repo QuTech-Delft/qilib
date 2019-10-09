@@ -23,20 +23,24 @@ from setuptools import setup
 
 def get_version_number(module: str) -> str:
     """ Extract the version number from the source code.
-    Pass the source module that contains the version.py file. This version
-    number will be returned as a string.
+
+    Pass the source module that contains the version.py file.
+    This version number will be returned as a string.
+
     Args:
         module: module containing the version.py file
+
     Returns:
         the version number.
     """
-    from importlib import import_module
-    module = import_module(f'src.{module}.version')
-    return module.__version__
+    with open(f'src/{module}/version.py') as f:
+        content = f.read()
 
-def get_long_description():
-    """ Extract the long description from the README file """
+    return content.split('\'')[1]
 
+
+def get_long_description() -> str:
+    """ Extract the long description from the README file."""
     with open('README.md', encoding='utf-8') as f:
         long_description = f.read()
 
@@ -61,7 +65,7 @@ setup(name='qilib',
       license='Other/Proprietary License',
 
       install_requires=['spirack>=0.1.8', 'numpy', 'serialize', 'zhinst',
-                        'pymongo', 'requests', 'qcodes'],
+                        'pymongo', 'requests', 'qcodes', 'dataclasses-json'],
       extras_require={
           'dev': ['pytest>=3.3.1', 'coverage>=4.5.1', 'mongomock'],
       }
