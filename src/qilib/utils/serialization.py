@@ -17,47 +17,23 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
-from json import JSONEncoder, JSONDecoder
-from typing import Any, Dict, Callable, ClassVar
-from qilib.data_set import MongoDataSetIO
-import numpy as np
 import base64
+from functools import partial
+from json import JSONDecoder, JSONEncoder
+from typing import Any, Callable, ClassVar, Dict
+
+import numpy as np
+
+from qilib.data_set import MongoDataSetIO
 
 # A callable type for transforming a given argument with a type to another type
 TransformFunction = Callable[[Any], Any]
 
 
 class JsonSerializeKey:
-    """ The custum value types for the JSON serializer """
+    """ The custom value types for the JSON serializer """
     OBJECT = '__object__'
     CONTENT = '__content__'
-
-
-def encode_json_dataclass(object_tag, item):
-    """ Encode a JSON dataclass object.
-
-    Args:
-        object_tag: Tag to be used in storage
-        item: Item to be encoded
-
-    Returns:
-        Dictionary that can be serialized
-    """
-    return {JsonSerializeKey.OBJECT: object_tag,
-            JsonSerializeKey.CONTENT: item.to_dict()}
-
-
-def decode_json_dataclass(class_type, data):
-    """ Decode a JSON dataclass object.
-
-    Args:
-        class_type: Type of class to be decoded
-        data: Decoded data
-
-    Returns
-        Object of specified type
-    """
-    return class_type.from_dict(data[JsonSerializeKey.CONTENT])
 
 
 class Encoder(JSONEncoder):
@@ -132,6 +108,33 @@ def _decode_numpy_number(item):
     return np.frombuffer(base64.b64decode(obj['__npnumber__']), dtype=np.dtype(obj['__data_type__']))[0]
 
 
+def _encode_dataclass(object_: Any, class_name: str) -> Dict[str, Any]:
+    """ Encodes a JSON dataclass object
+
+    Args:
+        object_: Object to be encoded
+        class_name: Object dataclass name
+
+    Returns:
+        Dictionary that can be serialized
+    """
+    return {JsonSerializeKey.OBJECT: class_name,
+            JsonSerializeKey.CONTENT: object_.to_dict()}
+
+
+def _decode_dataclass(data: Any, class_type: type) -> Any:
+    """ Decodes a JSON dataclass object
+
+    Args:
+        data: Data to be decoded
+        class_type: The dataclass type to decode
+
+    Returns
+        Object of specified class_type type with decoded data
+    """
+    return class_type.from_dict(data[JsonSerializeKey.CONTENT])
+
+
 class Serializer:
     """ A general serializer to serialize data to JSON and vice versa. It allows
      extending the types with a custom encoder and decoder."""
@@ -178,6 +181,18 @@ class Serializer:
 
         self.encoder.encoders[type_] = encode_func
         self.decoder.decoders[type_name] = decode_func
+
+    def register_dataclass(self, type_: type) -> None:
+        """ Registers an encoder and decoder for a dataclass with a given type
+
+        Args:
+            type_: The dataclass type to decode
+        """
+
+        type_name = type_.__name__
+        encode_function = partial(_encode_dataclass, class_name=type_name)
+        decode_function = partial(_decode_dataclass, class_type=type_)
+        self.register(type_, encode_function, type_name, decode_function)
 
     def serialize(self, data: Any) -> str:
         """ Serializes a Python object to JSON
