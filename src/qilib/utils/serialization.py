@@ -139,8 +139,8 @@ class Serializer:
     """ A general serializer to serialize data to JSON and vice versa. It allows
      extending the types with a custom encoder and decoder."""
 
-    def __init__(self, encoders: Dict[type, TransformFunction]=None,
-                 decoders: Dict[str, TransformFunction]=None):
+    def __init__(self, encoders: Dict[type, TransformFunction] = None,
+                 decoders: Dict[str, TransformFunction] = None):
         """ Creates a serializer
 
         Args:
