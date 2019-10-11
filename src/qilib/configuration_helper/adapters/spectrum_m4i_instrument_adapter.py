@@ -34,7 +34,8 @@ class M4iInstrumentAdapter(CommonInstrumentAdapter):
         return PythonJsonStructure(super().read(update))
 
     def _filter_parameters(self, parameters: PythonJsonStructure) -> PythonJsonStructure:
-        filtered = {parameter: value for (parameter, value) in parameters.items() if 'system_nics_' not in parameter}
+        black_list = ['exact_sample_rate ', 'box_averages'] + ['channel_{i}' for i in range(4)]
+        filtered = {parameter: value for (parameter, value) in parameters.items() if parameter not in black_list}
         return PythonJsonStructure(filtered)
 
    
