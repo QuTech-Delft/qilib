@@ -26,6 +26,7 @@ class TestInstrumentAdapter(unittest.TestCase):
             def _filter_parameters(self, parameters: PythonJsonStructure) -> PythonJsonStructure:
                 pass
 
+
         adapter = TestAdapter('fake')
         adapter.close_instrument()
         instrument.close.assert_called_once_with()

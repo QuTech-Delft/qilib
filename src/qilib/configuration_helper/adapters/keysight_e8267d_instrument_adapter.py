@@ -21,7 +21,7 @@ from typing import Optional
 
 from qcodes.instrument_drivers.Keysight.Keysight_E8267D import Keysight_E8267D
 
-from qilib.configuration_helper.adapters import CommonInstrumentAdapter
+from qilib.configuration_helper.adapters.common_instrument_adapter import CommonInstrumentAdapter
 from qilib.utils import PythonJsonStructure
 
 

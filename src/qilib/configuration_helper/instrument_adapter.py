@@ -71,7 +71,6 @@ class InstrumentAdapter(ABC):
         configuration = PythonJsonStructure()
         if self._instrument is not None:
             snapshot = self._instrument.snapshot(update)
-            configuration['name'] = snapshot['name']
             configuration.update(self._filter_parameters(snapshot['parameters']))
         return configuration
 

@@ -34,6 +34,7 @@ class TestInstrumentConfiguration(unittest.TestCase):
             def _filter_parameters(self, parameters: PythonJsonStructure) -> PythonJsonStructure:
                 pass
 
+
         test_adapter = TestAdapter('fake-address')
 
         with patch(

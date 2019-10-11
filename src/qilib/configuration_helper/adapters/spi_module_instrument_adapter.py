@@ -21,7 +21,9 @@ import re
 from typing import Tuple, Optional
 
 from qilib.configuration_helper import SerialPortResolver
-from qilib.configuration_helper.adapters import SpiRackInstrumentAdapter, CommonInstrumentAdapter
+from qilib.configuration_helper.adapters.spi_rack_instrument_adapter import SpiRackInstrumentAdapter
+from qilib.configuration_helper.adapters.common_instrument_adapter import CommonInstrumentAdapter
+
 from qilib.utils import PythonJsonStructure
 
 

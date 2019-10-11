@@ -19,10 +19,23 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 """
 
 import unittest
+from dataclasses import dataclass
+from unittest import TestCase
+from unittest.mock import MagicMock
+
 import numpy as np
+from dataclasses_json import dataclass_json
 
 from qilib.utils import PythonJsonStructure
-from qilib.utils.serialization import serializer, serialize, unserialize, Encoder, Decoder
+from qilib.utils.serialization import (Decoder, Encoder, JsonSerializeKey,
+                                       serialize, serializer, unserialize)
+
+
+@dataclass
+@dataclass_json
+class CustomDataClass:
+    x_data: float
+    y_data: str
 
 
 class CustomType:
@@ -30,7 +43,7 @@ class CustomType:
         self.x, self.y = x, y
 
 
-class TestSerialization(unittest.TestCase):
+class TestSerialization(TestCase):
     def setUp(self):
         self.testdata = [(1, 2, 3), 10, 3.14, 'string', b'bytes', {'a': 1, 'b': 2}, [1, 2], [1, [2, 3]],
                          np.int16(1), np.int32(2), np.int64(3), np.float16(3.3), np.float32(4.4), np.float64(5.5),
@@ -104,6 +117,12 @@ class TestSerialization(unittest.TestCase):
         data = {'results': [{'result_1': np.array([1, 2, 3, 4, 5])}]}
         new_data = serializer.decode_data(serializer.encode_data(data))
         self.assertTrue(np.array_equal(data['results'][0]['result_1'], new_data['results'][0]['result_1']))
+
+    def test_encode_decode_json_dataclass(self):
+        serializer.register_dataclass(CustomDataClass)
+        custom_dataclass = CustomDataClass(1.25, 'my_dummy_value')
+        new_dataclass = unserialize(serialize(custom_dataclass))
+        self.assertEqual(new_dataclass, custom_dataclass)
 
     def test_decode_unknown_type(self):
         self.assertRaises(ValueError, serializer.decode_data, {'__object__': 'CustomType', '__content__': [1, 2, 3]})

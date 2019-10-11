@@ -24,7 +24,6 @@ class TestKeysightE8267DInstrumentAdapter(unittest.TestCase):
         self.assertNotIn('val_mapping', config['filtered_parameter_1'])
         self.assertNotIn('on_off_mapping', config['filtered_parameter_2'])
         self.assertEqual(42, config['good_parameter']['value'])
-        self.assertEqual('some_keysight', config['name'])
         self.assertFalse(config['filtered_parameter_1']['value'])
         self.assertEqual('OFF', config['filtered_parameter_2']['value'])
         adapter.close_instrument()

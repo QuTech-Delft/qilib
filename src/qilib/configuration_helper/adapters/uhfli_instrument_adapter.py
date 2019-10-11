@@ -22,7 +22,7 @@ from typing import Optional
 import numpy as np
 from qcodes.instrument_drivers.ZI.ZIUHFLI import ZIUHFLI
 
-from qilib.configuration_helper.adapters import CommonInstrumentAdapter
+from qilib.configuration_helper.adapters.common_instrument_adapter import CommonInstrumentAdapter
 from qilib.utils import PythonJsonStructure
 
 

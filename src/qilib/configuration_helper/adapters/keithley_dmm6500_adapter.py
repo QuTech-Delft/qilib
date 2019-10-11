@@ -22,7 +22,7 @@ from typing import Optional
 import requests
 from qcodes.instrument_drivers.tektronix.Keithley_6500 import Keithley_6500
 
-from qilib.configuration_helper.adapters import CommonInstrumentAdapter
+from qilib.configuration_helper.adapters.common_instrument_adapter import CommonInstrumentAdapter
 from qilib.utils import PythonJsonStructure
 
 
