@@ -19,7 +19,7 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 """
 from typing import Optional
 
-from qcodes.instrument_drivers import Spectrum
+from qcodes.instrument_drivers.Spectrum.M4i import M4i
 
 from qilib.configuration_helper.adapters import CommonInstrumentAdapter
 from qilib.utils import PythonJsonStructure
@@ -30,7 +30,11 @@ class M4iInstrumentAdapter(CommonInstrumentAdapter):
 
     def __init__(self, address: str, instrument_name: Optional[str] = None) -> None:
         super().__init__(address, instrument_name)
-        self._instrument: Spectrum.M4i = Spectrum.M4i(self._instrument_name, cardid=address)
+        self._instrument: M4i = M4i(self._instrument_name, cardid=address)
 
     def _filter_parameters(self, parameters: PythonJsonStructure) -> PythonJsonStructure:
+        if parameters['box_averages']['value'] == 1:
+            parameters.pop('box_averages')
+
+        parameters.pop('IDN')
         return parameters
