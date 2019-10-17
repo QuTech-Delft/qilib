@@ -75,7 +75,8 @@ class TestD5aInstrumentAdapter(unittest.TestCase):
             d5a_adapter.instrument.close()
 
     def test_apply_config_raises_configuration_mismatch_error(self):
-        with patch('qcodes.instrument_drivers.QuTech.D5a.D5a_module') as d5a_module_mock:
+        with patch('qcodes.instrument_drivers.QuTech.D5a.D5a_module') as d5a_module_mock, \
+          patch('qilib.configuration_helper.adapters.spi_rack_instrument_adapter.SPI_rack'):
             range_4volt_bi = 2
             dac_value = 0.03997802734375
             d5a_module_mock.range_4V_bi = range_4volt_bi
