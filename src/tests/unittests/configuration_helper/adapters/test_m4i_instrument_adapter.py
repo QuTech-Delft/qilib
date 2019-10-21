@@ -16,16 +16,14 @@ class TestM4iInstrumentAdapter(TestCase):
         InstrumentAdapterFactory.instrument_adapters.clear()
 
     def test_constructor(self):
-        with patch('qilib.configuration_helper.adapters.m4i_instrument_adapter.qcodes') as qcodes_mock:
-            m4i_mock = qcodes_mock.instrument_drivers.Spectrum.M4i.M4i
+        with patch('qcodes.instrument_drivers.Spectrum.M4i.M4i') as m4i_mock:
             adapter = InstrumentAdapterFactory.get_instrument_adapter(self.adapter_name, self.address)
             m4i_mock.assert_called_with(self.instrument_name, cardid=self.address)
             self.assertEqual(adapter.instrument, m4i_mock())
 
     def test_apply_config(self):
-        with patch('qilib.configuration_helper.adapters.m4i_instrument_adapter.qcodes') as qcodes_mock, \
+        with patch('qcodes.instrument_drivers.Spectrum.M4i.M4i') as m4i_mock, \
           patch('qilib.configuration_helper.adapters.common_instrument_adapter.logging') as logging_mock:
-            m4i_mock = qcodes_mock.instrument_drivers.Spectrum.M4i.M4i
             adapter = InstrumentAdapterFactory.get_instrument_adapter(self.adapter_name, self.address)
             adapter.instrument.parameters = {key: MagicMock() for key in snapshot.keys()}
             adapter.apply(snapshot)
@@ -41,9 +39,7 @@ class TestM4iInstrumentAdapter(TestCase):
             self.assertRegex(logging_call, "Some parameter values of *")
 
     def test_read_config(self):
-        with patch('qilib.configuration_helper.adapters.m4i_instrument_adapter.qcodes') as qcodes_mock:
-            m4i_mock = qcodes_mock.instrument_drivers.Spectrum.M4i.M4i
-
+        with patch('qcodes.instrument_drivers.Spectrum.M4i.M4i') as m4i_mock:
             adapter = InstrumentAdapterFactory.get_instrument_adapter(self.adapter_name, self.address)
             adapter.instrument.snapshot.return_value = {'parameters': snapshot.copy()}
 

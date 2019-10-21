@@ -17,7 +17,6 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
-import qcodes
 from typing import Optional
 
 from qilib.configuration_helper.adapters import CommonInstrumentAdapter
@@ -29,7 +28,8 @@ class M4iInstrumentAdapter(CommonInstrumentAdapter):
 
     def __init__(self, address: str, instrument_name: Optional[str] = None) -> None:
         super().__init__(address, instrument_name)
-        self._instrument = qcodes.instrument_drivers.Spectrum.M4i.M4i(self._instrument_name, cardid=address)
+        from qcodes.instrument_drivers.Spectrum.M4i import M4i
+        self._instrument = M4i(self._instrument_name, cardid=address)
 
     def _filter_parameters(self, parameters: PythonJsonStructure) -> PythonJsonStructure:
         if parameters['box_averages']['value'] == 1:
