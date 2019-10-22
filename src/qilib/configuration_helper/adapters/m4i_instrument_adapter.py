@@ -19,6 +19,8 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 """
 from typing import Optional
 
+import qcodes
+
 from qilib.configuration_helper.adapters import CommonInstrumentAdapter
 from qilib.utils import PythonJsonStructure
 
