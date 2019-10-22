@@ -32,6 +32,7 @@ class M4iInstrumentAdapter(CommonInstrumentAdapter):
         super().__init__(address, instrument_name)
         from qcodes.instrument_drivers.Spectrum.M4i import M4i
         self._instrument = M4i(self._instrument_name, cardid=address)
+        self._instrument.initialize_channels()
 
     def _filter_parameters(self, parameters: PythonJsonStructure) -> PythonJsonStructure:
         if parameters['box_averages']['value'] == 1:

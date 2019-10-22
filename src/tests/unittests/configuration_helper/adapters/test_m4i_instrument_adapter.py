@@ -1,3 +1,4 @@
+import sys
 import logging
 from unittest import TestCase
 from unittest.mock import MagicMock, call, patch
@@ -10,21 +11,26 @@ from tests.test_data.m4i_snapshot import snapshot
 class TestM4iInstrumentAdapter(TestCase):
 
     def setUp(self):
+        sys.modules['pyspcm'] = MagicMock()
+        from qcodes.instrument_drivers.Spectrum.M4i import M4i
+
         self.address = 'spcm1234'
         self.adapter_name = 'M4iInstrumentAdapter'
         self.instrument_name = f'{self.adapter_name}_{self.address}'
         InstrumentAdapterFactory.instrument_adapters.clear()
 
+    def tearDown(self):
+        del sys.modules['pyspcm']
+
     def test_constructor(self):
-        with patch('qcodes.instrument_drivers.Spectrum.M4i.pyspcm') as pyspcm_mock, \
-          patch('qcodes.instrument_drivers.Spectrum.M4i.M4i') as m4i_mock:
+        with patch('qcodes.instrument_drivers.Spectrum.M4i.M4i') as m4i_mock:
             adapter = InstrumentAdapterFactory.get_instrument_adapter(self.adapter_name, self.address)
             m4i_mock.assert_called_with(self.instrument_name, cardid=self.address)
+            m4i_mock.return_value.initialize_channels.assert_called_once()
             self.assertEqual(adapter.instrument, m4i_mock())
 
     def test_apply_config(self):
-        with patch('qcodes.instrument_drivers.Spectrum.M4i.pyspcm') as pyspcm_mock, \
-          patch('qcodes.instrument_drivers.Spectrum.M4i.M4i') as m4i_mock, \
+        with patch('qcodes.instrument_drivers.Spectrum.M4i.M4i') as m4i_mock, \
           patch('qilib.configuration_helper.adapters.common_instrument_adapter.logging') as logging_mock:
             adapter = InstrumentAdapterFactory.get_instrument_adapter(self.adapter_name, self.address)
             adapter.instrument.parameters = {key: MagicMock() for key in snapshot.keys()}
@@ -41,8 +47,7 @@ class TestM4iInstrumentAdapter(TestCase):
             self.assertRegex(logging_call, "Some parameter values of *")
 
     def test_read_config(self):
-        with patch('qcodes.instrument_drivers.Spectrum.M4i.pyspcm') as pyspcm_mock, \
-          patch('qcodes.instrument_drivers.Spectrum.M4i.M4i') as m4i_mock:
+        with patch('qcodes.instrument_drivers.Spectrum.M4i.M4i') as m4i_mock:
             adapter = InstrumentAdapterFactory.get_instrument_adapter(self.adapter_name, self.address)
             adapter.instrument.snapshot.return_value = {'parameters': snapshot.copy()}
 
