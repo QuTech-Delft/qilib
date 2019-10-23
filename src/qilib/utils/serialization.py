@@ -69,7 +69,7 @@ class Decoder(JSONDecoder):
                 if obj[JsonSerializeKey.OBJECT] in self.decoders:
                     return self.decoders[obj[JsonSerializeKey.OBJECT]](obj)
                 else:
-                    raise ValueError()
+                    raise ValueError(f'object key {obj[JsonSerializeKey.OBJECT]} not in decoders')
 
         return obj
 
@@ -283,7 +283,7 @@ class Serializer:
                 if data[JsonSerializeKey.OBJECT] in self.decoder.decoders:
                     return self.decoder.decoders[data[JsonSerializeKey.OBJECT]](data)
                 else:
-                    raise ValueError()
+                    raise ValueError(f'object key {data[JsonSerializeKey.OBJECT]} not in decoders')
 
         return data
 
