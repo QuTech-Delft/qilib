@@ -1,3 +1,4 @@
+import copy
 import unittest
 from unittest.mock import patch, MagicMock
 
@@ -135,10 +136,10 @@ class TestD5aInstrumentAdapter(unittest.TestCase):
             f1d_adapter.instrument.f1d.set_Q_gain.assert_called_with('high')
             f1d_adapter.instrument.f1d.enable_remote.assert_called_with(True)
 
-            self.mock_config['Q_gain']['value'] = None
-            f1d_adapter.apply(self.mock_config)
-            warning_text = 'Some parameter values of {} are None and will not be set!'.format(instrument_name)
-            logger_mock.warning.assert_called_once_with(warning_text)
+            parameter_name = 'Q_gain'
+            self.mock_config[parameter_name]['value'] = None
+            error_message = f'The following parameter\(s\) of .* {parameter_name}\!'
+            self.assertRaisesRegex(ValueError, error_message, f1d_adapter.apply, self.mock_config)
 
             f1d_adapter.instrument.close()
 
@@ -148,6 +149,7 @@ class TestD5aInstrumentAdapter(unittest.TestCase):
             address = 'spirack1_module3'
             SerialPortResolver.serial_port_identifiers = {'spirack1': 'COMnumber_test'}
             f1d_adapter = InstrumentAdapterFactory.get_instrument_adapter('F1dInstrumentAdapter', address)
+            mock_config = copy.deepcopy(self.mock_config)
 
             spi_mock.assert_called()
             f1d_module_mock.assert_called()
@@ -155,11 +157,13 @@ class TestD5aInstrumentAdapter(unittest.TestCase):
             self.assertEqual(f1d_adapter.instrument.f1d, f1d_module_mock())
 
             identity = 'IDN'
-            self.mock_config[identity] = 'version_test'
-            mocked_snapshot = {'name': 'f1d', 'parameters': self.mock_config}
+            mock_config[identity] = 'version_test'
+            mocked_snapshot = {'name': 'd5a', 'parameters': mock_config}
             f1d_adapter.instrument.snapshot = MagicMock(return_value=mocked_snapshot)
 
             config = f1d_adapter.read()
+            mock_config.pop(identity)
             self.assertTrue(identity not in config.keys())
-            self.assertDictEqual(self.mock_config, config)
+            self.assertDictEqual(mock_config, config)
+
             f1d_adapter.instrument.close()

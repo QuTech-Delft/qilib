@@ -108,6 +108,7 @@ class TestD5aInstrumentAdapter(unittest.TestCase):
             range_4volt_bi = 2
             d5a_module_mock.range_4V_bi = range_4volt_bi
             d5a_module_mock().span.__getitem__.return_value = range_4volt_bi
+            mock_config = copy.deepcopy(self.mock_config)
 
             address = 'spirack1_module3'
             SerialPortResolver.serial_port_identifiers = {'spirack1': 'COMnumber_test'}
@@ -119,11 +120,13 @@ class TestD5aInstrumentAdapter(unittest.TestCase):
             self.assertEqual(d5a_adapter.instrument.d5a, d5a_module_mock())
 
             identity = 'IDN'
-            self.mock_config[identity] = 'version_test'
-            mocked_snapshot = {'name': 'd5a', 'parameters': self.mock_config}
+            mock_config[identity] = 'version_test'
+            mocked_snapshot = {'name': 'd5a', 'parameters': mock_config}
             d5a_adapter.instrument.snapshot = MagicMock(return_value=mocked_snapshot)
 
             config = d5a_adapter.read()
+            mock_config.pop(identity)
             self.assertTrue(identity not in config.keys())
-            self.assertDictEqual(self.mock_config, config)
+            self.assertDictEqual(mock_config, config)
+
             d5a_adapter.instrument.close()

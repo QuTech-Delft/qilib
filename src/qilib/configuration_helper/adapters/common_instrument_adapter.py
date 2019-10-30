@@ -42,12 +42,9 @@ class CommonInstrumentAdapter(InstrumentAdapter, ABC):
             if parameter in self._instrument.parameters and hasattr(self._instrument.parameters[parameter], 'set'):
                 parameters.append(parameter)
 
-        if any(config[parameter]['value'] is None for parameter in parameters):
-            error_message = 'Some parameter values of {0} are None and will not be set!'.format(self._instrument.name)
-            logging.warning(error_message)
+        self.__raise_none_value_parameters(config, parameters)
         for parameter in parameters:
-            if 'value' in config[parameter] and config[parameter]['value'] is not None:
-                self._instrument.set(parameter, config[parameter]['value'])
+            self._instrument.set(parameter, config[parameter]['value'])
 
     @abstractmethod
     def _filter_parameters(self, parameters: PythonJsonStructure) -> PythonJsonStructure:
@@ -63,3 +60,16 @@ class CommonInstrumentAdapter(InstrumentAdapter, ABC):
             PythonJsonStructure: Contains the instrument snapshot without the instrument
                                  parameters which are filtered out by this function.
         """
+
+    def __raise_none_value_parameters(self, config, parameters) -> None:
+        """
+        """
+        non_value_parameters = list(filter(lambda parameter: config[parameter]['value']==None, parameters))
+        if not non_value_parameters:
+            return
+
+        error_message = f'The following parameter(s) of {self._instrument.name} have value None and cannot be set: '
+        for parameter in non_value_parameters[:-1]:
+            error_message += f'{parameter}, '
+        error_message += f'{non_value_parameters[-1]}!'
+        raise ValueError(error_message)

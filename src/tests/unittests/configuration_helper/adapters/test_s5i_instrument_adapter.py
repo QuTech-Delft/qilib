@@ -1,3 +1,4 @@
+import copy
 import unittest
 from unittest.mock import patch, MagicMock
 
@@ -104,10 +105,10 @@ class TestS5iInstrumentAdapter(unittest.TestCase):
             s5i_adapter.instrument.s5i.set_frequency.assert_called_with(41000000.0)
             s5i_adapter.instrument.s5i.set_output_power.assert_called_with(10)
 
-            self.mock_config['frequency']['value'] = None
-            s5i_adapter.apply(self.mock_config)
-            warning_text = 'Some parameter values of {} are None and will not be set!'.format(instrument_name)
-            logger_mock.warning.assert_called_once_with(warning_text)
+            parameter_name = 'frequency'
+            self.mock_config[parameter_name]['value'] = None
+            error_message = f'The following parameter\(s\) of .* {parameter_name}\!'
+            self.assertRaisesRegex(ValueError, error_message, s5i_adapter.apply, self.mock_config)
 
             s5i_adapter.instrument.close()
 
@@ -117,6 +118,7 @@ class TestS5iInstrumentAdapter(unittest.TestCase):
             address = 'spirack1_module3'
             SerialPortResolver.serial_port_identifiers = {'spirack1': 'COMnumber_test'}
             s5i_adapter = InstrumentAdapterFactory.get_instrument_adapter('S5iInstrumentAdapter', address)
+            mock_config = copy.deepcopy(self.mock_config)
 
             spi_mock.assert_called()
             s5i_module_mock.assert_called()
@@ -124,11 +126,13 @@ class TestS5iInstrumentAdapter(unittest.TestCase):
             self.assertEqual(s5i_adapter.instrument.s5i, s5i_module_mock())
 
             identity = 'IDN'
-            self.mock_config[identity] = 'version_test'
-            mocked_snapshot = {'name': 'some_s5i', 'parameters': self.mock_config}
+            mock_config[identity] = 'version_test'
+            mocked_snapshot = {'name': 'some_s5i', 'parameters': mock_config}
             s5i_adapter.instrument.snapshot = MagicMock(return_value=mocked_snapshot)
 
             config = s5i_adapter.read()
+            mock_config.pop(identity)
             self.assertTrue(identity not in config.keys())
             self.assertDictEqual(self.mock_config, config)
+
             s5i_adapter.instrument.close()
