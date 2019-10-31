@@ -65,6 +65,11 @@ class TestZIUHFLIInstrumentAdapter(unittest.TestCase):
         with patch.object(zhinst.utils, 'create_api_session', return_value=3 * (MagicMock(),)):
             adapter = InstrumentAdapterFactory.get_instrument_adapter('ZIUHFLIInstrumentAdapter', 'dev4242')
 
+            adapter.instrument.demod1_oscillator(1)
+
             adapter.instrument.value_mapping = 1
             with self.assertLogs(level='ERROR') as log_grabber:
                 config = adapter.read()
+
+            self.assertTrue(all(['val_mapping' not in config[key] for key in config.keys()]))
+            self.assertTrue('IDN' not in config.keys())

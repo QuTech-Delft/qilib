@@ -19,6 +19,7 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 """
 import logging
 from abc import ABC, abstractmethod
+from typing import List
 
 from qilib.configuration_helper import InstrumentAdapter
 from qilib.utils import PythonJsonStructure
@@ -61,8 +62,12 @@ class CommonInstrumentAdapter(InstrumentAdapter, ABC):
                                  parameters which are filtered out by this function.
         """
 
-    def __raise_none_value_parameters(self, config, parameters) -> None:
-        """
+    def __raise_none_value_parameters(self, config: PythonJsonStructure, parameters: List[dict]) -> None:
+        """ Raises a ValueError if non value parameters are present in the configuration.
+
+        Args:
+            config: The configuration with settings for the adapters instrument.
+            parameters: A list of the settable parameters of the instrument.
         """
         non_value_parameters = list(filter(lambda parameter: config[parameter]['value']==None, parameters))
         if non_value_parameters:

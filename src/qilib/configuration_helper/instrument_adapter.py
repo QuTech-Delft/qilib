@@ -19,7 +19,7 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 """
 import logging
 from abc import ABC, abstractmethod
-from typing import Optional
+from typing import Dict, Any
 
 from qcodes import Instrument
 
@@ -105,7 +105,7 @@ class InstrumentAdapter(ABC):
         """
         visitor.visit(self)
 
-    def __notify_and_remove_none_values(self, snapshot):
+    def __notify_and_remove_none_values(self, snapshot: Dict[str, Any]) -> Dict[str, Any]:
         """ Gets all setted parameters from the QCoDeS snapshot.
 
             Takes the parameters of the QCoDeS instrument snapshot. Removes all parameters
