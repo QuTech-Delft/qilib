@@ -33,7 +33,7 @@ class TestZIUHFLIInstrumentAdapter(unittest.TestCase):
 
             parameter_name = 'scope_trig_level'
             config[parameter_name]['value'] = None
-            error_message = f'The following parameter\(s\) of .* {parameter_name}\!'
+            error_message = f'The following parameter\(s\) of .* \[\'{parameter_name}\'\]\!'
             self.assertRaisesRegex(ValueError, error_message, adapter.apply, config)
 
         adapter.instrument.close()
@@ -60,3 +60,11 @@ class TestZIUHFLIInstrumentAdapter(unittest.TestCase):
                     self.assertNotIsInstance(parameter.raw_value, np.int64)
 
         adapter.instrument.close()
+
+    def test_filtered_parameters(self):
+        with patch.object(zhinst.utils, 'create_api_session', return_value=3 * (MagicMock(),)):
+            adapter = InstrumentAdapterFactory.get_instrument_adapter('ZIUHFLIInstrumentAdapter', 'dev4242')
+
+            adapter.instrument.value_mapping = 1
+            with self.assertLogs(level='ERROR') as log_grabber:
+                config = adapter.read()

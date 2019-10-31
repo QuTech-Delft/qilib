@@ -107,7 +107,7 @@ class TestS5iInstrumentAdapter(unittest.TestCase):
 
             parameter_name = 'frequency'
             self.mock_config[parameter_name]['value'] = None
-            error_message = f'The following parameter\(s\) of .* {parameter_name}\!'
+            error_message = f'The following parameter\(s\) of .* \[\'{parameter_name}\'\]\!'
             self.assertRaisesRegex(ValueError, error_message, s5i_adapter.apply, self.mock_config)
 
             s5i_adapter.instrument.close()

@@ -72,7 +72,7 @@ class TestM2jInstrumentAdapter(unittest.TestCase):
 
             parameter_name = 'gain'
             self.mock_config[parameter_name]['value'] = None
-            error_message = f'The following parameter\(s\) of .* {parameter_name}\!'
+            error_message = f'The following parameter\(s\) of .* \[\'{parameter_name}\'\]\!'
             self.assertRaisesRegex(ValueError, error_message, m2j_adapter.apply, self.mock_config)
 
             m2j_adapter.instrument.close()

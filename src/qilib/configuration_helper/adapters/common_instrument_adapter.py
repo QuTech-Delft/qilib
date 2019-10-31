@@ -65,11 +65,7 @@ class CommonInstrumentAdapter(InstrumentAdapter, ABC):
         """
         """
         non_value_parameters = list(filter(lambda parameter: config[parameter]['value']==None, parameters))
-        if not non_value_parameters:
-            return
-
-        error_message = f'The following parameter(s) of {self._instrument.name} have value None and cannot be set: '
-        for parameter in non_value_parameters[:-1]:
-            error_message += f'{parameter}, '
-        error_message += f'{non_value_parameters[-1]}!'
-        raise ValueError(error_message)
+        if non_value_parameters:
+            error_message = f'The following parameter(s) of {self._instrument.name} have value ' \
+                            f'None and cannot be set: {non_value_parameters}!'
+            raise ValueError(error_message)

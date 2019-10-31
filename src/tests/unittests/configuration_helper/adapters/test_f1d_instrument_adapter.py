@@ -138,7 +138,7 @@ class TestD5aInstrumentAdapter(unittest.TestCase):
 
             parameter_name = 'Q_gain'
             self.mock_config[parameter_name]['value'] = None
-            error_message = f'The following parameter\(s\) of .* {parameter_name}\!'
+            error_message = f'The following parameter\(s\) of .* \[\'{parameter_name}\'\]\!'
             self.assertRaisesRegex(ValueError, error_message, f1d_adapter.apply, self.mock_config)
 
             f1d_adapter.instrument.close()

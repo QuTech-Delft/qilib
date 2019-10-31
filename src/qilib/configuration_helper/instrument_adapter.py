@@ -129,7 +129,7 @@ class InstrumentAdapter(ABC):
 
         if non_value_parameters:
             parameter_names = list(non_value_parameters.keys())
-            error_message = f'Parameter values of {self._instrument_name} are None. Please set: {parameter_names}'
+            error_message = f'Parameter values of {self._instrument_name} are None. Please set: {parameter_names}.'
             logging.error(error_message)
 
         return parameters
