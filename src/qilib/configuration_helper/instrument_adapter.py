@@ -66,8 +66,8 @@ class InstrumentAdapter(ABC):
         """ Obtains a full set of settings from the instrument.
 
         Returns:
-            Part of the instrument snapshot, i.e., parameter values, without the instrument's parameters which are
-            explicitly filtered out, and the instrument name.
+            Part of the instrument snapshot, i.e., parameter values, without the instrument's
+            parameters which are explicitly filtered out, and the instrument name.
         """
         configuration = PythonJsonStructure()
         if self._instrument is not None:

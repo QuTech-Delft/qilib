@@ -9,6 +9,7 @@ from tests.test_data.dummy_instrument import DummyAMI430Instrument
 
 
 class TestAMI430InstrumentAdapter(unittest.TestCase):
+
     def test_constructor(self):
         with patch('qilib.configuration_helper.adapters.ami430_instrument_adapter.AMI430') as mock_instrument:
             address = '192.168.1.128:7180'
