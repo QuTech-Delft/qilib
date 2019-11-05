@@ -63,14 +63,14 @@ class CommonInstrumentAdapter(InstrumentAdapter, ABC):
         """
 
     def __raise_none_value_parameters(self, config: PythonJsonStructure, parameters: List[dict]) -> None:
-        """ Raises a ValueError if non value parameters are present in the configuration.
+        """ Raises a ValueError when in the configuration one or more parameters have value None.
 
         Args:
             config: The configuration with settings for the adapters instrument.
             parameters: A list of the settable parameters of the instrument.
         """
-        non_value_parameters = list(filter(lambda parameter: config[parameter]['value']==None, parameters))
-        if non_value_parameters:
+        none_value_parameters = list(filter(lambda parameter: config[parameter]['value']==None, parameters))
+        if none_value_parameters:
             error_message = f'The following parameter(s) of {self._instrument.name} have value ' \
-                            f'None and cannot be set: {non_value_parameters}!'
+                            f'None and cannot be set: {none_value_parameters}!'
             raise ValueError(error_message)

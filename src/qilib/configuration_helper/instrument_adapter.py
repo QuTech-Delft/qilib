@@ -19,7 +19,7 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 """
 import logging
 from abc import ABC, abstractmethod
-from typing import Dict, Any
+from typing import Any, Dict, Optional
 
 from qcodes import Instrument
 
@@ -29,7 +29,7 @@ from qilib.utils import PythonJsonStructure
 
 class InstrumentAdapter(ABC):
 
-    def __init__(self, address: str, instrument_name: str = None) -> None:
+    def __init__(self, address: str, instrument_name: Optional[str] = None) -> None:
         """ A template for an adapter to the QCoDeS instrument interface.
 
         Args:
@@ -106,10 +106,10 @@ class InstrumentAdapter(ABC):
         visitor.visit(self)
 
     def __notify_and_remove_none_values(self, snapshot: Dict[str, Any]) -> Dict[str, Any]:
-        """ Gets all setted parameters from the QCoDeS snapshot.
+        """ Return parameters from the QCoDeS snapshot which are not None.
 
             Takes the parameters of the QCoDeS instrument snapshot. Removes all parameters
-            which have a value of None. Notifies an error for which parameters have a none value.
+            which have a value of None. Logs an error for all parameters that have a None value.
             Returns the parameter settings which have a value.
 
         Args:
