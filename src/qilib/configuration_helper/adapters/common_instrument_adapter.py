@@ -61,7 +61,7 @@ class CommonInstrumentAdapter(InstrumentAdapter, ABC):
                                  parameters which are filtered out by this function.
         """
 
-    def __raise_none_value_parameters(self, config: PythonJsonStructure, parameters: List[Dict[str, Any]]) -> None:
+    def __raise_none_value_parameters(self, config: PythonJsonStructure, parameters: List[PythonJsonStructure]) -> None:
         """ Raises a ValueError when one or more parameters in the configuration have value None.
 
         Args:

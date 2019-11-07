@@ -105,7 +105,7 @@ class InstrumentAdapter(ABC):
         """
         visitor.visit(self)
 
-    def __notify_and_remove_none_values(self, snapshot: Dict[str, Any]) -> Dict[str, Any]:
+    def __notify_and_remove_none_values(self, snapshot: PythonJsonStructure) -> PythonJsonStructure:
         """ Return parameters from the QCoDeS snapshot which are not None.
 
             Takes the parameters of the QCoDeS instrument snapshot. Removes all parameters
@@ -119,8 +119,8 @@ class InstrumentAdapter(ABC):
             PythonJsonStructure: Contains the instrument snapshot parameters without the
                                  instrument parameters which a none value.
         """
-        parameters = {}
-        non_value_parameters = {}
+        parameters = PythonJsonStructure()
+        non_value_parameters = PythonJsonStructure()
         for parameter_name, settings in snapshot['parameters'].items():
             if 'value' in settings and settings['value'] is None:
                 non_value_parameters[parameter_name] = settings

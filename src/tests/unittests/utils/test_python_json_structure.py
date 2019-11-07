@@ -63,10 +63,15 @@ class TestPythonJsonStructure(unittest.TestCase):
             'list': [1, 2, 3],
             'str': 'some_string',
             'bytes': b'1010101',
+            'json_object': PythonJsonStructure(),
+            'np.float32': np.float32(3.1415),
+            'np.float64': np.float64(-3.1415),
+            'np.int32': np.int32(4),
+            'np.in64': np.int64(-4),
+            'np.cfloat': np.random.rand(2, 4, 5, 3).astype(np.cfloat),
             'tuple': (1, 2, 3),
             'dict': {'a': 1, 'b': 2, 'c': 3},
-            'ndarray': np.array([[1, 2], [3, 4]]),
-            'json_object': PythonJsonStructure()
+            'ndarray': np.array([[1, 2], [3, 4]])
         }
 
         json_object = PythonJsonStructure()
@@ -183,12 +188,18 @@ class TestPythonJsonStructure(unittest.TestCase):
             'float': 3.141592,
             'str': 'some_string',
             'bytes': b'1010101',
+            'np.float32': np.float32(3.1415),
+            'np.float64': np.float64(-3.1415),
+            'np.int32': np.int32(4),
+            'np.in64': np.int64(-4),
+            'np.cfloat': np.random.rand(2, 4, 5, 3).astype(np.cfloat),
         }
         for key, expected in settable_objects.items():
             json_object = PythonJsonStructure({key: expected})
             serialized_object = serialize(json_object)
             unserialized_object = unserialize(serialized_object)
-            self.assertEqual(json_object, unserialized_object)
+            np.testing.assert_equal(json_object, unserialized_object)
+
 
     def test_serialization_container_types(self):
         """ Creates a PythonJsonStucture with all the data-types. Serializes the
