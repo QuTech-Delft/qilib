@@ -1,3 +1,4 @@
+import copy
 import unittest
 from unittest.mock import patch, MagicMock
 
@@ -47,7 +48,6 @@ class TestM2jInstrumentAdapter(unittest.TestCase):
 
     def test_apply_config(self):
         with patch('qilib.configuration_helper.adapters.spi_rack_instrument_adapter.SPI_rack') as spi_mock, \
-         patch('qilib.configuration_helper.adapters.common_instrument_adapter.logging') as logger_mock, \
          patch('qcodes.instrument_drivers.QuTech.M2j.M2j_module') as m2j_module_mock:
             address = 'spirack1_module3'
             adapter_name = 'M2jInstrumentAdapter'
@@ -69,10 +69,10 @@ class TestM2jInstrumentAdapter(unittest.TestCase):
             m2j_adapter.instrument.m2j.get_level.assert_not_called()
             m2j_adapter.instrument.m2j.set_gain.assert_called_once_with(ref_scale)
 
-            self.mock_config['gain']['value'] = None
-            m2j_adapter.apply(self.mock_config)
-            warning_text = 'Some parameter values of {} are None and will not be set!'.format(instrument_name)
-            logger_mock.warning.assert_called_once_with(warning_text)
+            parameter_name = 'gain'
+            self.mock_config[parameter_name]['value'] = None
+            error_message = f'The following parameter\(s\) of .* \[\'{parameter_name}\'\]\!'
+            self.assertRaisesRegex(ValueError, error_message, m2j_adapter.apply, self.mock_config)
 
             m2j_adapter.instrument.close()
 
@@ -82,6 +82,7 @@ class TestM2jInstrumentAdapter(unittest.TestCase):
             address = 'spirack1_module3'
             SerialPortResolver.serial_port_identifiers = {'spirack1': 'COMnumber_test'}
             m2j_adapter = InstrumentAdapterFactory.get_instrument_adapter('M2jInstrumentAdapter', address)
+            mock_config = copy.deepcopy(self.mock_config)
 
             spi_mock.assert_called()
             m2j_module_mock.assert_called()
@@ -89,11 +90,13 @@ class TestM2jInstrumentAdapter(unittest.TestCase):
             self.assertEqual(m2j_adapter.instrument.m2j, m2j_module_mock())
 
             identity = 'IDN'
-            self.mock_config[identity] = 'version_test'
-            mocked_snapshot = {'name': 'some_m2j', 'parameters': self.mock_config}
+            mock_config[identity] = 'version_test'
+            mocked_snapshot = {'name': 'd5a', 'parameters': mock_config}
             m2j_adapter.instrument.snapshot = MagicMock(return_value=mocked_snapshot)
 
             config = m2j_adapter.read()
+            mock_config.pop(identity)
             self.assertTrue(identity not in config.keys())
-            self.assertDictEqual(self.mock_config, config)
+            self.assertDictEqual(mock_config, config)
+
             m2j_adapter.instrument.close()

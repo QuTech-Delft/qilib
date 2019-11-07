@@ -36,4 +36,3 @@ class TestInstrumentAdapter(unittest.TestCase):
         adapter_str = str(adapter)
         self.assertEqual('InstrumentAdapter: DummyInstrumentAdapter_some_address', adapter_str)
         adapter.close_instrument()
-

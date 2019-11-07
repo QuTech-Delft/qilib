@@ -25,8 +25,10 @@ from qilib.utils.type_aliases import PJSValues
 
 
 class PythonJsonStructure(dict):  # type: ignore
-    __serializable_value_types = (bool, int, float, complex, str, bytes)
+    __serializable_key_types = (str, int)
+    __serializable_python_types = (bool, int, float, complex, str, bytes)
     __serializable_numpy_types = (np.float32, np.float64, np.int32, np.int64, np.cfloat)
+    __serializable_value_types = (*__serializable_python_types, *__serializable_numpy_types)
 
     def __init__(self, *args: Dict[str, PJSValues], **kwargs: Any) -> None:
         """ A python container which can hold data objects and can be serialized
@@ -99,7 +101,7 @@ class PythonJsonStructure(dict):  # type: ignore
 
     @staticmethod
     def __assert_correct_key_type(key: Any) -> None:
-        if not isinstance(key, (str, int)):
+        if not isinstance(key, PythonJsonStructure.__serializable_key_types):
             raise TypeError('Invalid key! (key={})'.format(key))
 
     @staticmethod

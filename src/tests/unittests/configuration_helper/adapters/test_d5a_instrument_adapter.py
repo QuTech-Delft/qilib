@@ -44,7 +44,6 @@ class TestD5aInstrumentAdapter(unittest.TestCase):
 
     def test_apply_config_ok(self):
         with patch('qilib.configuration_helper.adapters.spi_rack_instrument_adapter.SPI_rack') as spi_mock, \
-                patch('qilib.configuration_helper.adapters.common_instrument_adapter.logging') as logger_mock, \
                 patch('qcodes.instrument_drivers.QuTech.D5a.D5a_module') as d5a_module_mock:
             range_4volt_bi = 2
             d5a_module_mock.range_4V_bi = range_4volt_bi
@@ -65,7 +64,7 @@ class TestD5aInstrumentAdapter(unittest.TestCase):
             mocked_snapshot = {'name': 'd5a', 'parameters': self.mock_config}
             d5a_adapter.instrument.snapshot = MagicMock(return_value=mocked_snapshot)
             d5a_adapter.apply(self.mock_config)
-            logger_mock.assert_not_called()
+
             d5a_adapter.instrument.d5a.set_voltage.assert_not_called()
             d5a_adapter.instrument.d5a.change_span_update.assert_not_called()
             d5a_adapter.instrument.d5a.get_stepsize.assert_not_called()
@@ -75,7 +74,8 @@ class TestD5aInstrumentAdapter(unittest.TestCase):
             d5a_adapter.instrument.close()
 
     def test_apply_config_raises_configuration_mismatch_error(self):
-        with patch('qcodes.instrument_drivers.QuTech.D5a.D5a_module') as d5a_module_mock:
+        with patch('qilib.configuration_helper.adapters.spi_rack_instrument_adapter.SPI_rack') as spi_mock, \
+            patch('qcodes.instrument_drivers.QuTech.D5a.D5a_module') as d5a_module_mock:
             range_4volt_bi = 2
             dac_value = 0.03997802734375
             d5a_module_mock.range_4V_bi = range_4volt_bi
@@ -108,6 +108,7 @@ class TestD5aInstrumentAdapter(unittest.TestCase):
             range_4volt_bi = 2
             d5a_module_mock.range_4V_bi = range_4volt_bi
             d5a_module_mock().span.__getitem__.return_value = range_4volt_bi
+            mock_config = copy.deepcopy(self.mock_config)
 
             address = 'spirack1_module3'
             SerialPortResolver.serial_port_identifiers = {'spirack1': 'COMnumber_test'}
@@ -119,11 +120,13 @@ class TestD5aInstrumentAdapter(unittest.TestCase):
             self.assertEqual(d5a_adapter.instrument.d5a, d5a_module_mock())
 
             identity = 'IDN'
-            self.mock_config[identity] = 'version_test'
-            mocked_snapshot = {'name': 'd5a', 'parameters': self.mock_config}
+            mock_config[identity] = 'version_test'
+            mocked_snapshot = {'name': 'd5a', 'parameters': mock_config}
             d5a_adapter.instrument.snapshot = MagicMock(return_value=mocked_snapshot)
 
             config = d5a_adapter.read()
+            mock_config.pop(identity)
             self.assertTrue(identity not in config.keys())
-            self.assertDictEqual(self.mock_config, config)
+            self.assertDictEqual(mock_config, config)
+
             d5a_adapter.instrument.close()
