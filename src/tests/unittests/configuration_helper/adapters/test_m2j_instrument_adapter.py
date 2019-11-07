@@ -48,7 +48,6 @@ class TestM2jInstrumentAdapter(unittest.TestCase):
 
     def test_apply_config(self):
         with patch('qilib.configuration_helper.adapters.spi_rack_instrument_adapter.SPI_rack') as spi_mock, \
-         patch('qilib.configuration_helper.adapters.common_instrument_adapter.logging') as logger_mock, \
          patch('qcodes.instrument_drivers.QuTech.M2j.M2j_module') as m2j_module_mock:
             address = 'spirack1_module3'
             adapter_name = 'M2jInstrumentAdapter'

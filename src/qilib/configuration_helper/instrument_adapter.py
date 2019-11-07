@@ -109,8 +109,8 @@ class InstrumentAdapter(ABC):
         """ Return parameters from the QCoDeS snapshot which are not None.
 
             Takes the parameters of the QCoDeS instrument snapshot. Removes all parameters
-            which have a value of None. Logs an error for all parameters that have a None value.
-            Returns the parameter settings which have a value.
+            which have a value of None. Returns the parameter settings which have a value.
+            All parameters with None value will be listed in the log as an error.
 
         Args:
             snapshot: A QCoDeS instrument snapshot.
@@ -122,7 +122,7 @@ class InstrumentAdapter(ABC):
         parameters = {}
         non_value_parameters = {}
         for parameter_name, settings in snapshot['parameters'].items():
-            if 'value' in settings and settings['value'] == None:
+            if 'value' in settings and settings['value'] is None:
                 non_value_parameters[parameter_name] = settings
             else:
                 parameters[parameter_name] = settings
@@ -134,7 +134,7 @@ class InstrumentAdapter(ABC):
 
         return parameters
 
-    def __str__(self):
+    def __str__(self) -> str:
         """ Returns string representation for the InstrumentAdapter.
 
         Returns:

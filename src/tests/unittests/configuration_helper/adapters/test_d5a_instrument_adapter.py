@@ -44,7 +44,6 @@ class TestD5aInstrumentAdapter(unittest.TestCase):
 
     def test_apply_config_ok(self):
         with patch('qilib.configuration_helper.adapters.spi_rack_instrument_adapter.SPI_rack') as spi_mock, \
-                patch('qilib.configuration_helper.adapters.common_instrument_adapter.logging') as logger_mock, \
                 patch('qcodes.instrument_drivers.QuTech.D5a.D5a_module') as d5a_module_mock:
             range_4volt_bi = 2
             d5a_module_mock.range_4V_bi = range_4volt_bi
@@ -65,7 +64,7 @@ class TestD5aInstrumentAdapter(unittest.TestCase):
             mocked_snapshot = {'name': 'd5a', 'parameters': self.mock_config}
             d5a_adapter.instrument.snapshot = MagicMock(return_value=mocked_snapshot)
             d5a_adapter.apply(self.mock_config)
-            logger_mock.assert_not_called()
+
             d5a_adapter.instrument.d5a.set_voltage.assert_not_called()
             d5a_adapter.instrument.d5a.change_span_update.assert_not_called()
             d5a_adapter.instrument.d5a.get_stepsize.assert_not_called()

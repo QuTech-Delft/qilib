@@ -72,8 +72,7 @@ class TestZIHDAWG8InstrumentAdapter(unittest.TestCase):
     def test_apply(self):
         with patch.object(zhinst.utils, 'create_api_session', return_value=3 * (MagicMock(),)) as daq, \
                 patch.object(qilib.configuration_helper.adapters.hdawg8_instrument_adapter.ZIHDAWG8,
-                             'download_device_node_tree', return_value=self.node_tree) as ddnt, \
-                patch('qilib.configuration_helper.adapters.common_instrument_adapter.logging') as logger_mock:
+                             'download_device_node_tree', return_value=self.node_tree) as ddnt:
             address = 'test_dev1'
             adapter_name = 'ZIHDAWG8InstrumentAdapter'
             instrument_name = "{0}_{1}".format(adapter_name, address)
@@ -111,7 +110,6 @@ class TestZIHDAWG8InstrumentAdapter(unittest.TestCase):
             self.assertEqual(0.2, hdawg_adapter.instrument.sines_0_amplitudes_0.raw_value)
 
             hdawg_adapter.apply(config)
-            logger_mock.warning.assert_not_called()
 
             self.assertEqual(1, hdawg_adapter.instrument.system_awg_channelgrouping.raw_value)
             self.assertEqual(1, hdawg_adapter.instrument.sigouts_0_on.raw_value)
@@ -129,7 +127,6 @@ class TestZIHDAWG8InstrumentAdapter(unittest.TestCase):
 
     def test_full_node_tree(self):
         with patch.object(zhinst.utils, 'create_api_session', return_value=3 * (MagicMock(),)) as daq, \
-                patch('qilib.configuration_helper.adapters.common_instrument_adapter.logging'), \
                 open(self._node_tree_path) as node_tree, \
                 patch.object(qilib.configuration_helper.adapters.hdawg8_instrument_adapter.ZIHDAWG8,
                              'download_device_node_tree', return_value=json.load(node_tree)) as ddnt:

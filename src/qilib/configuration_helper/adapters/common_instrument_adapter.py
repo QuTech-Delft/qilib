@@ -17,9 +17,8 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
-import logging
 from abc import ABC, abstractmethod
-from typing import List
+from typing import Any, Dict, List
 
 from qilib.configuration_helper import InstrumentAdapter
 from qilib.utils import PythonJsonStructure
@@ -32,8 +31,8 @@ class CommonInstrumentAdapter(InstrumentAdapter, ABC):
 
         Only the setter commands will be updated.
         Note that setter only parameters which have not been set yield a None when reading the configuration from the
-        instrument adapter. These None parameter values in the configuration will not be set. A warning will be
-        given if any of the configuration parameter values are None.
+        instrument adapter. The apply method will raise a ValueError if any of the configuration parameter values are
+        None. The None value parameters are listed in the raised ValueError.
 
         Args:
             config: The configuration with settings for the adapters instrument.
@@ -62,14 +61,14 @@ class CommonInstrumentAdapter(InstrumentAdapter, ABC):
                                  parameters which are filtered out by this function.
         """
 
-    def __raise_none_value_parameters(self, config: PythonJsonStructure, parameters: List[dict]) -> None:
-        """ Raises a ValueError when in the configuration one or more parameters have value None.
+    def __raise_none_value_parameters(self, config: PythonJsonStructure, parameters: List[Dict[str, Any]]) -> None:
+        """ Raises a ValueError when one or more parameters in the configuration have value None.
 
         Args:
-            config: The configuration with settings for the adapters instrument.
-            parameters: A list of the settable parameters of the instrument.
+            config: A configuration with settings for the instrument adapter.
+            parameters: A list with settable instrument parameters.
         """
-        none_value_parameters = list(filter(lambda parameter: config[parameter]['value']==None, parameters))
+        none_value_parameters = list(filter(lambda parameter: config[parameter]['value'] is None, parameters))
         if none_value_parameters:
             error_message = f'The following parameter(s) of {self._instrument.name} have value ' \
                             f'None and cannot be set: {none_value_parameters}!'

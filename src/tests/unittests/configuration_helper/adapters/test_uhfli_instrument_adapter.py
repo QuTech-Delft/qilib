@@ -39,8 +39,7 @@ class TestZIUHFLIInstrumentAdapter(unittest.TestCase):
         adapter.instrument.close()
 
     def test_int64_convert_to_int(self):
-        with patch.object(zhinst.utils, 'create_api_session', return_value=3 * (MagicMock(),)), \
-             patch('qilib.configuration_helper.adapters.common_instrument_adapter.logging') as logger_mock:
+        with patch.object(zhinst.utils, 'create_api_session', return_value=3 * (MagicMock(),)):
             adapter = InstrumentAdapterFactory.get_instrument_adapter('ZIUHFLIInstrumentAdapter', 'dev4142')
 
             adapter.instrument.scope_trig_level(np.int64(1))

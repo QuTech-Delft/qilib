@@ -85,7 +85,6 @@ class TestS5iInstrumentAdapter(unittest.TestCase):
 
     def test_apply_config(self):
         with patch('qilib.configuration_helper.adapters.spi_rack_instrument_adapter.SPI_rack') as spi_mock, \
-                patch('qilib.configuration_helper.adapters.common_instrument_adapter.logging') as logger_mock, \
                 patch('qcodes.instrument_drivers.QuTech.S5i.S5i_module') as s5i_module_mock:
             address = 'spirack1_module3'
             adapter_name = 'S5iInstrumentAdapter'

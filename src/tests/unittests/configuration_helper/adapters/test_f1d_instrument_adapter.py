@@ -115,7 +115,6 @@ class TestD5aInstrumentAdapter(unittest.TestCase):
 
     def test_apply_config(self):
         with patch('qilib.configuration_helper.adapters.spi_rack_instrument_adapter.SPI_rack') as spi_mock, \
-         patch('qilib.configuration_helper.adapters.common_instrument_adapter.logging') as logger_mock, \
          patch('qcodes.instrument_drivers.QuTech.F1d.F1d_module') as f1d_module_mock:
             address = 'spirack1_module3'
             adapter_name = 'F1dInstrumentAdapter'
@@ -128,9 +127,8 @@ class TestD5aInstrumentAdapter(unittest.TestCase):
             self.assertEqual(address, f1d_adapter.address)
             self.assertEqual(f1d_module_mock(), f1d_adapter.instrument.f1d)
             self.assertEqual(instrument_name, f1d_adapter.instrument.name)
-
             f1d_adapter.apply(self.mock_config)
-            logger_mock.assert_not_called()
+
             f1d_adapter.instrument.f1d.set_IQ_filter.assert_called_with(3)
             f1d_adapter.instrument.f1d.set_I_gain.assert_called_with('low')
             f1d_adapter.instrument.f1d.set_Q_gain.assert_called_with('high')
