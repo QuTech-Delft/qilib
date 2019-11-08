@@ -43,6 +43,7 @@ class CommonConfigInstrumentAdapter(InstrumentAdapter, ABC):
 
         for parameter in config:
             if parameter in self._instrument.parameters and hasattr(self._instrument.parameters[parameter], 'set'):
+
                 result = self._compare_config_values(config[parameter]['value'],
                                                      device_config[parameter]['value'], parameter)
                 if result:

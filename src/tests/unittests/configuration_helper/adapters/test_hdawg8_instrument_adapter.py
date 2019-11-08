@@ -72,8 +72,7 @@ class TestZIHDAWG8InstrumentAdapter(unittest.TestCase):
     def test_apply(self):
         with patch.object(zhinst.utils, 'create_api_session', return_value=3 * (MagicMock(),)) as daq, \
                 patch.object(qilib.configuration_helper.adapters.hdawg8_instrument_adapter.ZIHDAWG8,
-                             'download_device_node_tree', return_value=self.node_tree) as ddnt, \
-                patch('qilib.configuration_helper.adapters.common_instrument_adapter.logging') as logger_mock:
+                             'download_device_node_tree', return_value=self.node_tree) as ddnt:
             address = 'test_dev1'
             adapter_name = 'ZIHDAWG8InstrumentAdapter'
             instrument_name = "{0}_{1}".format(adapter_name, address)
@@ -111,7 +110,6 @@ class TestZIHDAWG8InstrumentAdapter(unittest.TestCase):
             self.assertEqual(0.2, hdawg_adapter.instrument.sines_0_amplitudes_0.raw_value)
 
             hdawg_adapter.apply(config)
-            logger_mock.warning.assert_not_called()
 
             self.assertEqual(1, hdawg_adapter.instrument.system_awg_channelgrouping.raw_value)
             self.assertEqual(1, hdawg_adapter.instrument.sigouts_0_on.raw_value)
@@ -119,17 +117,16 @@ class TestZIHDAWG8InstrumentAdapter(unittest.TestCase):
             self.assertListEqual([0.1, 0.2, 0.3, 0.4], hdawg_adapter.instrument.awgs_1_waveform_data.raw_value)
             self.assertEqual(0.5, hdawg_adapter.instrument.sines_0_amplitudes_0.raw_value)
 
+            parameter_name = 'sigouts_0_on'
             config = hdawg_adapter.read()
-            config['sigouts_0_on']['value'] = None
-            hdawg_adapter.apply(config)
-            warning_text = 'Some parameter values of {} are None and will not be set!'.format(instrument_name)
-            logger_mock.warning.assert_called_once_with(warning_text)
+            config[parameter_name]['value'] = None
+            error_message = f'The following parameter\(s\) of .*'
+            self.assertRaisesRegex(ValueError, error_message, hdawg_adapter.apply, config)
 
             hdawg_adapter.instrument.close()
 
     def test_full_node_tree(self):
         with patch.object(zhinst.utils, 'create_api_session', return_value=3 * (MagicMock(),)) as daq, \
-                patch('qilib.configuration_helper.adapters.common_instrument_adapter.logging'), \
                 open(self._node_tree_path) as node_tree, \
                 patch.object(qilib.configuration_helper.adapters.hdawg8_instrument_adapter.ZIHDAWG8,
                              'download_device_node_tree', return_value=json.load(node_tree)) as ddnt:
@@ -141,13 +138,20 @@ class TestZIHDAWG8InstrumentAdapter(unittest.TestCase):
             daq.return_value[1].getDouble.return_value = 0.5
             daq.return_value[1].getString.return_value = "Test String"
             daq.return_value[1].getAsEvent.return_value = [0.1, 0.2, 0.3, 0.4]
-            config_original = hdawg_adapter.read()
+            expected_regex = f"Parameter values of {hdawg_adapter.name} are .*"
+            with self.assertLogs(level='ERROR') as log_grabber:
+                config_original = hdawg_adapter.read()
+
+            self.assertRegex(log_grabber.records[0].message, expected_regex)
 
             daq.return_value[1].getInt.return_value = 0
             daq.return_value[1].getDouble.return_value = 0.7
             daq.return_value[1].getString.return_value = "New String"
             daq.return_value[1].getAsEvent.return_value = [0.5, 0.6, 0.7, 0.8]
-            config_new = hdawg_adapter.read()
+            with self.assertLogs(level='ERROR') as log_grabber:
+                config_new = hdawg_adapter.read()
+
+            self.assertRegex(log_grabber.records[0].message, expected_regex)
 
             # Apply original config and assert parameters have been updated
             hdawg_adapter.apply(config_original)
@@ -225,7 +229,12 @@ class TestZIHDAWG8InstrumentAdapter(unittest.TestCase):
             daq.return_value[1].getDouble.return_value = 0.5
             daq.return_value[1].getString.return_value = "Test String"
             daq.return_value[1].getAsEvent.return_value = [0.1, 0.2, 0.3, 0.4]
-            config = hdawg_adapter.read()
+
+            expected_regex = f"Parameter values of {hdawg_adapter.name} are .*"
+            with self.assertLogs(level='ERROR') as log_grabber:
+                config = hdawg_adapter.read()
+
+        self.assertRegex(log_grabber.records[0].message, expected_regex)
         self.assertNotIn('system_nics_0_defaultip4', config)
         self.assertNotIn('system_nics_0_defaultmask', config)
         self.assertNotIn('system_nics_0_defaultgateway', config)
