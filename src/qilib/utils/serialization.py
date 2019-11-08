@@ -189,7 +189,7 @@ class Serializer:
             type_: The dataclass type to decode
         """
 
-        type_name = type_.__name__
+        type_name = f'dataclass_{type_.__name__}'
         encode_function = partial(_encode_dataclass, class_name=type_name)
         decode_function = partial(_decode_dataclass, class_type=type_)
         self.register(type_, encode_function, type_name, decode_function)
