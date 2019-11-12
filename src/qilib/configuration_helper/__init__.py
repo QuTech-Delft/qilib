@@ -5,4 +5,6 @@ from qilib.configuration_helper.instrument_configuration_set import InstrumentCo
 from qilib.configuration_helper.instrument_configuration_visitor import InstrumentConfigurationVisitor
 from qilib.configuration_helper.serial_port_resolver import SerialPortResolver
 from qilib.configuration_helper.configuration_helper import ConfigurationHelper
-import qilib.configuration_helper.adapters
+from qilib.configuration_helper import adapters
+
+InstrumentAdapterFactory.add_instrument_adapter_package(adapters)

@@ -23,10 +23,14 @@ class DummyInstrument(Instrument):
                            set_cmd=None,
                            label=name)
 
+    def __str__(self):
+        return self.__class__.__name__
+
     def get_idn(self):
         idn = {'vendor': 'QuTech', 'model': self.name,
                'serial': 42, 'firmware': '20-05-2019-RC'}
         return idn
+
 
 class DummyAMI430Instrument(Instrument):
 
