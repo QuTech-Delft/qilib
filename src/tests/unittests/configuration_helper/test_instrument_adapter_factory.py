@@ -32,7 +32,7 @@ class TestInstrumentAdapterFactory(unittest.TestCase):
         with self.assertRaises(ValueError):
             InstrumentAdapterFactory.get_instrument_adapter('SomeAdapter', 'dev42')
 
-    def test_adda_wrong_class_raises_type_error(self):
+    def test_add_wrong_class_raises_type_error(self):
         error = (TypeError, 'DummyInstrument is not a subclass of InstrumentAdapter')
         self.assertRaisesRegex(*error, InstrumentAdapterFactory.add_instrument_adapter_class, DummyInstrument)
 

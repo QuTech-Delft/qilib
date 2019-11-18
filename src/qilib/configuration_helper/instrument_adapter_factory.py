@@ -32,7 +32,13 @@ class InstrumentAdapterFactory:
     instrument as well as a dictionary that provides key-value pairs of address specifications.
     """
 
+    #: A container that holds all instantiated instrument adapters created by the factory.
+    #: When an adapter is requested via the get_instrument_adapter method, this dictionary is
+    #: checked first for an existing adapter with same name and address.
     adapter_instances: Dict[Tuple[str, str], InstrumentAdapter] = {}
+
+    #: A dictionary containing all available adapters. External adapters can be added via add_instrument_adapter_package
+    #: or add_instrument_adapter_class.
     _instrument_adapters: Dict[str, Type[InstrumentAdapter]] = {}
 
     @classmethod
