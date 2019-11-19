@@ -17,11 +17,11 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
+import inspect
 from types import ModuleType
-from typing import Dict, Tuple, cast, Optional
+from typing import Dict, Tuple, Optional, Type
 
-import qilib
-from qilib.configuration_helper import InstrumentAdapter
+from qilib.configuration_helper.instrument_adapter import InstrumentAdapter
 
 
 class InstrumentAdapterFactory:
@@ -32,18 +32,39 @@ class InstrumentAdapterFactory:
     instrument as well as a dictionary that provides key-value pairs of address specifications.
     """
 
-    instrument_adapters: Dict[Tuple[str, str], InstrumentAdapter] = {}
-    _external_adapters: Dict[str, ModuleType] = {}
+    #: A container that holds all instantiated instrument adapters created by the factory.
+    #: When an adapter is requested via the get_instrument_adapter method, this dictionary is
+    #: checked first for an existing adapter with same name and address.
+    adapter_instances: Dict[Tuple[str, str], InstrumentAdapter] = {}
 
-    @staticmethod
-    def add_instrument_adapters(package: ModuleType):
+    #: A dictionary containing all available adapters. External adapters can be added via add_instrument_adapter_package
+    #: or add_instrument_adapter_class.
+    _instrument_adapters: Dict[str, Type[InstrumentAdapter]] = {}
+
+    @classmethod
+    def add_instrument_adapter_package(cls, package: ModuleType) -> None:
         """ Adds InstrumentAdapters (from an external package)
 
         Args:
             package: The package that contains InstrumentAdapters
+
         """
 
-        InstrumentAdapterFactory._external_adapters.update(vars(package))
+        for adapter in inspect.getmembers(package, lambda m: inspect.isclass(m) and issubclass(m, InstrumentAdapter)):
+            cls.add_instrument_adapter_class(adapter[1])
+
+    @classmethod
+    def add_instrument_adapter_class(cls, adapter: Type[InstrumentAdapter]) -> None:
+        """
+        Args:
+            adapter: Adapter class to be added to the factory.
+        Raises:
+            TypeError: If the adapter is not subclass of InstrumentAdapter.
+
+        """
+        if not issubclass(adapter, InstrumentAdapter):
+            raise TypeError(f'{adapter.__name__} is not a subclass of InstrumentAdapter')
+        cls._instrument_adapters[adapter.__name__] = adapter
 
     @classmethod
     def get_instrument_adapter(cls, instrument_adapter_class_name: str, address: str,
@@ -63,20 +84,24 @@ class InstrumentAdapterFactory:
 
         """
         instrument_adapter_key = instrument_adapter_class_name, str(address)
-        if instrument_adapter_key in cls.instrument_adapters:
-            adapter = cls.instrument_adapters[instrument_adapter_key]
-            if instrument_name is not None and instrument_name != adapter.instrument.name:
-                raise ValueError(f'An adapter exist with different instrument name'
-                                 f' \'{adapter.instrument.name}\' != \'{instrument_name}\'')
-            return adapter
-
-        adapter = vars(qilib.configuration_helper.adapters).get(instrument_adapter_class_name,
-                                                                InstrumentAdapterFactory._external_adapters.get(
-                                                                    instrument_adapter_class_name))
-        if adapter is None:
-            raise ValueError(f"No such InstrumentAdapter {instrument_adapter_class_name}")
+        if instrument_adapter_key in cls.adapter_instances:
+            return cls._get_adapter_instance(instrument_adapter_key, instrument_name)
+        elif instrument_adapter_class_name in cls._instrument_adapters:
+            return cls._get_new_adapter_instance(address, instrument_adapter_class_name, instrument_name)
         else:
-            args = (address, instrument_name) if instrument_name is not None else (address,)
-            adapter = cast(InstrumentAdapter, adapter(*args))
-            cls.instrument_adapters[instrument_adapter_key] = adapter
-            return adapter
+            raise ValueError(f"No such InstrumentAdapter {instrument_adapter_class_name}")
+
+    @classmethod
+    def _get_new_adapter_instance(cls, address, class_name, instrument_name):
+        args = (address, instrument_name) if instrument_name is not None else (address,)
+        adapter = cls._instrument_adapters[class_name](*args)
+        cls.adapter_instances[(class_name, str(address))] = adapter
+        return adapter
+
+    @classmethod
+    def _get_adapter_instance(cls, instrument_adapter_key, instrument_name):
+        adapter = cls.adapter_instances[instrument_adapter_key]
+        if instrument_name is not None and instrument_name != adapter.instrument.name:
+            raise ValueError(f'An adapter exist with different instrument name'
+                             f' \'{adapter.instrument.name}\' != \'{instrument_name}\'')
+        return adapter

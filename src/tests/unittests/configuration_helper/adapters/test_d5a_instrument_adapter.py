@@ -11,7 +11,7 @@ from qilib.configuration_helper.adapters.d5a_instrument_adapter import SpanValue
 class TestD5aInstrumentAdapter(unittest.TestCase):
 
     def setUp(self):
-        InstrumentAdapterFactory.instrument_adapters.clear()
+        InstrumentAdapterFactory.adapter_instances.clear()
 
         self.mock_config = {
             'name': 'd5a',

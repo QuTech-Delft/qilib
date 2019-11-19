@@ -8,7 +8,7 @@ from qilib.utils import PythonJsonStructure
 class TestSpiRackInstrumentAdapter(TestCase):
 
     def setUp(self):
-        InstrumentAdapterFactory.instrument_adapters = {}
+        InstrumentAdapterFactory.adapter_instances = {}
         self.serial_port_settings = PythonJsonStructure(MagicMock(spec=dict()))
         self.mock_config = PythonJsonStructure({
             'version': 1.23,

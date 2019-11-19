@@ -8,7 +8,7 @@ from qilib.configuration_helper import InstrumentAdapterFactory, SerialPortResol
 class TestD5aInstrumentAdapter(unittest.TestCase):
 
     def setUp(self):
-        InstrumentAdapterFactory.instrument_adapters.clear()
+        InstrumentAdapterFactory.adapter_instances.clear()
 
         self.mock_config = {
             'name': 'F1dInstrumentAdapter_spirack1_module3',

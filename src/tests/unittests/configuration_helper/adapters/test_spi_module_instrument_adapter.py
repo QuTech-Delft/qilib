@@ -8,7 +8,7 @@ from qilib.configuration_helper.adapters import SpiModuleInstrumentAdapter
 class TestSpiModuleInstrumentAdapter(TestCase):
 
     def setUp(self):
-        InstrumentAdapterFactory.instrument_adapters = {}
+        InstrumentAdapterFactory.adapter_instances = {}
 
     def test_create_has_invalid_address(self):
         invalid_address = 'ItIsInvalid'

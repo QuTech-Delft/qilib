@@ -11,7 +11,7 @@ from qilib.configuration_helper import (InstrumentAdapterFactory,
 class TestM2jInstrumentAdapter(unittest.TestCase):
 
     def setUp(self):
-        InstrumentAdapterFactory.instrument_adapters.clear()
+        InstrumentAdapterFactory.adapter_instances.clear()
 
         self.mock_config = {
             'name': 'M2jInstrumentAdapter_spirack1_module3',
