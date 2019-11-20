@@ -1,26 +1,24 @@
-import sys
+import copy
 import logging
+import sys
 from unittest import TestCase
 from unittest.mock import MagicMock, call, patch
 
 from qilib.configuration_helper import InstrumentAdapterFactory
-from qilib.configuration_helper.adapters import M4iInstrumentAdapter
+
+sys.modules['pyspcm'] = MagicMock()
 from tests.test_data.m4i_snapshot import snapshot
+del sys.modules['pyspcm']
 
 
 class TestM4iInstrumentAdapter(TestCase):
 
     def setUp(self):
-        sys.modules['pyspcm'] = MagicMock()
-        from qcodes.instrument_drivers.Spectrum.M4i import M4i
-
         self.address = 'spcm1234'
+        self.snapshot = copy.deepcopy(snapshot)
         self.adapter_name = 'M4iInstrumentAdapter'
         self.instrument_name = f'{self.adapter_name}_{self.address}'
-        InstrumentAdapterFactory.instrument_adapters.clear()
-
-    def tearDown(self):
-        del sys.modules['pyspcm']
+        InstrumentAdapterFactory.adapter_instances.clear()
 
     def test_constructor(self):
         with patch('qcodes.instrument_drivers.Spectrum.M4i.M4i') as m4i_mock:
@@ -29,12 +27,11 @@ class TestM4iInstrumentAdapter(TestCase):
             m4i_mock.return_value.initialize_channels.assert_called_once()
             self.assertEqual(adapter.instrument, m4i_mock())
 
-    def test_apply_config(self):
-        with patch('qcodes.instrument_drivers.Spectrum.M4i.M4i') as m4i_mock, \
-          patch('qilib.configuration_helper.adapters.common_instrument_adapter.logging') as logging_mock:
+    def test_apply_config_parameters_called(self):
+        with patch('qcodes.instrument_drivers.Spectrum.M4i.M4i') as m4i_mock:
             adapter = InstrumentAdapterFactory.get_instrument_adapter(self.adapter_name, self.address)
-            adapter.instrument.parameters = {key: MagicMock() for key in snapshot.keys()}
-            adapter.apply(snapshot)
+            adapter.instrument.parameters = {key: MagicMock() for key in self.snapshot.keys()}
+            adapter.apply(self.snapshot)
 
             self.assertEqual(adapter.name, self.instrument_name)
             self.assertEqual(adapter.instrument, m4i_mock())
@@ -43,19 +40,27 @@ class TestM4iInstrumentAdapter(TestCase):
                      if parameter['value'] is not None]
             adapter.instrument.set.assert_has_calls(calls, any_order=True)
 
-            logging_call = logging_mock.method_calls[0][1][0]
-            self.assertRegex(logging_call, "Some parameter values of *")
+    def test_apply_config_none_value_raises(self):
+        with patch('qcodes.instrument_drivers.Spectrum.M4i.M4i') as m4i_mock:
+            adapter = InstrumentAdapterFactory.get_instrument_adapter(self.adapter_name, self.address)
+            adapter.instrument.parameters = {key: MagicMock() for key in self.snapshot.keys()}
+
+            parameter_name = 'channel_1'
+            self.snapshot[parameter_name]['value'] = None
+
+            error_message = f'The following parameter\(s\) of .* \[\'{parameter_name}\'\]\!'
+            self.assertRaisesRegex(ValueError, error_message, adapter.apply, self.snapshot)
 
     def test_read_config(self):
         with patch('qcodes.instrument_drivers.Spectrum.M4i.M4i') as m4i_mock:
             adapter = InstrumentAdapterFactory.get_instrument_adapter(self.adapter_name, self.address)
-            adapter.instrument.snapshot.return_value = {'parameters': snapshot.copy()}
+            adapter.instrument.snapshot.return_value = {'parameters': self.snapshot}
 
             self.assertEqual(adapter.instrument, m4i_mock())
             self.assertEqual(adapter.name, self.instrument_name)
             config = adapter.read()
 
-            expected_config = snapshot.copy()
+            expected_config = self.snapshot
             expected_config.pop('IDN')
             expected_config.pop('box_averages')
             self.assertDictEqual(expected_config, config)
