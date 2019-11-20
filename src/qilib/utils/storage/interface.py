@@ -34,6 +34,10 @@ class NodeAlreadyExistsError(Exception):
     pass
 
 
+class StorageTimeoutError(Exception):
+    """ Raised when connection to storage can not be established."""
+
+
 class StorageInterface(ABC):
     """ Base class for storage of measurement and calibration results.
         The storage is based on tags (HDF5-like).
