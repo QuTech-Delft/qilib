@@ -114,7 +114,7 @@ class StorageInterface(ABC):
         """ Assert that tag is a list of strings."""
 
         if not isinstance(tag, list) or not all(type(item) == str for item in tag):
-            raise TypeError('Tag should be a list of strings')
+            raise TypeError(f'Tag {tag} should be a list of strings')
 
     @abstractmethod
     def save_data(self, data: Any, tag: List[str]) -> None:
