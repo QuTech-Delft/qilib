@@ -17,7 +17,7 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
-from typing import List, Union
+from typing import List, Union, Optional
 
 from qilib.configuration_helper import InstrumentAdapterFactory
 from qilib.configuration_helper.exceptions import DuplicateTagError
@@ -32,8 +32,8 @@ class InstrumentConfiguration:
     STORAGE_BASE_TAG = 'configuration'
 
     def __init__(self, adapter_class_name: str, address: str, storage: StorageInterface,
-                 tag: Union[None, List[str]] = None,
-                 configuration: Union[None, PythonJsonStructure] = None) -> None:
+                 tag: Union[None, List[str]] = None, configuration: Union[None, PythonJsonStructure] = None,
+                 instrument_name: Optional[str] = None) -> None:
         """ A set of instrument configurations
 
         Args
@@ -42,11 +42,12 @@ class InstrumentConfiguration:
             storage: Any storage that implements the StorageInterface
             tag: A unique identifier for a instrument configuration set
             configuration: The instrument configuration
+            instrument_name: User defined name for the instrument
         """
         self._adapter_class_name = adapter_class_name
         self._address = address
         self._storage = storage
-        self._instrument = InstrumentAdapterFactory.get_instrument_adapter(adapter_class_name, address)
+        self._instrument = InstrumentAdapterFactory.get_instrument_adapter(adapter_class_name, address, instrument_name)
         self._configuration = PythonJsonStructure() if configuration is None else configuration
         self._tag = [self.STORAGE_BASE_TAG, adapter_class_name, StorageInterface.datetag_part()] if tag is None else tag
 
