@@ -92,6 +92,7 @@ class StorageMemory(StorageInterface):
         return self._unserialize(StorageMemory._retrieve_value_from_dict_by_tag(self._data, tag))
 
     def save_data(self, data: Any, tag: List[str]) -> None:
+        StorageInterface._validate_tag(tag)
         StorageMemory._store_value_to_dict_by_tag(self._data, tag, self._serialize(data))
 
     def get_latest_subtag(self, tag: List[str]) -> Optional[List[str]]:
