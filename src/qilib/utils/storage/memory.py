@@ -22,6 +22,7 @@ from typing import Any, Dict, List, Optional
 from qilib.utils.storage.interface import (NoDataAtKeyError,
                                            NodeAlreadyExistsError,
                                            StorageInterface)
+from qilib.utils.type_aliases import TagType
 
 
 class StorageMemory(StorageInterface):
@@ -48,7 +49,7 @@ class StorageMemory(StorageInterface):
 
     @staticmethod
     def _retrieve_value_from_dict_by_tag(dictionary: Dict[str, Any],
-                                         tag: List[str]) -> Any:
+                                         tag: TagType) -> Any:
         if len(tag) == 0:
             if not isinstance(dictionary, StorageMemory.__Leaf):
                 raise NoDataAtKeyError()
@@ -60,7 +61,7 @@ class StorageMemory(StorageInterface):
 
     @staticmethod
     def _retrieve_nodes_from_dict_by_tag(dictionary: Dict[str, Any],
-                                         tag: List[str]) -> List[str]:
+                                         tag: TagType) -> TagType:
         if len(tag) == 0:
             return list(dictionary.keys())
         tag_prefix = tag[0]
@@ -72,7 +73,7 @@ class StorageMemory(StorageInterface):
         return StorageMemory._retrieve_nodes_from_dict_by_tag(dictionary[tag_prefix], tag[1:])
 
     @staticmethod
-    def _store_value_to_dict_by_tag(dictionary: Dict[str, Any], tag: List[str], value: Any) -> None:
+    def _store_value_to_dict_by_tag(dictionary: Dict[str, Any], tag: TagType, value: Any) -> None:
         if len(tag) == 1:
             if tag[0] in dictionary:
                 if isinstance(dictionary[tag[0]], StorageMemory.__Node):
@@ -86,24 +87,25 @@ class StorageMemory(StorageInterface):
 
             StorageMemory._store_value_to_dict_by_tag(dictionary[tag[0]], tag[1:], value)
 
-    def load_data(self, tag: List[str]) -> Any:
+    def load_data(self, tag: TagType) -> Any:
         if not isinstance(tag, list):
             raise TypeError()
         return self._unserialize(StorageMemory._retrieve_value_from_dict_by_tag(self._data, tag))
 
-    def save_data(self, data: Any, tag: List[str]) -> None:
+    def save_data(self, data: Any, tag: TagType) -> None:
+        StorageInterface._validate_tag(tag)
         StorageMemory._store_value_to_dict_by_tag(self._data, tag, self._serialize(data))
 
-    def get_latest_subtag(self, tag: List[str]) -> Optional[List[str]]:
-        child_tags: List[str] = self.list_data_subtags(tag)
+    def get_latest_subtag(self, tag: TagType) -> Optional[TagType]:
+        child_tags: TagType = self.list_data_subtags(tag)
         if len(child_tags) == 0:
             return None
         child_tags = sorted(child_tags)
         return tag + [child_tags[-1]]
 
-    def list_data_subtags(self, tag: List[str]) -> List[str]:
+    def list_data_subtags(self, tag: TagType) -> TagType:
         try:
-            tags: List[str] = self._retrieve_nodes_from_dict_by_tag(self._data, tag)
+            tags: TagType = self._retrieve_nodes_from_dict_by_tag(self._data, tag)
         except NoDataAtKeyError:
             return []
         return list(tags)
@@ -111,7 +113,7 @@ class StorageMemory(StorageInterface):
     def search(self, query: str) -> Any:
         raise NotImplementedError()
 
-    def tag_in_storage(self, tag: List[str]) -> bool:
+    def tag_in_storage(self, tag: TagType) -> bool:
         tmp_data = self._data
         for partial_tag in tag:
             if partial_tag in tmp_data:

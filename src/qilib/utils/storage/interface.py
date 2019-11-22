@@ -23,6 +23,8 @@ from abc import ABC, abstractmethod
 from datetime import datetime
 from typing import Any, Callable, Optional, List, Union
 
+from qilib.utils.type_aliases import TagType
+
 
 class NoDataAtKeyError(Exception):
     pass
@@ -78,7 +80,7 @@ class StorageInterface(ABC):
         return date_with_time.isoformat()
 
     @abstractmethod
-    def load_data(self, tag: List[str]) -> Any:
+    def load_data(self, tag: TagType) -> Any:
         """ Load result from storage.
 
         Args:
@@ -92,7 +94,7 @@ class StorageInterface(ABC):
         """
 
     @staticmethod
-    def _tag_to_list(tag: Union[str, List[str]]) -> List[str]:
+    def _tag_to_list(tag: Union[str, TagType]) -> TagType:
         """ Convert a str or list tag to list format. """
         if not isinstance(tag, (str, list)):
             raise TypeError('tag should be of type %s' % list)
@@ -101,7 +103,7 @@ class StorageInterface(ABC):
         return tag
 
     @staticmethod
-    def _tag_to_string(tag: Union[str, List[str]]) -> str:
+    def _tag_to_string(tag: Union[str, TagType]) -> str:
         """ Convert a tag to string format. """
         if not isinstance(tag, (str, list)):
             raise TypeError('tag should be of type %s' % list)
@@ -109,8 +111,15 @@ class StorageInterface(ABC):
             tag = '/'.join(tag)
         return tag
 
+    @staticmethod
+    def _validate_tag(tag: TagType) -> None:
+        """ Assert that tag is a list of strings."""
+
+        if not isinstance(tag, list) or not all(isinstance(item, str) for item in tag):
+            raise TypeError(f'Tag {tag} should be a list of strings')
+
     @abstractmethod
-    def save_data(self, data: Any, tag: List[str]) -> None:
+    def save_data(self, data: Any, tag: TagType) -> None:
         """ Save data to storage.
 
         Args:
@@ -120,7 +129,7 @@ class StorageInterface(ABC):
         pass
 
     @abstractmethod
-    def get_latest_subtag(self, tag: List[str]) -> Optional[List[str]]:
+    def get_latest_subtag(self, tag: TagType) -> Optional[TagType]:
         """ Return tag of latest result for a given tag.
 
         Args:
@@ -137,7 +146,7 @@ class StorageInterface(ABC):
         pass
 
     @abstractmethod
-    def list_data_subtags(self, tag: List[str]) -> List[str]:
+    def list_data_subtags(self, tag: TagType) -> TagType:
         """ List available result tags of at tag.
 
         Args:
@@ -162,7 +171,7 @@ class StorageInterface(ABC):
         raise NotImplementedError('search interface not yet specified')
 
     @abstractmethod
-    def tag_in_storage(self, tag: List[str]) -> bool:
+    def tag_in_storage(self, tag: TagType) -> bool:
         """ Check if tag is already in storage
         Args:
             tag: hdf5 tag

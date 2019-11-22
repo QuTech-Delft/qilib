@@ -31,6 +31,7 @@ from qilib.utils.serialization import Serializer, serializer as _serializer
 from qilib.utils.storage.interface import (NoDataAtKeyError,
                                            NodeAlreadyExistsError,
                                            StorageInterface)
+from qilib.utils.type_aliases import TagType
 
 
 class NumpyArrayCodec(TypeCodec):  # type: ignore
@@ -98,7 +99,7 @@ class StorageMongoDb(StorageInterface):
         else:
             return self._collection.insert_one({'tag': ''}).inserted_id
 
-    def _retrieve_nodes_by_tag(self, tag: List[str], parent: ObjectId) -> List[str]:
+    def _retrieve_nodes_by_tag(self, tag: TagType, parent: ObjectId) -> TagType:
         """Traverse the tree and list the children of a given tag
 
         Args:
@@ -122,7 +123,7 @@ class StorageMongoDb(StorageInterface):
             else:
                 return self._retrieve_nodes_by_tag(tag[1:], doc['_id'])
 
-    def _retrieve_value_by_tag(self, tag: List[str], parent: ObjectId) -> Any:
+    def _retrieve_value_by_tag(self, tag: TagType, parent: ObjectId) -> Any:
         """Traverse the tree and give the value a given leaf tag
 
         Args:
@@ -149,7 +150,7 @@ class StorageMongoDb(StorageInterface):
             else:
                 return self._retrieve_value_by_tag(tag[1:], doc['_id'])
 
-    def _store_value_by_tag(self, tag: List[str], data: Any, parent: ObjectId) -> None:
+    def _store_value_by_tag(self, tag: TagType, data: Any, parent: ObjectId) -> None:
         """ Store a value at a given tag
 
         Args:
@@ -181,7 +182,7 @@ class StorageMongoDb(StorageInterface):
 
             self._store_value_by_tag(tag[1:], data, parent)
 
-    def load_data(self, tag: List[str]) -> Any:
+    def load_data(self, tag: TagType) -> Any:
         if not isinstance(tag, list):
             raise TypeError('Tag should be a list of strings')
 
@@ -190,20 +191,18 @@ class StorageMongoDb(StorageInterface):
 
         return self._unserialize(self._decode_data(self._retrieve_value_by_tag(tag, self._get_root())))
 
-    def save_data(self, data: Any, tag: List[str]) -> None:
-        if not isinstance(tag, list):
-            raise TypeError('Tag should be a list of strings')
-
+    def save_data(self, data: Any, tag: TagType) -> None:
+        StorageInterface._validate_tag(tag)
         self._store_value_by_tag(tag, self._encode_data(self._serialize(data)), self._get_root())
 
-    def get_latest_subtag(self, tag: List[str]) -> Optional[List[str]]:
+    def get_latest_subtag(self, tag: TagType) -> Optional[TagType]:
         child_tags = sorted(self.list_data_subtags(tag))
         if len(child_tags) == 0:
             return None
 
         return tag + [child_tags[-1]]
 
-    def list_data_subtags(self, tag: List[str]) -> List[str]:
+    def list_data_subtags(self, tag: TagType) -> TagType:
         try:
             tags = self._retrieve_nodes_by_tag(tag, self._get_root())
         except NoDataAtKeyError:
@@ -214,7 +213,7 @@ class StorageMongoDb(StorageInterface):
     def search(self, query: str) -> Any:
         raise NotImplementedError()
 
-    def tag_in_storage(self, tag: List[str]) -> bool:
+    def tag_in_storage(self, tag: TagType) -> bool:
         parent = self._get_root()
         for tag_part in tag:
             doc = self._collection.find_one({'parent': parent, 'tag': tag_part}, {'value': 0})

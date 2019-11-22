@@ -83,6 +83,10 @@ class TestStorageMemory(unittest.TestCase):
         results = storage.list_data_subtags(['1', '2'])
         self.assertEqual(results, ['3'])
 
+    def test_save_tag_mixed_list_raises_error(self):
+        error_msg = r"Tag \['bla', 5\] should be a list of strings"
+        self.assertRaisesRegex(TypeError, error_msg, self.storage.save_data, 'data', ['bla', 5])
+
     def test_get_latest(self):
         storage = self.storage
         test_tags = [
