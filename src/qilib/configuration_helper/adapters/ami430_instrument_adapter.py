@@ -22,11 +22,11 @@ from typing import Any, Optional
 
 from qcodes.instrument_drivers.american_magnetics.AMI430 import AMI430
 
-from qilib.configuration_helper.adapters.compare_configuration_instrument_adapter import CompareConfigurationInstrumentAdapter
+from qilib.configuration_helper.adapters.read_only_configuration_instrument_adapter import ReadOnlyConfigurationInstrumentAdapter
 from qilib.utils import PythonJsonStructure
 
 
-class AMI430InstrumentAdapter(CompareConfigurationInstrumentAdapter):
+class AMI430InstrumentAdapter(ReadOnlyConfigurationInstrumentAdapter):
     """ Adapter for the AMI430 QCoDeS driver."""
 
     def __init__(self, address: str, instrument_name: Optional[str] = None) -> None:

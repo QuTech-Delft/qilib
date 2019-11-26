@@ -21,7 +21,7 @@ from typing import Any, Optional
 
 from qcodes.instrument_drivers.QuTech.D5a import D5a
 
-from qilib.configuration_helper.adapters.compare_configuration_instrument_adapter import CompareConfigurationInstrumentAdapter
+from qilib.configuration_helper.adapters.read_only_configuration_instrument_adapter import ReadOnlyConfigurationInstrumentAdapter
 from qilib.configuration_helper.adapters.spi_module_instrument_adapter import SpiModuleInstrumentAdapter
 from qilib.utils import PythonJsonStructure
 
@@ -36,7 +36,7 @@ RESET_VOLTAGE = False
 MV = True
 
 
-class D5aInstrumentAdapter(CompareConfigurationInstrumentAdapter, SpiModuleInstrumentAdapter):
+class D5aInstrumentAdapter(ReadOnlyConfigurationInstrumentAdapter, SpiModuleInstrumentAdapter):
 
     def __init__(self, address: str, instrument_name: Optional[str] = None) -> None:
         super().__init__(address, instrument_name)
@@ -49,10 +49,10 @@ class D5aInstrumentAdapter(CompareConfigurationInstrumentAdapter, SpiModuleInstr
     def apply(self, config: PythonJsonStructure) -> None:
         """ Applies configuration
 
-        1. Apply configuration update for step, inter_delay
-        2. Apply configuration update for unit parameter based on dac1 unit
+        1. Apply configuration update for step, inter_delay.
+        2. Apply configuration update for unit of dac parameters based on dac1 unit.
         3. Compares rest of the configuration values with setter command, to existing values and raises
-           error incase of mismatch
+           error in case of mismatch.
 
         Args:
             config: Containing the instrument configuration.

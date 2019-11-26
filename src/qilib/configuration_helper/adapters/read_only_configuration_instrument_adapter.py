@@ -28,7 +28,7 @@ class ConfigurationError(Exception):
     """ Error to raise if configuration does not match."""
 
 
-class CompareConfigurationInstrumentAdapter(InstrumentAdapter, ABC):
+class ReadOnlyConfigurationInstrumentAdapter(InstrumentAdapter, ABC):
     """ Common methods to verify value mismatch on config apply"""
 
     def apply(self, config: PythonJsonStructure) -> None:

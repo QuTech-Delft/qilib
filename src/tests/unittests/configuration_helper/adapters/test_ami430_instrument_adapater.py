@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import patch, MagicMock
 
-from qilib.configuration_helper.adapters.compare_configuration_instrument_adapter import ConfigurationError
+from qilib.configuration_helper.adapters.read_only_configuration_instrument_adapter import ConfigurationError
 from qilib.configuration_helper.adapters.ami430_instrument_adapter import AMI430InstrumentAdapter
 
 from tests.test_data.ami430_snapshot import snapshot, bad_config
