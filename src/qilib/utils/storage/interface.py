@@ -21,17 +21,21 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 import logging
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import Any, Callable, Optional, List, Union
+from typing import Any, Callable, Optional, Union
 
 from qilib.utils.type_aliases import TagType
 
 
 class NoDataAtKeyError(Exception):
-    pass
+    """ Raised when trying to get data from a node or leave can not be found."""
 
 
 class NodeAlreadyExistsError(Exception):
-    pass
+    """ Raised when trying to create a node or leave when node already exists."""
+
+
+class ConnectionTimeoutError(Exception):
+    """ Raised when connection to storage can not be established."""
 
 
 class StorageInterface(ABC):
