@@ -63,7 +63,7 @@ class StorageMongoDb(StorageInterface):
     """
 
     def __init__(self, name: str, host: str = 'localhost', port: int = 27017, database: str = '',
-                 serializer: Union[Serializer, None] = None, connection_timeout: float = 30) -> None:
+                 serializer: Union[Serializer, None] = None, connection_timeout: float = 30000) -> None:
         """MongoDB implementation of storage class
 
         See also: `StorageInterface`
@@ -73,7 +73,7 @@ class StorageMongoDb(StorageInterface):
             host: MongoDB host
             port: MongoDB port
             database: The database to use, if empty the name of the storage is used
-            connection_timeout: How long to try to connect to database before raising an error
+            connection_timeout: How long to try to connect to database before raising an error in milliseconds
         Raises:
             StorageTimeoutError: If connection to database has not been established before connection_timeout is reached
         """
@@ -83,7 +83,6 @@ class StorageMongoDb(StorageInterface):
         codec_options = CodecOptions(type_registry=type_registry)
         self._client = MongoClient(host, port, serverSelectionTimeoutMS=connection_timeout)
         self._check_server_connection(connection_timeout)
-        self._client.server_info()
         self._db = self._client.get_database(database or name, codec_options=codec_options)
         self._collection = self._db.get_collection('storage')
 
@@ -95,9 +94,9 @@ class StorageMongoDb(StorageInterface):
     def _check_server_connection(self, timeout: float) -> None:
         """ Check if connection has been established to database server."""
         try:
-            self._client.server_info()
+            self._client.admin.command('ismaster')
         except ServerSelectionTimeoutError as e:
-            raise StorageTimeoutError(f'Failed to connect to Mongo database within {timeout} seconds') from e
+            raise StorageTimeoutError(f'Failed to connect to Mongo database within {timeout} milliseconds') from e
 
     def _get_root(self) -> ObjectId:
         """Get or create a root node if it doesn't exist yet
