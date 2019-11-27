@@ -32,7 +32,7 @@ from qilib.utils.serialization import Serializer, serializer as _serializer
 from qilib.utils.storage.interface import (NoDataAtKeyError,
                                            NodeAlreadyExistsError,
                                            StorageInterface,
-                                           StorageTimeoutError)
+                                           ConnectionTimeoutError)
 from qilib.utils.type_aliases import TagType
 
 
@@ -96,7 +96,7 @@ class StorageMongoDb(StorageInterface):
         try:
             self._client.server_info()
         except ServerSelectionTimeoutError as e:
-            raise StorageTimeoutError(f'Failed to connect to Mongo database within {timeout} milliseconds') from e
+            raise ConnectionTimeoutError(f'Failed to connect to Mongo database within {timeout} milliseconds') from e
 
     def _get_root(self) -> ObjectId:
         """Get or create a root node if it doesn't exist yet

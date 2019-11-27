@@ -34,7 +34,7 @@ class NodeAlreadyExistsError(Exception):
     """ Raised when trying to create a node or leave when node already exists."""
 
 
-class StorageTimeoutError(Exception):
+class ConnectionTimeoutError(Exception):
     """ Raised when connection to storage can not be established."""
 
 

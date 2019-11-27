@@ -8,7 +8,7 @@ from bson.codec_options import TypeRegistry, CodecOptions
 from mongomock import MongoClient
 
 from qilib.utils.storage import StorageMongoDb
-from qilib.utils.storage.interface import NoDataAtKeyError, NodeAlreadyExistsError, StorageTimeoutError
+from qilib.utils.storage.interface import NoDataAtKeyError, NodeAlreadyExistsError, ConnectionTimeoutError
 from qilib.utils.storage.mongo import NumpyArrayCodec
 
 
@@ -25,7 +25,7 @@ class TestStorageMongo(unittest.TestCase):
 
     def test_server_timeout(self):
         error_msg = 'Failed to connect to Mongo database within 0.01 milliseconds$'
-        self.assertRaisesRegex(StorageTimeoutError, error_msg, StorageMongoDb, 'test', port=-1, connection_timeout=0.01)
+        self.assertRaisesRegex(ConnectionTimeoutError, error_msg, StorageMongoDb, 'test', port=-1, connection_timeout=0.01)
 
     def test_save_load_basic_data(self):
         for index, value in enumerate(self.test_data):
