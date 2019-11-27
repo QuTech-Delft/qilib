@@ -24,7 +24,7 @@ class TestStorageMongo(unittest.TestCase):
         self.storage._collection.drop()
 
     def test_server_timeout(self):
-        error_msg = 'Failed to connect to Mongo database within 0.01 seconds$'
+        error_msg = 'Failed to connect to Mongo database within 0.01 milliseconds$'
         self.assertRaisesRegex(StorageTimeoutError, error_msg, StorageMongoDb, 'test', port=-1, connection_timeout=0.01)
 
     def test_save_load_basic_data(self):

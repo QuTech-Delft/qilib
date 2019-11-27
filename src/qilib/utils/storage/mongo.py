@@ -94,7 +94,7 @@ class StorageMongoDb(StorageInterface):
     def _check_server_connection(self, timeout: float) -> None:
         """ Check if connection has been established to database server."""
         try:
-            self._client.admin.command('ismaster')
+            self._client.server_info()
         except ServerSelectionTimeoutError as e:
             raise StorageTimeoutError(f'Failed to connect to Mongo database within {timeout} milliseconds') from e
 
