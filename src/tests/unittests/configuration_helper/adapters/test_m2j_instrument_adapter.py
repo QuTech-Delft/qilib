@@ -2,7 +2,7 @@ import copy
 import unittest
 from unittest.mock import patch, MagicMock
 
-from qcodes.instrument_drivers.QuTech.M2j import M2j
+from qcodes_contrib_drivers.drivers.QuTech.M2j import M2j
 
 from qilib.configuration_helper import (InstrumentAdapterFactory,
                                      SerialPortResolver)
@@ -48,7 +48,7 @@ class TestM2jInstrumentAdapter(unittest.TestCase):
 
     def test_apply_config(self):
         with patch('qilib.configuration_helper.adapters.spi_rack_instrument_adapter.SPI_rack') as spi_mock, \
-         patch('qcodes.instrument_drivers.QuTech.M2j.M2j_module') as m2j_module_mock:
+         patch('qcodes_contrib_drivers.drivers.QuTech.M2j.M2j_module') as m2j_module_mock:
             address = 'spirack1_module3'
             adapter_name = 'M2jInstrumentAdapter'
             instrument_name = '{0}_{1}'.format(adapter_name, address)
@@ -78,7 +78,7 @@ class TestM2jInstrumentAdapter(unittest.TestCase):
 
     def test_read_config(self):
         with patch('qilib.configuration_helper.adapters.spi_rack_instrument_adapter.SPI_rack') as spi_mock, \
-         patch('qcodes.instrument_drivers.QuTech.M2j.M2j_module') as m2j_module_mock:
+         patch('qcodes_contrib_drivers.drivers.QuTech.M2j.M2j_module') as m2j_module_mock:
             address = 'spirack1_module3'
             SerialPortResolver.serial_port_identifiers = {'spirack1': 'COMnumber_test'}
             m2j_adapter = InstrumentAdapterFactory.get_instrument_adapter('M2jInstrumentAdapter', address)
@@ -91,7 +91,7 @@ class TestM2jInstrumentAdapter(unittest.TestCase):
 
             identity = 'IDN'
             mock_config[identity] = 'version_test'
-            mocked_snapshot = {'name': 'd5a', 'parameters': mock_config}
+            mocked_snapshot = {'name': 'd5a', 'parameters': mock_config.copy()}
             m2j_adapter.instrument.snapshot = MagicMock(return_value=mocked_snapshot)
 
             config = m2j_adapter.read()

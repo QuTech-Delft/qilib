@@ -54,13 +54,14 @@ class TestM4iInstrumentAdapter(TestCase):
     def test_read_config(self):
         with patch('qcodes_contrib_drivers.drivers.Spectrum.M4i.M4i') as m4i_mock:
             adapter = InstrumentAdapterFactory.get_instrument_adapter(self.adapter_name, self.address)
-            adapter.instrument.snapshot.return_value = {'parameters': self.snapshot}
+            adapter.instrument.snapshot.return_value = {'parameters': copy.deepcopy(self.snapshot)}
 
             self.assertEqual(adapter.instrument, m4i_mock())
             self.assertEqual(adapter.name, self.instrument_name)
             config = adapter.read()
 
-            expected_config = self.snapshot
+            expected_config = self.snapshot.copy()
             expected_config.pop('IDN')
             expected_config.pop('box_averages')
+            expected_config.pop('card_available_length')
             self.assertDictEqual(expected_config, config)
