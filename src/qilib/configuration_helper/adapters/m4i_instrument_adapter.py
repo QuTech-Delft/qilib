@@ -36,5 +36,6 @@ class M4iInstrumentAdapter(CommonInstrumentAdapter):
         if parameters['box_averages']['value'] == 1:
             parameters.pop('box_averages')
 
+        parameters.pop('card_available_length')
         parameters.pop('IDN')
         return parameters

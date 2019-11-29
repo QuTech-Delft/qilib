@@ -72,8 +72,9 @@ class InstrumentAdapter(ABC):
         configuration = PythonJsonStructure()
         if self._instrument is not None:
             snapshot = self._instrument.snapshot(update)
-            parameters = self.__notify_and_remove_none_values(snapshot)
-            configuration.update(self._filter_parameters(parameters))
+            parameters = self._filter_parameters(snapshot['parameters'])
+            valued_parameters = self.__notify_and_remove_none_values(parameters)
+            configuration.update(valued_parameters)
 
         return configuration
 
@@ -105,7 +106,7 @@ class InstrumentAdapter(ABC):
         """
         visitor.visit(self)
 
-    def __notify_and_remove_none_values(self, snapshot: PythonJsonStructure) -> PythonJsonStructure:
+    def __notify_and_remove_none_values(self, parameters: PythonJsonStructure) -> PythonJsonStructure:
         """ Return parameters from the QCoDeS snapshot which are not None.
 
             Takes the parameters of the QCoDeS instrument snapshot. Removes all parameters
@@ -113,26 +114,26 @@ class InstrumentAdapter(ABC):
             All parameters with None value will be listed in the log as an error.
 
         Args:
-            snapshot: A QCoDeS instrument snapshot.
+            parameters: The parameters of a QCoDeS instrument snapshot.
 
         Returns:
             PythonJsonStructure: Contains the instrument snapshot parameters without the
                                  instrument parameters which a none value.
         """
-        parameters = PythonJsonStructure()
-        non_value_parameters = PythonJsonStructure()
-        for parameter_name, settings in snapshot['parameters'].items():
+        valued_parameters = PythonJsonStructure()
+        none_value_parameters = PythonJsonStructure()
+        for parameter_name, settings in parameters.items():
             if 'value' in settings and settings['value'] is None:
-                non_value_parameters[parameter_name] = settings
+                none_value_parameters[parameter_name] = settings
             else:
-                parameters[parameter_name] = settings
+                valued_parameters[parameter_name] = settings
 
-        if non_value_parameters:
-            parameter_names = list(non_value_parameters.keys())
+        if none_value_parameters:
+            parameter_names = list(none_value_parameters.keys())
             error_message = f'Parameter values of {self._instrument_name} are None. Please set: {parameter_names}.'
             logging.error(error_message)
 
-        return parameters
+        return valued_parameters
 
     def __str__(self) -> str:
         """ Returns string representation for the InstrumentAdapter.

@@ -19,7 +19,7 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 """
 from typing import Optional
 
-from qcodes.instrument_drivers.Keysight.Keysight_E8267D import Keysight_E8267D
+from qcodes_contrib_drivers.drivers.Keysight.Keysight_E8267D import Keysight_E8267D
 
 from qilib.configuration_helper.adapters.common_instrument_adapter import CommonInstrumentAdapter
 from qilib.utils import PythonJsonStructure
