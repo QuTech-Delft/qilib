@@ -44,7 +44,7 @@ class TestD5aInstrumentAdapter(unittest.TestCase):
 
     def test_apply_config_ok(self):
         with patch('qilib.configuration_helper.adapters.spi_rack_instrument_adapter.SPI_rack') as spi_mock, \
-                patch('qcodes.instrument_drivers.QuTech.D5a.D5a_module') as d5a_module_mock:
+                patch('qcodes_contrib_drivers.drivers.QuTech.D5a.D5a_module') as d5a_module_mock:
             range_4volt_bi = 2
             d5a_module_mock.range_4V_bi = range_4volt_bi
             d5a_module_mock().span.__getitem__.return_value = range_4volt_bi
@@ -75,7 +75,7 @@ class TestD5aInstrumentAdapter(unittest.TestCase):
 
     def test_apply_config_raises_configuration_mismatch_error(self):
         with patch('qilib.configuration_helper.adapters.spi_rack_instrument_adapter.SPI_rack'), \
-            patch('qcodes.instrument_drivers.QuTech.D5a.D5a_module') as d5a_module_mock:
+            patch('qcodes_contrib_drivers.drivers.QuTech.D5a.D5a_module') as d5a_module_mock:
             range_4volt_bi = 2
             dac_value = 0.03997802734375
             d5a_module_mock.range_4V_bi = range_4volt_bi
@@ -104,7 +104,7 @@ class TestD5aInstrumentAdapter(unittest.TestCase):
 
     def test_read_config(self):
         with patch('qilib.configuration_helper.adapters.spi_rack_instrument_adapter.SPI_rack') as spi_mock, \
-                patch('qcodes.instrument_drivers.QuTech.D5a.D5a_module') as d5a_module_mock:
+                patch('qcodes_contrib_drivers.drivers.QuTech.D5a.D5a_module') as d5a_module_mock:
             range_4volt_bi = 2
             d5a_module_mock.range_4V_bi = range_4volt_bi
             d5a_module_mock().span.__getitem__.return_value = range_4volt_bi
@@ -121,7 +121,7 @@ class TestD5aInstrumentAdapter(unittest.TestCase):
 
             identity = 'IDN'
             mock_config[identity] = 'version_test'
-            mocked_snapshot = {'name': 'd5a', 'parameters': mock_config}
+            mocked_snapshot = {'name': 'd5a', 'parameters': mock_config.copy()}
             d5a_adapter.instrument.snapshot = MagicMock(return_value=mocked_snapshot)
 
             config = d5a_adapter.read()

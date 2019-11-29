@@ -115,7 +115,7 @@ class TestD5aInstrumentAdapter(unittest.TestCase):
 
     def test_apply_config(self):
         with patch('qilib.configuration_helper.adapters.spi_rack_instrument_adapter.SPI_rack') as spi_mock, \
-         patch('qcodes.instrument_drivers.QuTech.F1d.F1d_module') as f1d_module_mock:
+         patch('qcodes_contrib_drivers.drivers.QuTech.F1d.F1d_module') as f1d_module_mock:
             address = 'spirack1_module3'
             adapter_name = 'F1dInstrumentAdapter'
             instrument_name = '{0}_{1}'.format(adapter_name, address)
@@ -143,7 +143,7 @@ class TestD5aInstrumentAdapter(unittest.TestCase):
 
     def test_read_config(self):
         with patch('qilib.configuration_helper.adapters.spi_rack_instrument_adapter.SPI_rack') as spi_mock, \
-         patch('qcodes.instrument_drivers.QuTech.F1d.F1d_module') as f1d_module_mock:
+         patch('qcodes_contrib_drivers.drivers.QuTech.F1d.F1d_module') as f1d_module_mock:
             address = 'spirack1_module3'
             SerialPortResolver.serial_port_identifiers = {'spirack1': 'COMnumber_test'}
             f1d_adapter = InstrumentAdapterFactory.get_instrument_adapter('F1dInstrumentAdapter', address)
@@ -156,7 +156,7 @@ class TestD5aInstrumentAdapter(unittest.TestCase):
 
             identity = 'IDN'
             mock_config[identity] = 'version_test'
-            mocked_snapshot = {'name': 'd5a', 'parameters': mock_config}
+            mocked_snapshot = {'name': 'd5a', 'parameters': mock_config.copy()}
             f1d_adapter.instrument.snapshot = MagicMock(return_value=mocked_snapshot)
 
             config = f1d_adapter.read()

@@ -19,7 +19,7 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 """
 from typing import Optional
 
-from qcodes.instrument_drivers.QuTech.F1d import F1d
+from qcodes_contrib_drivers.drivers.QuTech.F1d import F1d
 
 from qilib.configuration_helper.adapters.spi_module_instrument_adapter import SpiModuleInstrumentAdapter
 

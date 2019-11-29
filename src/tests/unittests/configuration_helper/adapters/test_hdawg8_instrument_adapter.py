@@ -138,20 +138,13 @@ class TestZIHDAWG8InstrumentAdapter(unittest.TestCase):
             daq.return_value[1].getDouble.return_value = 0.5
             daq.return_value[1].getString.return_value = "Test String"
             daq.return_value[1].getAsEvent.return_value = [0.1, 0.2, 0.3, 0.4]
-            expected_regex = f"Parameter values of {hdawg_adapter.name} are .*"
-            with self.assertLogs(level='ERROR') as log_grabber:
-                config_original = hdawg_adapter.read()
-
-            self.assertRegex(log_grabber.records[0].message, expected_regex)
+            config_original = hdawg_adapter.read()
 
             daq.return_value[1].getInt.return_value = 0
             daq.return_value[1].getDouble.return_value = 0.7
             daq.return_value[1].getString.return_value = "New String"
             daq.return_value[1].getAsEvent.return_value = [0.5, 0.6, 0.7, 0.8]
-            with self.assertLogs(level='ERROR') as log_grabber:
-                config_new = hdawg_adapter.read()
-
-            self.assertRegex(log_grabber.records[0].message, expected_regex)
+            config_new = hdawg_adapter.read()
 
             # Apply original config and assert parameters have been updated
             hdawg_adapter.apply(config_original)
@@ -230,11 +223,8 @@ class TestZIHDAWG8InstrumentAdapter(unittest.TestCase):
             daq.return_value[1].getString.return_value = "Test String"
             daq.return_value[1].getAsEvent.return_value = [0.1, 0.2, 0.3, 0.4]
 
-            expected_regex = f"Parameter values of {hdawg_adapter.name} are .*"
-            with self.assertLogs(level='ERROR') as log_grabber:
-                config = hdawg_adapter.read()
+            config = hdawg_adapter.read()
 
-        self.assertRegex(log_grabber.records[0].message, expected_regex)
         self.assertNotIn('system_nics_0_defaultip4', config)
         self.assertNotIn('system_nics_0_defaultmask', config)
         self.assertNotIn('system_nics_0_defaultgateway', config)

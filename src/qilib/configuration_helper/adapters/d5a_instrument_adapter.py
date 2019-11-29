@@ -19,7 +19,7 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 """
 from typing import Any, Optional
 
-from qcodes.instrument_drivers.QuTech.D5a import D5a
+from qcodes_contrib_drivers.drivers.QuTech.D5a import D5a
 
 from qilib.configuration_helper.adapters.read_only_configuration_instrument_adapter import ReadOnlyConfigurationInstrumentAdapter
 from qilib.configuration_helper.adapters.spi_module_instrument_adapter import SpiModuleInstrumentAdapter

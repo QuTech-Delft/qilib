@@ -19,7 +19,7 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 """
 from typing import Optional
 
-from qcodes.instrument_drivers.ZI.ZIHDAWG8 import ZIHDAWG8
+from qcodes_contrib_drivers.drivers.ZurichInstruments.ZIHDAWG8 import ZIHDAWG8
 
 from qilib.configuration_helper.adapters.common_instrument_adapter import CommonInstrumentAdapter
 from qilib.utils import PythonJsonStructure
@@ -34,7 +34,10 @@ class ZIHDAWG8InstrumentAdapter(CommonInstrumentAdapter):
         return PythonJsonStructure(super().read(update))
 
     def _filter_parameters(self, parameters: PythonJsonStructure) -> PythonJsonStructure:
-        filtered = {parameter: value for (parameter, value) in parameters.items() if 'system_nics_' not in parameter}
+        filter_items = ['_elf_data', '_waveform_descriptors', '_sequencer_program', '_sequencer_assembly', '_elf_name',
+                        '_dio_data', '_waveform_waves_', 'system_nics_', 'triggers_streams_', 'features_code']
+        filtered = {parameter: value for (parameter, value) in parameters.items()
+                    if all(filter not in parameter for filter in filter_items)}
         return PythonJsonStructure(filtered)
 
     def start(self, awg_number: int) -> None:
