@@ -17,7 +17,7 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
-from typing import Union, List
+from typing import Union, List, Optional
 
 from qilib.configuration_helper import InstrumentConfiguration
 from qilib.configuration_helper.visitor import Visitor
@@ -30,22 +30,21 @@ class InstrumentConfigurationSet:
 
     STORAGE_BASE_TAG = 'configuration_set'
 
-    def __init__(self, storage: StorageInterface, tag: Union[None, List[str]] = None,
-                 instruments: Union[None, List[InstrumentConfiguration]] = None) -> None:
+    def __init__(self, storage: StorageInterface, tag: Optional[List[str]] = None,
+                 instrument_configurations: Optional[List[InstrumentConfiguration]] = None) -> None:
         """ A set of instrument configurations
 
         Args
             storage: Any storage that implements the StorageInterface
             tag: A unique identifier for a instrument configuration set
-            instruments: A list of instrument configurations
+            instrument_configurations: A list of instrument configurations
         """
 
         self._storage = storage
         self._tag = [self.STORAGE_BASE_TAG, StorageInterface.datetag_part()] if tag is None else tag
-        if instruments is None:
-            instruments = []
-        self._instruments = instruments
-
+        if instrument_configurations is None:
+            instrument_configurations = []
+        self._instrument_configurations = instrument_configurations
 
     @property
     def tag(self) -> List[str]:
@@ -60,10 +59,10 @@ class InstrumentConfigurationSet:
         return self._storage
 
     @property
-    def instruments(self) -> List[InstrumentConfiguration]:
+    def instrument_configurations(self) -> List[InstrumentConfiguration]:
         """ The instrument configurations in this set """
 
-        return self._instruments
+        return self._instrument_configurations
 
     @staticmethod
     def load(tag: List[str], storage: StorageInterface) -> 'InstrumentConfigurationSet':
@@ -83,6 +82,12 @@ class InstrumentConfigurationSet:
 
         return InstrumentConfigurationSet(storage, tag, instruments)
 
+    def copy(self) -> 'InstrumentConfigurationSet':
+        """ Get a copy of the configuration set."""
+
+        configurations = [config.copy() for config in self._instrument_configurations]
+        return InstrumentConfigurationSet(self._storage, instrument_configurations=configurations)
+
     def store(self) -> None:
         """ Saves object to storage
 
@@ -94,7 +99,7 @@ class InstrumentConfigurationSet:
             raise DuplicateTagError(f'InstrumentConfiguration with tag \'{self._tag}\' already in storage')
 
         instruments = []
-        for instrument in self.instruments:
+        for instrument in self.instrument_configurations:
             try:
                 instrument.store()
             except DuplicateTagError:
@@ -110,25 +115,25 @@ class InstrumentConfigurationSet:
 
         self._tag = [self.STORAGE_BASE_TAG, StorageInterface.datetag_part()] if tag is None else tag
 
-        for instrument in self._instruments:
+        for instrument in self._instrument_configurations:
             instrument.refresh()
 
     def apply(self) -> None:
         """ Uploads the configurations to the instruments """
 
-        for instrument in self.instruments:
+        for instrument in self.instrument_configurations:
             instrument.apply()
 
     def apply_delta(self) -> None:
         """ Compare configurations with instruments and apply configurations that differs """
 
-        for instrument in self.instruments:
+        for instrument in self.instrument_configurations:
             instrument.apply_delta()
 
     def apply_delta_lazy(self) -> None:
         """ Compare configurations with instrument drivers last known settings and apply configurations that differs """
 
-        for instrument in self.instruments:
+        for instrument in self.instrument_configurations:
             instrument.apply_delta_lazy()
 
     def accept(self, visitor: Visitor) -> None:
@@ -138,5 +143,5 @@ class InstrumentConfigurationSet:
             visitor: An implementation of the Visitor interface.
         
         """
-        for instrument in self.instruments:
+        for instrument in self.instrument_configurations:
             instrument.accept(visitor)
