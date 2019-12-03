@@ -48,6 +48,7 @@ class InstrumentConfiguration:
         self._address = address
         self._storage = storage
         self._instrument = InstrumentAdapterFactory.get_instrument_adapter(adapter_class_name, address, instrument_name)
+        self._instrument_name = instrument_name
         self._configuration = PythonJsonStructure() if configuration is None else configuration
         self._tag = [self.STORAGE_BASE_TAG, adapter_class_name, StorageInterface.datetag_part()] if tag is None else tag
 
@@ -86,8 +87,9 @@ class InstrumentConfiguration:
         document = storage.load_data(tag)
         adapter_class_name = document['adapter_class_name']
         address = document['address']
+        instrument_name = document.get('instrument_name', None)
         configuration = document['configuration']
-        return InstrumentConfiguration(adapter_class_name, address, storage, tag, configuration)
+        return InstrumentConfiguration(adapter_class_name, address, storage, tag, configuration, instrument_name)
 
     def store(self) -> None:
         """ Saves object to storage.
@@ -97,9 +99,11 @@ class InstrumentConfiguration:
 
         """
         if self._storage.tag_in_storage(self._tag):
-            raise DuplicateTagError("InstrumentConfiguration with tag '{}' already in storage".format(self._tag))
+            raise DuplicateTagError(
+                f"InstrumentConfiguration for {self._adapter_class_name} with tag '{self._tag}' already in storage")
         document = PythonJsonStructure(adapter_class_name=self._adapter_class_name,
                                        address=self._address,
+                                       instrument_name=self._instrument_name,
                                        configuration=self._configuration)
         self._storage.save_data(document, self._tag)
 
