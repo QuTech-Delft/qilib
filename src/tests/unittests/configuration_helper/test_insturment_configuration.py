@@ -34,7 +34,6 @@ class TestInstrumentConfiguration(unittest.TestCase):
             def _filter_parameters(self, parameters: PythonJsonStructure) -> PythonJsonStructure:
                 pass
 
-
         test_adapter = TestAdapter('fake-address')
 
         with patch(
@@ -55,6 +54,7 @@ class TestInstrumentConfiguration(unittest.TestCase):
     def test_load(self):
         some_data = {'adapter_class_name': 'Dummy',
                      'address': 'dev42',
+                     'instrument_name': 'name',
                      'configuration': {'power': 'MAX',
                                        'other': 'SOME',
                                        'one_more': 0.42}}
@@ -62,7 +62,7 @@ class TestInstrumentConfiguration(unittest.TestCase):
         self._storage.save_data(some_data, ['2019-05-09T11:29:51.523636'])
         with patch('qilib.configuration_helper.instrument_configuration.InstrumentAdapterFactory') as mock_factory:
             instrument_configuration = InstrumentConfiguration.load(['2019-05-09T11:29:51.523636'], self._storage)
-            mock_factory.get_instrument_adapter.assert_called_with('Dummy', 'dev42', None)
+            mock_factory.get_instrument_adapter.assert_called_with('Dummy', 'dev42', 'name')
             self.assertListEqual(['2019-05-09T11:29:51.523636'], instrument_configuration.tag)
             self.assertDictEqual(some_data['configuration'], instrument_configuration.configuration)
 
@@ -71,7 +71,8 @@ class TestInstrumentConfiguration(unittest.TestCase):
             instrument_configuration = InstrumentConfiguration('DummyClass', 'fake-address', self._storage,
                                                                tag=['2019-05-09T11:29:51.523636'])
             instrument_configuration.store()
-            error = r"InstrumentConfiguration with tag '\['2019-05-09T11:29:51.523636'\]' already in storage"
+            error = r"InstrumentConfiguration for DummyClass with tag " \
+                    r"'\['2019-05-09T11:29:51.523636'\]' already in storage"
             self.assertRaisesRegex(DuplicateTagError, error, instrument_configuration.store)
 
     def test_store(self):
