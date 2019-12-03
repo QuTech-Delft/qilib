@@ -22,8 +22,9 @@ class TestInstrumentConfigurationVisitor(unittest.TestCase):
     def __create_visitor_with_instrument(self, adapter, instrument_class_name, instrument_address):
         with patch('qilib.configuration_helper.instrument_configuration.InstrumentAdapterFactory') as mock_factory:
             mock_factory.get_instrument_adapter.return_value = adapter
-            instrument_1 = InstrumentConfiguration(instrument_class_name, instrument_address, Mock(), tag=['instrument_1'])
-        instrument_configuration_set = InstrumentConfigurationSet(Mock(), instruments=[instrument_1])
+            instrument_1 = InstrumentConfiguration(instrument_class_name, instrument_address, Mock(),
+                                                   tag=['instrument_1'])
+        instrument_configuration_set = InstrumentConfigurationSet(Mock(), instrument_configurations=[instrument_1])
         visitor = InstrumentConfigurationVisitor()
         instrument_configuration_set.accept(visitor)
         return visitor

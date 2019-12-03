@@ -1,10 +1,13 @@
 import unittest
 from unittest.mock import MagicMock, Mock, patch
 
-from qilib.configuration_helper import InstrumentConfiguration, InstrumentConfigurationSet
+from qilib.configuration_helper import InstrumentConfiguration, InstrumentConfigurationSet, InstrumentAdapterFactory
 from qilib.configuration_helper.configuration_helper import ConfigurationHelper
 from qilib.utils import PythonJsonStructure
 from qilib.utils.storage import StorageMemory
+from tests.test_data.dummy_instrument_adapter import DummyInstrumentAdapter
+
+InstrumentAdapterFactory.add_instrument_adapter_class(DummyInstrumentAdapter)
 
 
 class TestConfigurationHelper(unittest.TestCase):
@@ -26,9 +29,9 @@ class TestConfigurationHelper(unittest.TestCase):
             configuration_helper.retrieve_inactive_configuration_from_storage(tag)
         inactive_configuration = configuration_helper._inactive_configuration
         self.assertListEqual(inactive_configuration.tag, tag)
-        self.assertListEqual(inactive_configuration.instruments[0].tag, ['some_tag'])
-        self.assertEqual(inactive_configuration.instruments[0].address, 'fake')
-        self.assertDictEqual(inactive_configuration.instruments[0].configuration, {'param': 'value'})
+        self.assertListEqual(inactive_configuration.instrument_configurations[0].tag, ['some_tag'])
+        self.assertEqual(inactive_configuration.instrument_configurations[0].address, 'fake')
+        self.assertDictEqual(inactive_configuration.instrument_configurations[0].configuration, {'param': 'value'})
 
     def test_configuration_helper_integration(self):
         storage = StorageMemory('some_name')
@@ -40,17 +43,40 @@ class TestConfigurationHelper(unittest.TestCase):
             instrument_2 = InstrumentConfiguration('DummyClass', 'fake-address-2', storage, tag=['instrument_2'],
                                                    configuration=configuration_2)
             instrument_configuration_set = InstrumentConfigurationSet(storage, tag=['set'],
-                                                                      instruments=[instrument_1, instrument_2])
+                                                                      instrument_configurations=[instrument_1,
+                                                                                                 instrument_2])
             instrument_configuration_set.store()
 
             configuration_helper = ConfigurationHelper(storage)
             configuration_helper.retrieve_inactive_configuration_from_storage(['set'])
         inactive_configuration = configuration_helper.inactive_configuration
         self.assertListEqual(inactive_configuration.tag, ['set'])
-        self.assertListEqual(inactive_configuration.instruments[0].tag, ['instrument_1'])
-        self.assertListEqual(inactive_configuration.instruments[1].tag, ['instrument_2'])
-        self.assertDictEqual(configuration_1, inactive_configuration.instruments[0].configuration)
-        self.assertDictEqual(configuration_2, inactive_configuration.instruments[1].configuration)
+        self.assertListEqual(inactive_configuration.instrument_configurations[0].tag, ['instrument_1'])
+        self.assertListEqual(inactive_configuration.instrument_configurations[1].tag, ['instrument_2'])
+        self.assertDictEqual(configuration_1, inactive_configuration.instrument_configurations[0].configuration)
+        self.assertDictEqual(configuration_2, inactive_configuration.instrument_configurations[1].configuration)
+
+    def test_retrieve_active_from_inactive(self):
+        dummy = InstrumentAdapterFactory.get_instrument_adapter('DummyInstrumentAdapter', 'address')
+        dummy.apply(PythonJsonStructure(amplitude={'value': 0}, frequency={'value': 0}, enable_output={'value': False}))
+        config = InstrumentConfiguration('DummyInstrumentAdapter', 'address', MagicMock())
+        instrument_configuration_set = InstrumentConfigurationSet(MagicMock, instrument_configurations=[config])
+        instrument_configuration_set.snapshot()
+        configuration_helper = ConfigurationHelper(MagicMock, inactive_configuration=instrument_configuration_set)
+
+        dummy.apply(PythonJsonStructure(amplitude={'value': 1}, frequency={'value': 2}, enable_output={'value': True}))
+        configuration_helper.retrieve_active_from_inactive()
+        inactive_configuration = configuration_helper.inactive_configuration.instrument_configurations[0].configuration
+        active_configuration = configuration_helper.active_configuration.instrument_configurations[0].configuration
+
+        self.assertEqual(0, inactive_configuration['amplitude']['value'])
+        self.assertEqual(0, inactive_configuration['frequency']['value'])
+        self.assertFalse(inactive_configuration['enable_output']['value'])
+        self.assertEqual(1, active_configuration['amplitude']['value'])
+        self.assertEqual(2, active_configuration['frequency']['value'])
+        self.assertTrue(active_configuration['enable_output']['value'])
+
+        dummy.close_instrument()
 
     def test_write_active_configuration_to_storage(self):
         storage = Mock()

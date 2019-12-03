@@ -17,6 +17,7 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
+from copy import deepcopy
 from typing import List, Union, Optional
 
 from qilib.configuration_helper import InstrumentAdapterFactory
@@ -47,8 +48,8 @@ class InstrumentConfiguration:
         self._adapter_class_name = adapter_class_name
         self._address = address
         self._storage = storage
-        self._instrument = InstrumentAdapterFactory.get_instrument_adapter(adapter_class_name, address, instrument_name)
         self._instrument_name = instrument_name
+        self._adapter = InstrumentAdapterFactory.get_instrument_adapter(adapter_class_name, address, instrument_name)
         self._configuration = PythonJsonStructure() if configuration is None else configuration
         self._tag = [self.STORAGE_BASE_TAG, adapter_class_name, StorageInterface.datetag_part()] if tag is None else tag
 
@@ -91,6 +92,12 @@ class InstrumentConfiguration:
         configuration = document['configuration']
         return InstrumentConfiguration(adapter_class_name, address, storage, tag, configuration, instrument_name)
 
+    def copy(self) -> 'InstrumentConfiguration':
+        """ Get a copy of the instrument configuration."""
+        configuration = deepcopy(self._configuration)
+        return InstrumentConfiguration(self._adapter_class_name, self._address, self._storage,
+                                       configuration=configuration, instrument_name=self._instrument_name)
+
     def store(self) -> None:
         """ Saves object to storage.
 
@@ -109,7 +116,7 @@ class InstrumentConfiguration:
 
     def apply(self) -> None:
         """ Uploads the configuration to the instrument."""
-        self._instrument.apply(self._configuration)
+        self._adapter.apply(self._configuration)
 
     def apply_delta(self, update: bool = True) -> None:
         """ Compare configuration with instrument and apply configuration that differs.
@@ -118,9 +125,9 @@ class InstrumentConfiguration:
             update: If True, request all parameter values from instrument, else use latest set values.
 
         """
-        instrument_config = self._instrument.read(update=update)
+        instrument_config = self._adapter.read(update=update)
         delta = self._get_configuration_delta(instrument_config)
-        self._instrument.apply(delta)
+        self._adapter.apply(delta)
 
     def _get_configuration_delta(self, instrument_config: PythonJsonStructure) -> PythonJsonStructure:
         delta = PythonJsonStructure()
@@ -138,7 +145,7 @@ class InstrumentConfiguration:
 
         If the settings read from the instrument differs from the configuration the tag is also updated.
         """
-        instrument_config = self._instrument.read(update=True)
+        instrument_config = self._adapter.read(update=True)
         delta = self._get_configuration_delta(instrument_config)
         if len(delta) > 0 or len(instrument_config) != len(self._configuration):
             self._configuration = instrument_config
@@ -152,7 +159,7 @@ class InstrumentConfiguration:
 
         """
         visitor.visit(self)
-        self._instrument.accept(visitor)
+        self._adapter.accept(visitor)
 
     def __str__(self):
         """Returns string representation for the underlying InstrumentAdapter.
@@ -160,4 +167,4 @@ class InstrumentConfiguration:
         Returns:
             String representation for the underlying InstrumentAdapter.
         """
-        return f'Configuration for {self._instrument}'
+        return f'Configuration for {self._adapter}'
