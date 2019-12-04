@@ -75,7 +75,7 @@ class ConfigurationHelper:
         """
         self._inactive_configuration = InstrumentConfigurationSet.load(tag, self._storage)
 
-    def retrieve_active_from_inactive(self):
+    def retrieve_active_from_inactive(self) -> None:
         """ Get active configuration based on instruments available in inactive configuration.
 
         Copies the inactive configuration, sets it as active and applies snapshot of the instruments settings.
