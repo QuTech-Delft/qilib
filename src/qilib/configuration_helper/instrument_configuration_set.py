@@ -78,9 +78,9 @@ class InstrumentConfigurationSet:
 
         # load the document as a list of instruments tags
         tags = storage.load_data(tag)
-        instruments = [InstrumentConfiguration.load(instrument_tag, storage) for instrument_tag in tags]
+        instrument_configurations = [InstrumentConfiguration.load(instrument_tag, storage) for instrument_tag in tags]
 
-        return InstrumentConfigurationSet(storage, tag, instruments)
+        return InstrumentConfigurationSet(storage, tag, instrument_configurations)
 
     def copy(self) -> 'InstrumentConfigurationSet':
         """ Get a copy of the configuration set."""
@@ -98,43 +98,43 @@ class InstrumentConfigurationSet:
         if self._storage.tag_in_storage(self._tag):
             raise DuplicateTagError(f'InstrumentConfiguration with tag \'{self._tag}\' already in storage')
 
-        instruments = []
-        for instrument in self.instrument_configurations:
+        instrument_configuration_tags = []
+        for instrument_configuration in self.instrument_configurations:
             try:
-                instrument.store()
+                instrument_configuration.store()
             except DuplicateTagError:
                 pass
             finally:
-                instruments.append(instrument.tag)
+                instrument_configuration_tags.append(instrument_configuration.tag)
 
         # save the document as a list of instruments tags
-        self._storage.save_data(instruments, self._tag)
+        self._storage.save_data(instrument_configuration_tags, self._tag)
 
     def snapshot(self, tag: Union[None, List[str]] = None) -> None:
         """ Updates the configuration set by overwriting the tag and refreshing all underlying instruments """
 
         self._tag = [self.STORAGE_BASE_TAG, StorageInterface.datetag_part()] if tag is None else tag
 
-        for instrument in self._instrument_configurations:
-            instrument.refresh()
+        for instrument_configuration in self._instrument_configurations:
+            instrument_configuration.refresh()
 
     def apply(self) -> None:
         """ Uploads the configurations to the instruments """
 
-        for instrument in self.instrument_configurations:
-            instrument.apply()
+        for instrument_configuration in self.instrument_configurations:
+            instrument_configuration.apply()
 
     def apply_delta(self) -> None:
         """ Compare configurations with instruments and apply configurations that differs """
 
-        for instrument in self.instrument_configurations:
-            instrument.apply_delta()
+        for instrument_configuration in self.instrument_configurations:
+            instrument_configuration.apply_delta()
 
     def apply_delta_lazy(self) -> None:
         """ Compare configurations with instrument drivers last known settings and apply configurations that differs """
 
-        for instrument in self.instrument_configurations:
-            instrument.apply_delta_lazy()
+        for instrument_configuration in self.instrument_configurations:
+            instrument_configuration.apply_delta_lazy()
 
     def accept(self, visitor: Visitor) -> None:
         """ Accepts a visitor and propagates to instrument configurations.
@@ -143,5 +143,5 @@ class InstrumentConfigurationSet:
             visitor: An implementation of the Visitor interface.
         
         """
-        for instrument in self.instrument_configurations:
-            instrument.accept(visitor)
+        for instrument_configuration in self.instrument_configurations:
+            instrument_configuration.accept(visitor)
