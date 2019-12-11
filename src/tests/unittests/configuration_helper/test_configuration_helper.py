@@ -55,28 +55,13 @@ class TestConfigurationHelper(unittest.TestCase):
         self.assertListEqual(inactive_configuration.instrument_configurations[1].tag, ['instrument_2'])
         self.assertDictEqual(configuration_1, inactive_configuration.instrument_configurations[0].configuration)
         self.assertDictEqual(configuration_2, inactive_configuration.instrument_configurations[1].configuration)
-
-    def test_retrieve_active_from_inactive(self):
-        dummy = InstrumentAdapterFactory.get_instrument_adapter('DummyInstrumentAdapter', 'address')
-        dummy.apply(PythonJsonStructure(amplitude={'value': 0}, frequency={'value': 0}, enable_output={'value': False}))
-        config = InstrumentConfiguration('DummyInstrumentAdapter', 'address', MagicMock())
-        instrument_configuration_set = InstrumentConfigurationSet(MagicMock, instrument_configurations=[config])
-        instrument_configuration_set.snapshot()
-        configuration_helper = ConfigurationHelper(MagicMock, inactive_configuration=instrument_configuration_set)
-
-        dummy.apply(PythonJsonStructure(amplitude={'value': 1}, frequency={'value': 2}, enable_output={'value': True}))
-        configuration_helper.retrieve_active_from_inactive()
-        inactive_configuration = configuration_helper.inactive_configuration.instrument_configurations[0].configuration
-        active_configuration = configuration_helper.active_configuration.instrument_configurations[0].configuration
-
-        self.assertEqual(0, inactive_configuration['amplitude']['value'])
-        self.assertEqual(0, inactive_configuration['frequency']['value'])
-        self.assertFalse(inactive_configuration['enable_output']['value'])
-        self.assertEqual(1, active_configuration['amplitude']['value'])
-        self.assertEqual(2, active_configuration['frequency']['value'])
-        self.assertTrue(active_configuration['enable_output']['value'])
-
-        dummy.close_instrument()
+        repr_str = r"ConfigurationHelper\(StorageMemory\('some_name'\), InstrumentConfigurationSet\(StorageMemory\(" \
+                   r"'some_name'\), \['configuration_set', '.*'\], \[\]\), " \
+                   r"InstrumentConfigurationSet\(StorageMemory\('some_name'\), \['set'\], \[InstrumentConfiguration\(" \
+                   r"'DummyClass', 'fake-address-1', StorageMemory\('some_name'\), \['instrument_1'\], " \
+                   r"\{'amper': 0.005\}, None\), InstrumentConfiguration\('DummyClass', 'fake-address-2', " \
+                   r"StorageMemory\('some_name'\), \['instrument_2'\], \{'frequency': '2.4 GHz'\}, None\)\]\)\)"
+        self.assertRegex(repr(configuration_helper), repr_str)
 
     def test_write_active_configuration_to_storage(self):
         storage = Mock()

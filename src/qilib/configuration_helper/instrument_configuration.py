@@ -33,7 +33,7 @@ class InstrumentConfiguration:
     STORAGE_BASE_TAG = 'configuration'
 
     def __init__(self, adapter_class_name: str, address: str, storage: StorageInterface,
-                 tag: Union[None, List[str]] = None, configuration: Union[None, PythonJsonStructure] = None,
+                 tag: Optional[List[str]] = None, configuration: Optional[PythonJsonStructure] = None,
                  instrument_name: Optional[str] = None) -> None:
         """ A set of instrument configurations
 
@@ -52,6 +52,13 @@ class InstrumentConfiguration:
         self._adapter = InstrumentAdapterFactory.get_instrument_adapter(adapter_class_name, address, instrument_name)
         self._configuration = PythonJsonStructure() if configuration is None else configuration
         self._tag = [self.STORAGE_BASE_TAG, adapter_class_name, StorageInterface.datetag_part()] if tag is None else tag
+
+    def __repr__(self):
+        repr_string = '%s(%r, %r, %r, %r, %r, %r)' % (
+            self.__class__.__name__, self._adapter_class_name, self._address, self._storage, self._tag,
+            self._configuration,
+            self._instrument_name)
+        return repr_string
 
     @property
     def tag(self) -> List[str]:
@@ -91,12 +98,6 @@ class InstrumentConfiguration:
         instrument_name = document.get('instrument_name', None)
         configuration = document['configuration']
         return InstrumentConfiguration(adapter_class_name, address, storage, tag, configuration, instrument_name)
-
-    def copy(self) -> 'InstrumentConfiguration':
-        """ Get a copy of the instrument configuration."""
-        configuration = deepcopy(self._configuration)
-        return InstrumentConfiguration(self._adapter_class_name, self._address, self._storage,
-                                       configuration=configuration, instrument_name=self._instrument_name)
 
     def store(self) -> None:
         """ Saves object to storage.
@@ -160,11 +161,3 @@ class InstrumentConfiguration:
         """
         visitor.visit(self)
         self._adapter.accept(visitor)
-
-    def __str__(self):
-        """Returns string representation for the underlying InstrumentAdapter.
-
-        Returns:
-            String representation for the underlying InstrumentAdapter.
-        """
-        return f'Configuration for {self._adapter}'

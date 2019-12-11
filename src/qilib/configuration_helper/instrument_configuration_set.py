@@ -46,6 +46,11 @@ class InstrumentConfigurationSet:
             instrument_configurations = []
         self._instrument_configurations = instrument_configurations
 
+    def __repr__(self):
+        repr_string = '%s(%r, %r, %r)' % (
+            self.__class__.__name__, self._storage, self._tag, self._instrument_configurations)
+        return repr_string
+
     @property
     def tag(self) -> List[str]:
         """ A unique identifier for this instrument configuration set """
@@ -81,12 +86,6 @@ class InstrumentConfigurationSet:
         instrument_configurations = [InstrumentConfiguration.load(instrument_tag, storage) for instrument_tag in tags]
 
         return InstrumentConfigurationSet(storage, tag, instrument_configurations)
-
-    def copy(self) -> 'InstrumentConfigurationSet':
-        """ Get a copy of the configuration set."""
-
-        configurations = [config.copy() for config in self._instrument_configurations]
-        return InstrumentConfigurationSet(self._storage, instrument_configurations=configurations)
 
     def store(self) -> None:
         """ Saves object to storage

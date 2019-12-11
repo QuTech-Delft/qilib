@@ -26,7 +26,6 @@ class TestInstrumentAdapter(unittest.TestCase):
             def _filter_parameters(self, parameters: PythonJsonStructure) -> PythonJsonStructure:
                 pass
 
-
         adapter = TestAdapter('fake')
         adapter.close_instrument()
         instrument.close.assert_called_once_with()
@@ -34,5 +33,5 @@ class TestInstrumentAdapter(unittest.TestCase):
     def test_instrument_string_representation(self):
         adapter = DummyInstrumentAdapter('some_address', 'some_dummy')
         adapter_str = str(adapter)
-        self.assertEqual('InstrumentAdapter: DummyInstrumentAdapter_some_address', adapter_str)
+        self.assertEqual("DummyInstrumentAdapter('some_address', 'some_dummy')", adapter_str)
         adapter.close_instrument()

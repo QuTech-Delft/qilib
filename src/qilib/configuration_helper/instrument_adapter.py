@@ -19,7 +19,7 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 """
 import logging
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Optional
+from typing import Optional
 
 from qcodes import Instrument
 
@@ -37,8 +37,11 @@ class InstrumentAdapter(ABC):
         """
         self._name = f'{self.__class__.__name__}_{address}'
         self._address = address
-        self._instrument: Instrument = None
+        self._instrument: Optional[Instrument] = None
         self._instrument_name = instrument_name if instrument_name is not None else self.name
+
+    def __repr__(self):
+        return '%s(%r, %r)' % (self.__class__.__name__, self._address, self._instrument_name)
 
     @property
     def name(self) -> str:
@@ -134,11 +137,3 @@ class InstrumentAdapter(ABC):
             logging.error(error_message)
 
         return valued_parameters
-
-    def __str__(self) -> str:
-        """ Returns string representation for the InstrumentAdapter.
-
-        Returns:
-            String representation for the InstrumentAdapter.
-        """
-        return f'InstrumentAdapter: {self.name}'

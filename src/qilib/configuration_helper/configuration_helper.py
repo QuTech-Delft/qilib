@@ -46,6 +46,11 @@ class ConfigurationHelper:
             self._inactive_configuration = InstrumentConfigurationSet(storage)
         self._storage = storage
 
+    def __repr__(self):
+        repr_string = '%s(%r, %r, %r)' % (
+            self.__class__.__name__, self._storage, self._active_configuration, self._inactive_configuration)
+        return repr_string
+
     def snapshot(self, tag: Optional[List[str]] = None) -> None:
         """ Refresh the active configuration set so it reflects thee actual settings of the devices.
 
@@ -74,14 +79,6 @@ class ConfigurationHelper:
 
         """
         self._inactive_configuration = InstrumentConfigurationSet.load(tag, self._storage)
-
-    def retrieve_active_from_inactive(self) -> None:
-        """ Get active configuration based on instruments available in inactive configuration.
-
-        Copies the inactive configuration, sets it as active and applies snapshot of the instruments settings.
-        """
-        self._active_configuration = self._inactive_configuration.copy()
-        self._active_configuration.snapshot()
 
     def write_active_configuration_to_storage(self) -> None:
         """ Write the active configuration set to storage."""
