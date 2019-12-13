@@ -3,7 +3,6 @@ from unittest.mock import patch, MagicMock
 
 from qilib.configuration_helper import InstrumentConfiguration
 from qilib.configuration_helper.exceptions import DuplicateTagError
-from qilib.configuration_helper import InstrumentAdapter
 from qilib.utils import PythonJsonStructure
 from qilib.utils.storage import StorageMemory
 
@@ -22,26 +21,6 @@ class TestInstrumentConfiguration(unittest.TestCase):
         self.assertEqual(instrument_configuration.tag[0], 'configuration')
         self.assertEqual(instrument_configuration.tag[1], 'DummyClass')
         self.assertRegex(instrument_configuration.tag[2], r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{6}')
-
-    def test_string_representation(self):
-        class TestAdapter(InstrumentAdapter):
-            def __init__(self, address: str):
-                super().__init__(address)
-
-            def apply(self, config: PythonJsonStructure) -> None:
-                pass
-
-            def _filter_parameters(self, parameters: PythonJsonStructure) -> PythonJsonStructure:
-                pass
-
-        test_adapter = TestAdapter('fake-address')
-
-        with patch(
-                'qilib.configuration_helper.instrument_configuration.InstrumentAdapterFactory.get_instrument_adapter',
-                return_value=test_adapter):
-            instrument_configuration = InstrumentConfiguration('DummyClass', 'fake-address', self._storage)
-        self.assertEqual(instrument_configuration.__str__(),
-                         'Configuration for InstrumentAdapter: TestAdapter_fake-address')
 
     def test_constructor_full(self):
         config = PythonJsonStructure(voltage='low', current='lower', frequency='high-enough')

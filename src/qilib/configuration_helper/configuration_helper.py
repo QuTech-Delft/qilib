@@ -46,6 +46,11 @@ class ConfigurationHelper:
             self._inactive_configuration = InstrumentConfigurationSet(storage)
         self._storage = storage
 
+    def __repr__(self):
+        repr_string = f'{self.__class__.__name__}({self._storage!r}, {self._active_configuration!r}, ' \
+            f'{self._inactive_configuration!r})'
+        return repr_string
+
     def snapshot(self, tag: Optional[List[str]] = None) -> None:
         """ Refresh the active configuration set so it reflects thee actual settings of the devices.
 

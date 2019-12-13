@@ -12,7 +12,7 @@ class TestInstrumentConfigurationSet(TestCase):
 
     def test_constructor(self):
         instrument_configuration_set = InstrumentConfigurationSet(self._storage)
-        self.assertEqual(instrument_configuration_set.instruments, [])
+        self.assertEqual(instrument_configuration_set.instrument_configurations, [])
         self.assertIs(instrument_configuration_set.storage, self._storage)
         self.assertEqual(len(instrument_configuration_set.tag), 2)
         self.assertEqual(instrument_configuration_set.tag[0], 'configuration_set')
@@ -26,7 +26,8 @@ class TestInstrumentConfigurationSet(TestCase):
                                                                            self._storage)
 
         self.assertEqual(instrument_configuration_set_new.tag, instrument_configuration_set.tag)
-        self.assertEqual(instrument_configuration_set_new.instruments, instrument_configuration_set.instruments)
+        self.assertEqual(instrument_configuration_set_new.instrument_configurations,
+                         instrument_configuration_set.instrument_configurations)
 
     def test_load_with_instruments(self):
         with patch('qilib.configuration_helper.instrument_configuration.InstrumentAdapterFactory'):
@@ -34,16 +35,17 @@ class TestInstrumentConfigurationSet(TestCase):
             instrument_2 = InstrumentConfiguration('DummyClass', 'fake-address-2', self._storage, tag=['instrument_2'])
 
             instrument_configuration_set = InstrumentConfigurationSet(self._storage,
-                                                                      instruments=[instrument_1, instrument_2])
+                                                                      instrument_configurations=[instrument_1,
+                                                                                                 instrument_2])
             instrument_configuration_set.store()
 
             instrument_configuration_set_new = InstrumentConfigurationSet.load(instrument_configuration_set.tag,
                                                                                self._storage)
 
         self.assertEqual(instrument_configuration_set_new.tag, instrument_configuration_set.tag)
-        self.assertEqual(len(instrument_configuration_set_new.instruments), 2)
-        self.assertEqual(instrument_configuration_set_new.instruments[0].tag, instrument_1.tag)
-        self.assertEqual(instrument_configuration_set_new.instruments[1].tag, instrument_2.tag)
+        self.assertEqual(len(instrument_configuration_set_new.instrument_configurations), 2)
+        self.assertEqual(instrument_configuration_set_new.instrument_configurations[0].tag, instrument_1.tag)
+        self.assertEqual(instrument_configuration_set_new.instrument_configurations[1].tag, instrument_2.tag)
 
     def test_store(self):
         instrument_configuration_set = InstrumentConfigurationSet(self._storage)
@@ -59,7 +61,8 @@ class TestInstrumentConfigurationSet(TestCase):
             instrument_2.store()
 
             instrument_configuration_set = InstrumentConfigurationSet(self._storage,
-                                                                      instruments=[instrument_1, instrument_2])
+                                                                      instrument_configurations=[instrument_1,
+                                                                                                 instrument_2])
 
             instrument_configuration_set.store()
 
@@ -78,7 +81,8 @@ class TestInstrumentConfigurationSet(TestCase):
         instrument_2 = Mock()
 
         instrument_configuration_set = InstrumentConfigurationSet(self._storage,
-                                                                  instruments=[instrument_1, instrument_2])
+                                                                  instrument_configurations=[instrument_1,
+                                                                                             instrument_2])
         instrument_configuration_set.apply()
 
         instrument_1.apply.assert_called_once_with()
@@ -89,7 +93,8 @@ class TestInstrumentConfigurationSet(TestCase):
         instrument_2 = Mock()
 
         instrument_configuration_set = InstrumentConfigurationSet(self._storage,
-                                                                  instruments=[instrument_1, instrument_2])
+                                                                  instrument_configurations=[instrument_1,
+                                                                                             instrument_2])
         instrument_configuration_set.apply_delta()
 
         instrument_1.apply_delta.assert_called_once()
@@ -100,7 +105,8 @@ class TestInstrumentConfigurationSet(TestCase):
         instrument_2 = Mock()
 
         instrument_configuration_set = InstrumentConfigurationSet(self._storage,
-                                                                  instruments=[instrument_1, instrument_2])
+                                                                  instrument_configurations=[instrument_1,
+                                                                                             instrument_2])
         instrument_configuration_set.apply_delta_lazy()
 
         instrument_1.apply_delta_lazy.assert_called_once_with()
@@ -116,7 +122,8 @@ class TestInstrumentConfigurationSet(TestCase):
             instrument_2 = InstrumentConfiguration('DummyClass', 'fake-address-2', self._storage, tag=['instrument_2'])
 
             instrument_configuration_set = InstrumentConfigurationSet(self._storage, tag=['test'],
-                                                                      instruments=[instrument_1, instrument_2])
+                                                                      instrument_configurations=[instrument_1,
+                                                                                                 instrument_2])
             tag = instrument_configuration_set.tag
             tag_1 = instrument_1.tag
             tag_2 = instrument_2.tag

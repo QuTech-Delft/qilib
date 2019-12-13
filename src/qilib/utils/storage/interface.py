@@ -65,6 +65,9 @@ class StorageInterface(ABC):
         self.logger: Any = logging.getLogger(self.name)
         self.logger.info('created StorageInterface %s', self.name)
 
+    def __repr__(self):
+        return f'{self.__class__.__name__}({self.name!r})'
+
     @staticmethod
     def datetag_part(date_with_time: Optional[datetime] = None) -> str:
         """
