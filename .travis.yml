@@ -8,12 +8,10 @@ matrix:
     sudo: true
     dist: xenial
 install:
-- pip install --upgrade mypy
 - pip install .[dev] coveralls
 script:
 - echo "running unit tests"
 - coverage run --source="./src/qilib" -m unittest discover -s src/tests -t src -v
-- echo "running mypy"
 after_success:
 - coveralls
 deploy:

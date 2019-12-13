@@ -47,8 +47,8 @@ class InstrumentConfigurationSet:
         self._instrument_configurations = instrument_configurations
 
     def __repr__(self):
-        repr_string = '%s(%r, %r, %r)' % (
-            self.__class__.__name__, self._storage, self._tag, self._instrument_configurations)
+        repr_string = f'{self.__class__.__name__}({self._storage!r}, {self._tag!r}, ' \
+            f'{self._instrument_configurations!r})'
         return repr_string
 
     @property

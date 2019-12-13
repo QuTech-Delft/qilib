@@ -17,8 +17,7 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
-from copy import deepcopy
-from typing import List, Union, Optional
+from typing import List, Optional
 
 from qilib.configuration_helper import InstrumentAdapterFactory
 from qilib.configuration_helper.exceptions import DuplicateTagError
@@ -54,10 +53,8 @@ class InstrumentConfiguration:
         self._tag = [self.STORAGE_BASE_TAG, adapter_class_name, StorageInterface.datetag_part()] if tag is None else tag
 
     def __repr__(self):
-        repr_string = '%s(%r, %r, %r, %r, %r, %r)' % (
-            self.__class__.__name__, self._adapter_class_name, self._address, self._storage, self._tag,
-            self._configuration,
-            self._instrument_name)
+        repr_string = f'{self.__class__.__name__}({self._adapter_class_name!r}, {self._address!r}, {self._storage!r}, '\
+            f'{self._tag!r}, {self._configuration!r}, {self._instrument_name!r})'
         return repr_string
 
     @property
