@@ -1,13 +1,10 @@
 import unittest
 from unittest.mock import MagicMock, Mock, patch
 
-from qilib.configuration_helper import InstrumentConfiguration, InstrumentConfigurationSet, InstrumentAdapterFactory
+from qilib.configuration_helper import InstrumentConfiguration, InstrumentConfigurationSet
 from qilib.configuration_helper.configuration_helper import ConfigurationHelper
 from qilib.utils import PythonJsonStructure
 from qilib.utils.storage import StorageMemory
-from tests.test_data.dummy_instrument_adapter import DummyInstrumentAdapter
-
-InstrumentAdapterFactory.add_instrument_adapter_class(DummyInstrumentAdapter)
 
 
 class TestConfigurationHelper(unittest.TestCase):
