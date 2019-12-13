@@ -41,7 +41,7 @@ class InstrumentAdapter(ABC):
         self._instrument_name = instrument_name if instrument_name is not None else self.name
 
     def __repr__(self):
-        return '%s(%r, %r)' % (self.__class__.__name__, self._address, self._instrument_name)
+        return f'{self.__class__.__name__}({self._address!r}, {self._instrument_name!r})'
 
     @property
     def name(self) -> str:
