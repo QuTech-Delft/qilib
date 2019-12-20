@@ -31,8 +31,8 @@ from qilib.utils.serialization import (Decoder, Encoder, JsonSerializeKey,
                                        serialize, serializer, unserialize)
 
 
-@dataclass
 @dataclass_json
+@dataclass
 class CustomDataClass:
     x_data: float
     y_data: str
