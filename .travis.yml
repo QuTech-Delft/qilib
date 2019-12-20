@@ -14,7 +14,6 @@ matrix:
       - export PATH="$HOME/.pyenv/pyenv-win/bin:$HOME/.pyenv/pyenv-win/shims:$PATH"
       - pyenv install -q 3.6.8
       - pyenv global 3.6.8
-      - pyenv rehash
       - python --version
   - os: windows
     language: sh
@@ -23,7 +22,6 @@ matrix:
       - export PATH="$HOME/.pyenv/pyenv-win/bin:$HOME/.pyenv/pyenv-win/shims:$PATH"
       - pyenv install -q 3.7.5
       - pyenv global 3.7.5
-      - pyenv rehash
       - python --version
 install:
 - pip install .[dev] coveralls
