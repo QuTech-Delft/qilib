@@ -12,8 +12,17 @@ matrix:
     before_install:
       - git clone https://github.com/pyenv-win/pyenv-win.git $HOME/.pyenv
       - export PATH="$HOME/.pyenv/pyenv-win/bin:$HOME/.pyenv/pyenv-win/shims:$PATH"
-      - pyenv install -q 3.7.1
-      - pyenv global 3.7.1
+      - pyenv install -q 3.6.8
+      - pyenv global 3.6.8
+      - pyenv rehash
+      - python --version
+  - os: windows
+    language: sh
+    before_install:
+      - git clone https://github.com/pyenv-win/pyenv-win.git $HOME/.pyenv
+      - export PATH="$HOME/.pyenv/pyenv-win/bin:$HOME/.pyenv/pyenv-win/shims:$PATH"
+      - pyenv install -q 3.7.5
+      - pyenv global 3.7.5
       - pyenv rehash
       - python --version
 install:
