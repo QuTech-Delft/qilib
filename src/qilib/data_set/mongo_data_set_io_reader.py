@@ -24,7 +24,9 @@ from typing import Optional, Any, Dict, List
 from pymongo.change_stream import CollectionChangeStream
 from pymongo.errors import InvalidOperation, OperationFailure
 
-from qilib.data_set import DataSet, MongoDataSetIO, DataArray
+from qilib.data_set.data_set import DataSet
+from qilib.data_set.data_array import DataArray
+from qilib.data_set.mongo_data_set_io import MongoDataSetIO
 from qilib.data_set.data_set_io_reader import DataSetIOReader
 
 watchers = []

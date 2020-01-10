@@ -17,7 +17,7 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
-from typing import Dict, Any
+from typing import Dict, Any, Optional, cast
 
 import numpy as np
 
@@ -68,7 +68,7 @@ class PythonJsonStructure(dict):  # type: ignore
             for key, value in kwargs_items:
                 self[key] = value
 
-    def setdefault(self, key: str, default: PJSValues = None) -> PJSValues:
+    def setdefault(self, key: str, default: Optional[PJSValues] = None) -> PJSValues:
         """ If key is in the dictionary, return its value. If not, insert key
             with a value of default and return default.
 
@@ -77,9 +77,9 @@ class PythonJsonStructure(dict):  # type: ignore
             default: The default value of the updated item.
         """
         default = self.__validate_key_value_pair(key, default)
-        return super().setdefault(key, default)
+        return cast(PJSValues, super().setdefault(key, default))
 
-    def __validate_key_value_pair(self, key: Any, value: Any) -> Any:
+    def __validate_key_value_pair(self, key: str, value: Optional[PJSValues] = None) -> PJSValues:
         if isinstance(value, dict):
             value = PythonJsonStructure(value)
         PythonJsonStructure.__assert_correct_key_type(key)

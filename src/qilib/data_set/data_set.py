@@ -22,9 +22,9 @@ import collections
 from datetime import datetime
 from typing import Any, Union, Tuple, List, Dict, Optional
 
-from qilib.data_set import DataArray
+from qilib.data_set.data_array import DataArray
 from qilib.data_set.type_aliases import DataArrays
-from qilib.utils import PythonJsonStructure
+from qilib.utils.python_json_structure import PythonJsonStructure
 
 
 class DataSet:

@@ -26,10 +26,13 @@ matrix:
       - pyenv rehash
       - python --version
 install:
-- pip install .[dev] coveralls
+- pip install --upgrade mypy
+- pip install --upgrade .[dev] coveralls
 script:
 - echo "running unit tests"
 - python -m coverage run --source="./src/qilib" -m unittest discover -s src/tests -t src -v
+- echo "running mypy"
+- MYPYPATH=./src mypy --strict --ignore-missing-imports --allow-untyped-calls -p qilib
 after_success:
 - python -m coveralls
 deploy:

@@ -19,8 +19,8 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 """
 from spirack import SPI_rack
 
-from qilib.configuration_helper import InstrumentAdapter
-from qilib.utils import PythonJsonStructure
+from qilib.configuration_helper.instrument_adapter import InstrumentAdapter
+from qilib.utils.python_json_structure import PythonJsonStructure
 
 
 class SpiRackInstrumentAdapter(InstrumentAdapter):

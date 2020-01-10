@@ -17,11 +17,12 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
-from typing import Union, Any
+from typing import Union, List
 
-from qcodes import Instrument
+from qcodes.instrument.base import Instrument
 
-from qilib.configuration_helper import InstrumentAdapter, InstrumentConfiguration
+from qilib.configuration_helper.instrument_adapter import InstrumentAdapter
+from qilib.configuration_helper.instrument_configuration import InstrumentConfiguration
 from qilib.configuration_helper.visitor import Visitor
 
 
@@ -29,7 +30,7 @@ class InstrumentConfigurationVisitor(Visitor):
     """ Implementation of Visitor interface to visit InstrumentConfiguration."""
     def __init__(self) -> None:
         """ Instantiate a new visitor."""
-        self.instruments = []
+        self.instruments: List[Instrument] = []
 
     def visit(self, element: Union[InstrumentAdapter, InstrumentConfiguration]) -> None:
         """ Visit InstrumentConfiguration and/or InstrumentAdapter.

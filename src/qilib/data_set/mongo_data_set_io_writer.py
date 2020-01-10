@@ -19,7 +19,8 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 """
 from typing import Optional, Union, Dict, Any, Tuple
 
-from qilib.data_set import DataArray, MongoDataSetIO
+from qilib.data_set.data_array import DataArray
+from qilib.data_set.mongo_data_set_io import MongoDataSetIO
 from qilib.data_set.data_set_io_reader import DataSetIOReader
 from qilib.data_set.data_set_io_writer import DataSetIOWriter
 

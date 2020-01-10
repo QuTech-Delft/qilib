@@ -21,10 +21,10 @@ import logging
 from abc import ABC, abstractmethod
 from typing import Optional
 
-from qcodes import Instrument
+from qcodes.instrument.base import Instrument
 
 from qilib.configuration_helper.visitor import Visitor
-from qilib.utils import PythonJsonStructure
+from qilib.utils.python_json_structure import PythonJsonStructure
 
 
 class InstrumentAdapter(ABC):
@@ -37,10 +37,11 @@ class InstrumentAdapter(ABC):
         """
         self._name = f'{self.__class__.__name__}_{address}'
         self._address = address
-        self._instrument: Optional[Instrument] = None
+        # self._instrument: Optional[Instrument] = None
+        self._instrument: Instrument
         self._instrument_name = instrument_name if instrument_name is not None else self.name
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f'{self.__class__.__name__}({self._address!r}, {self._instrument_name!r})'
 
     @property

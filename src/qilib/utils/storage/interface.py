@@ -65,7 +65,7 @@ class StorageInterface(ABC):
         self.logger: Any = logging.getLogger(self.name)
         self.logger.info('created StorageInterface %s', self.name)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f'{self.__class__.__name__}({self.name!r})'
 
     @staticmethod

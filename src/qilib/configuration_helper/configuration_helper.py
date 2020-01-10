@@ -19,7 +19,7 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 """
 from typing import List, Any, Optional
 
-from qilib.configuration_helper import InstrumentConfigurationSet
+from qilib.configuration_helper.instrument_configuration_set import InstrumentConfigurationSet
 from qilib.utils.storage.interface import StorageInterface
 
 
@@ -46,7 +46,7 @@ class ConfigurationHelper:
             self._inactive_configuration = InstrumentConfigurationSet(storage)
         self._storage = storage
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         repr_string = f'{self.__class__.__name__}({self._storage!r}, {self._active_configuration!r}, ' \
             f'{self._inactive_configuration!r})'
         return repr_string

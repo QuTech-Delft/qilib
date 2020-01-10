@@ -22,8 +22,9 @@ from typing import Any, Optional
 
 from qcodes.instrument_drivers.american_magnetics.AMI430 import AMI430
 
-from qilib.configuration_helper.adapters.read_only_configuration_instrument_adapter import ReadOnlyConfigurationInstrumentAdapter
-from qilib.utils import PythonJsonStructure
+from qilib.configuration_helper.adapters.read_only_configuration_instrument_adapter import \
+    ReadOnlyConfigurationInstrumentAdapter
+from qilib.utils.python_json_structure import PythonJsonStructure
 
 
 class AMI430InstrumentAdapter(ReadOnlyConfigurationInstrumentAdapter):
@@ -39,7 +40,7 @@ class AMI430InstrumentAdapter(ReadOnlyConfigurationInstrumentAdapter):
         super().__init__(address)
         ip_and_port = address.split(':')
         name = instrument_name if instrument_name is not None else self.name
-        self._instrument = AMI430(name=name, address=ip_and_port[0], port=int(ip_and_port[1]))
+        self._instrument: AMI430 = AMI430(name=name, address=ip_and_port[0], port=int(ip_and_port[1]))
         self.field_variation_tolerance = 0.01
 
     def apply(self, config: PythonJsonStructure) -> None:

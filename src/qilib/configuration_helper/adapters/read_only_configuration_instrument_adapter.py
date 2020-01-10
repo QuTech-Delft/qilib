@@ -20,8 +20,8 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 from typing import Any, Optional
 from abc import ABC, abstractmethod
 
-from qilib.configuration_helper import InstrumentAdapter
-from qilib.utils import PythonJsonStructure
+from qilib.configuration_helper.instrument_adapter import InstrumentAdapter
+from qilib.utils.python_json_structure import PythonJsonStructure
 
 
 class ConfigurationError(Exception):
@@ -44,7 +44,6 @@ class ReadOnlyConfigurationInstrumentAdapter(InstrumentAdapter, ABC):
 
         for parameter in config:
             if parameter in self._instrument.parameters and hasattr(self._instrument.parameters[parameter], 'set'):
-
                 result = self._compare_config_values(config[parameter]['value'],
                                                      device_config[parameter]['value'], parameter)
                 if result:

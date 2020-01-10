@@ -17,13 +17,16 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
-from typing import Any, Optional
+from typing import Any, Optional, cast
 
 from qcodes_contrib_drivers.drivers.QuTech.D5a import D5a
+from qcodes.instrument.base import Instrument
+from qcodes.instrument.parameter import Parameter
 
-from qilib.configuration_helper.adapters.read_only_configuration_instrument_adapter import ReadOnlyConfigurationInstrumentAdapter
+from qilib.configuration_helper.adapters.read_only_configuration_instrument_adapter import \
+    ReadOnlyConfigurationInstrumentAdapter
 from qilib.configuration_helper.adapters.spi_module_instrument_adapter import SpiModuleInstrumentAdapter
-from qilib.utils import PythonJsonStructure
+from qilib.utils.python_json_structure import PythonJsonStructure
 
 
 class SpanValueError(Exception):
@@ -40,9 +43,9 @@ class D5aInstrumentAdapter(ReadOnlyConfigurationInstrumentAdapter, SpiModuleInst
 
     def __init__(self, address: str, instrument_name: Optional[str] = None) -> None:
         super().__init__(address, instrument_name)
-        self._instrument = D5a(self._instrument_name, self._spi_rack, self._module_number, mV=MV,
-                               inter_delay=INTER_DELAY,
-                               reset_voltages=RESET_VOLTAGE, dac_step=DAC_STEP)
+        self._instrument: Instrument = D5a(self._instrument_name, self._spi_rack, self._module_number, mV=MV,
+                                       inter_delay=INTER_DELAY,
+                                       reset_voltages=RESET_VOLTAGE, dac_step=DAC_STEP)
         if self._instrument.span3() != '4v bi':
             raise SpanValueError('D5a instrument has span unequal to "4v bi"')
 
@@ -62,8 +65,8 @@ class D5aInstrumentAdapter(ReadOnlyConfigurationInstrumentAdapter, SpiModuleInst
         self._instrument.set_dac_unit(unit)
         dac_parameters = {param: values for param, values in config.items() if param[0:3] == 'dac'}
         for dac, values in dac_parameters.items():
-            self._instrument[dac].step = values['step']
-            self._instrument[dac].inter_delay = values['inter_delay']
+            cast(Parameter, self._instrument[dac]).step = values['step']
+            cast(Parameter, self._instrument[dac]).inter_delay = values['inter_delay']
         super().apply(config)
 
     def _compare_config_values(self, config_value: Any, device_value: Any, parameter: Optional[str] = None) -> bool:

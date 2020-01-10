@@ -23,7 +23,7 @@ import requests
 from qcodes.instrument_drivers.tektronix.Keithley_6500 import Keithley_6500
 
 from qilib.configuration_helper.adapters.common_instrument_adapter import CommonInstrumentAdapter
-from qilib.utils import PythonJsonStructure
+from qilib.utils.python_json_structure import PythonJsonStructure
 
 
 class Keithley6500InstrumentAdapter(CommonInstrumentAdapter):
@@ -33,7 +33,7 @@ class Keithley6500InstrumentAdapter(CommonInstrumentAdapter):
             # Perform a http request to the instrument's IP address before opening the device to make sure any
             # stuck state is unstuck.
             self._send_request_to_instrument(address)
-        self._instrument = Keithley_6500(self._instrument_name, address)
+        self._instrument: Keithley_6500 = Keithley_6500(self._instrument_name, address)
 
     def _filter_parameters(self, parameters: PythonJsonStructure) -> PythonJsonStructure:
         return parameters

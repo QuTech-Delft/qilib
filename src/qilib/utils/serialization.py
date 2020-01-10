@@ -20,14 +20,16 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 import base64
 from functools import partial
 from json import JSONDecoder, JSONEncoder
-from typing import Any, Callable, ClassVar, Dict
+from typing import Any, Callable, ClassVar, Dict, Tuple, Optional
+from dataclasses_json.api import DataClassJsonMixin
 
 import numpy as np
 
-from qilib.data_set import MongoDataSetIO
+from qilib.data_set.mongo_data_set_io import MongoDataSetIO
 
 # A callable type for transforming a given argument with a type to another type
-TransformFunction = Callable[[Any], Any]
+TransformFunctionResult = Any
+TransformFunction = Callable[[Any], TransformFunctionResult]
 
 
 class JsonSerializeKey:
@@ -39,14 +41,13 @@ class JsonSerializeKey:
 class Encoder(JSONEncoder):
     """ A JSON encoder """
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: Any) -> None:
         """ Constructs a JSON Encoder """
         super().__init__(**kwargs)
-
         # creates a new transform table
-        self.encoders: ClassVar[Dict[type, TransformFunction]] = {}
+        self.encoders: Dict[type, TransformFunction] = {}
 
-    def default(self, o):
+    def default(self, o: Any) -> TransformFunctionResult:
         if type(o) in self.encoders:
             return self.encoders[type(o)](o)
 
@@ -56,14 +57,13 @@ class Encoder(JSONEncoder):
 class Decoder(JSONDecoder):
     """ A JSON decoder """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """ Constructs a JSON Decoder """
         super().__init__(object_hook=self._object_hook)
-
         # creates a new transform table
-        self.decoders: ClassVar[Dict[str, TransformFunction]] = {}
+        self.decoders: Dict[str, TransformFunction] = {}
 
-    def _object_hook(self, obj):
+    def _object_hook(self, obj: Any) -> TransformFunctionResult:
         if isinstance(obj, dict):
             if JsonSerializeKey.OBJECT in obj:
                 if obj[JsonSerializeKey.OBJECT] in self.decoders:
@@ -79,21 +79,21 @@ def _encode_bytes(data: Any) -> Dict[str, Any]:
 
 
 def _decode_bytes(data: Dict[str, Any]) -> bytes:
-    return data[JsonSerializeKey.CONTENT].encode('utf-8')
+    return bytes(data[JsonSerializeKey.CONTENT].encode('utf-8'))
 
 
-def _encode_tuple(item):
+def _encode_tuple(item: Tuple[Any, Any]) -> Dict[str, Any]:
     return {
         JsonSerializeKey.OBJECT: tuple.__name__,
         JsonSerializeKey.CONTENT: [serializer.encode_data(value) for value in item]
     }
 
 
-def _decode_tuple(data: Dict[str, Any]) -> tuple:
+def _decode_tuple(data: Dict[str, Any]) -> Tuple[Any, ...]:
     return tuple(data[JsonSerializeKey.CONTENT])
 
 
-def _encode_numpy_number(item):
+def _encode_numpy_number(item: Any) -> Dict[str, Any]:
     return {
         JsonSerializeKey.OBJECT: '__npnumber__',
         JsonSerializeKey.CONTENT: {
@@ -103,12 +103,12 @@ def _encode_numpy_number(item):
     }
 
 
-def _decode_numpy_number(item):
+def _decode_numpy_number(item: Dict[str, Any]) -> Any:
     obj = item[JsonSerializeKey.CONTENT]
     return np.frombuffer(base64.b64decode(obj['__npnumber__']), dtype=np.dtype(obj['__data_type__']))[0]
 
 
-def _encode_dataclass(object_: Any, class_name: str) -> Dict[str, Any]:
+def _encode_dataclass(object_: DataClassJsonMixin, class_name: str) -> Dict[str, Any]:
     """ Encodes a JSON dataclass object
 
     Args:
@@ -122,7 +122,7 @@ def _encode_dataclass(object_: Any, class_name: str) -> Dict[str, Any]:
             JsonSerializeKey.CONTENT: object_.to_dict()}
 
 
-def _decode_dataclass(data: Any, class_type: type) -> Any:
+def _decode_dataclass(data: Dict[str, Any], class_type: DataClassJsonMixin) -> TransformFunctionResult:
     """ Decodes a JSON dataclass object
 
     Args:
@@ -139,8 +139,8 @@ class Serializer:
     """ A general serializer to serialize data to JSON and vice versa. It allows
      extending the types with a custom encoder and decoder."""
 
-    def __init__(self, encoders: Dict[type, TransformFunction] = None,
-                 decoders: Dict[str, TransformFunction] = None):
+    def __init__(self, encoders: Optional[Dict[type, TransformFunction]] = None,
+                 decoders: Optional[Dict[str, TransformFunction]] = None):
         """ Creates a serializer
 
         Args:

@@ -19,10 +19,10 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 """
 from typing import List, Optional
 
-from qilib.configuration_helper import InstrumentAdapterFactory
+from qilib.configuration_helper.instrument_adapter_factory import InstrumentAdapterFactory
 from qilib.configuration_helper.exceptions import DuplicateTagError
 from qilib.configuration_helper.visitor import Visitor
-from qilib.utils import PythonJsonStructure
+from qilib.utils.python_json_structure import PythonJsonStructure
 from qilib.utils.storage.interface import StorageInterface
 
 
@@ -52,7 +52,7 @@ class InstrumentConfiguration:
         self._configuration = PythonJsonStructure() if configuration is None else configuration
         self._tag = [self.STORAGE_BASE_TAG, adapter_class_name, StorageInterface.datetag_part()] if tag is None else tag
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         repr_string = f'{self.__class__.__name__}({self._adapter_class_name!r}, {self._address!r}, {self._storage!r}, '\
             f'{self._tag!r}, {self._configuration!r}, {self._instrument_name!r})'
         return repr_string

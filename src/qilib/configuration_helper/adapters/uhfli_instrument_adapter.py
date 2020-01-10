@@ -23,7 +23,7 @@ import numpy as np
 from qcodes.instrument_drivers.ZI.ZIUHFLI import ZIUHFLI
 
 from qilib.configuration_helper.adapters.common_instrument_adapter import CommonInstrumentAdapter
-from qilib.utils import PythonJsonStructure
+from qilib.utils.python_json_structure import PythonJsonStructure
 
 
 class ZIUHFLIInstrumentAdapter(CommonInstrumentAdapter):
