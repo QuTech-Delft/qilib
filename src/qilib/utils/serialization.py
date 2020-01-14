@@ -20,7 +20,7 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 import base64
 from functools import partial
 from json import JSONDecoder, JSONEncoder
-from typing import Any, Callable, ClassVar, Dict, Tuple, Optional
+from typing import Any, Callable, Dict, Tuple, Optional
 from dataclasses_json.api import DataClassJsonMixin
 
 import numpy as np

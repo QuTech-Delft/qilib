@@ -37,8 +37,7 @@ class InstrumentAdapter(ABC):
         """
         self._name = f'{self.__class__.__name__}_{address}'
         self._address = address
-        # self._instrument: Optional[Instrument] = None
-        self._instrument: Instrument
+        self._instrument: Optional[Instrument] = None
         self._instrument_name = instrument_name if instrument_name is not None else self.name
 
     def __repr__(self) -> str:
@@ -49,7 +48,7 @@ class InstrumentAdapter(ABC):
         return self._name
 
     @property
-    def instrument(self) -> Instrument:
+    def instrument(self) -> Optional[Instrument]:
         return self._instrument
 
     @property

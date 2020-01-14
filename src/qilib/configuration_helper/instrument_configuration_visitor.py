@@ -45,7 +45,8 @@ class InstrumentConfigurationVisitor(Visitor):
             pass
 
     def _visit_instrument_adapter(self, instrument_adapter: InstrumentAdapter) -> None:
-        self.instruments.append(instrument_adapter.instrument)
+        if instrument_adapter.instrument is not None:
+            self.instruments.append(instrument_adapter.instrument)
 
     def get_instrument(self, adapter_identifier: str) -> Instrument:
         """ Returns a specific instrument given the adapter name, address combination.

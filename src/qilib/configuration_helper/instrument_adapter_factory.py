@@ -92,14 +92,18 @@ class InstrumentAdapterFactory:
             raise ValueError(f"No such InstrumentAdapter {instrument_adapter_class_name}")
 
     @classmethod
-    def _get_new_adapter_instance(cls, address: str, class_name: str, instrument_name: Optional[str] = None) -> InstrumentAdapter:
+    def _get_new_adapter_instance(cls, address: str, class_name: str,
+                                  instrument_name: Optional[str] = None) -> InstrumentAdapter:
+
         args: Any = (address, instrument_name) if instrument_name is not None else (address, )
         adapter: InstrumentAdapter = cls._instrument_adapters[class_name](*args)
         cls.adapter_instances[(class_name, str(address))] = adapter
         return adapter
 
     @classmethod
-    def _get_adapter_instance(cls, instrument_adapter_key: Tuple[str, str], instrument_name: Optional[str] = None) -> InstrumentAdapter:
+    def _get_adapter_instance(cls, instrument_adapter_key: Tuple[str, str],
+                              instrument_name: Optional[str] = None) -> InstrumentAdapter:
+
         adapter = cls.adapter_instances[instrument_adapter_key]
         if instrument_name is not None and adapter.instrument is not None \
            and instrument_name != adapter.instrument.name:

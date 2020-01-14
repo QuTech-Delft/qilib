@@ -40,15 +40,15 @@ class ReadOnlyConfigurationInstrumentAdapter(InstrumentAdapter, ABC):
         Raises:
             ConfigurationError: If config does not match device configuration .
         """
-        device_config = self.read(True)
-
-        for parameter in config:
-            if parameter in self._instrument.parameters and hasattr(self._instrument.parameters[parameter], 'set'):
-                result = self._compare_config_values(config[parameter]['value'],
-                                                     device_config[parameter]['value'], parameter)
-                if result:
-                    self._raise_configuration_error(config[parameter]['value'], device_config[parameter]['value'],
-                                                    parameter)
+        if self._instrument is not None:
+            device_config = self.read(True)
+            for parameter in config:
+                if parameter in self._instrument.parameters and hasattr(self._instrument.parameters[parameter], 'set'):
+                    result = self._compare_config_values(config[parameter]['value'],
+                                                         device_config[parameter]['value'], parameter)
+                    if result:
+                        self._raise_configuration_error(config[parameter]['value'], device_config[parameter]['value'],
+                                                        parameter)
 
     @abstractmethod
     def _compare_config_values(self, config_value: Any, device_value: Any, parameter: Optional[str] = None) -> bool:

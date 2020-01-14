@@ -27,19 +27,33 @@ class SpiRackInstrumentAdapter(InstrumentAdapter):
 
     def __init__(self, address: str) -> None:
         super().__init__(address)
-        self._instrument: SPI_rack = SPI_rack(address, baud='115200', timeout=1)
+        self._spi_rack: SPI_rack = SPI_rack(address, baud='115200', timeout=1)
+
+    @property
+    def instrument(self) -> SPI_rack:
+        # Override instrument property of InstrumentAdapter to return the spi_rack instead of the instrument of
+        # the base class.
+        return self._spi_rack
+
+    @property
+    def spi_rack(self) -> SPI_rack:
+        return self._spi_rack
 
     def apply(self, config: PythonJsonStructure) -> None:
-        self._instrument.apply_settings(config['serialport'])
+        self._spi_rack.apply_settings(config['serialport'])
 
     def read(self, update: bool = True) -> PythonJsonStructure:
         parameters = {
-            'version': self._instrument.get_firmware_version(),
-            'temperature': self._instrument.get_temperature(),
-            'battery': self._instrument.get_battery(),
-            'serialport': self._instrument.get_settings()
+            'version': self._spi_rack.get_firmware_version(),
+            'temperature': self._spi_rack.get_temperature(),
+            'battery': self._spi_rack.get_battery(),
+            'serialport': self._spi_rack.get_settings()
         }
         return PythonJsonStructure(parameters)
+
+    def close_instrument(self) -> None:
+        """ Override close_instrument. Close the serial port of spi rack."""
+        self._spi_rack.close()
 
     def _filter_parameters(self, parameters: PythonJsonStructure) -> PythonJsonStructure:
         return parameters
