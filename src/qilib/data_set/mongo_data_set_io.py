@@ -25,7 +25,7 @@ from bson import ObjectId
 from pymongo import MongoClient
 from pymongo.change_stream import CollectionChangeStream
 from pymongo.errors import DuplicateKeyError
-
+from qilib.data_set.type_aliases import EncodedNumpyArray
 from qilib.data_set.data_array import DataArray
 
 
@@ -150,7 +150,7 @@ class MongoDataSetIO:
 
     @staticmethod
     def encode_numpy_array(
-            array: Union[np.ndarray, DataArray]) -> Dict[str, Union[str, Dict[str, Union[str, List[Any], bytes]]]]:
+            array: Union[np.ndarray, DataArray]) -> EncodedNumpyArray:
         """ Encode numpy array to store in database.
         Args:
             array: Numpy array to encode.
