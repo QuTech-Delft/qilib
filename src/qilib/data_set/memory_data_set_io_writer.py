@@ -20,7 +20,7 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 from copy import deepcopy
 from typing import Any, Union, Dict, Tuple
 
-from qilib.data_set import DataArray
+from qilib.data_set.data_array import DataArray
 from qilib.data_set.data_set_io_writer import DataSetIOWriter
 from qilib.utils.memory_storage_queue import MemoryStorageQueue
 

@@ -19,7 +19,8 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 """
 from typing import Dict
 
-from qilib.configuration_helper import InstrumentAdapterFactory, InstrumentAdapter
+from qilib.configuration_helper.instrument_adapter_factory import InstrumentAdapterFactory
+from qilib.configuration_helper.instrument_adapter import InstrumentAdapter
 
 
 class SerialPortResolver:

@@ -18,15 +18,15 @@ COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER I
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 import base64
-from typing import Optional, Dict, Any, Union, Tuple
+from typing import Optional, Dict, Any, Union, List
 
 import numpy as np
 from bson import ObjectId
 from pymongo import MongoClient
 from pymongo.change_stream import CollectionChangeStream
 from pymongo.errors import DuplicateKeyError
-
-from qilib.data_set import DataArray
+from qilib.data_set.type_aliases import EncodedNumpyArray
+from qilib.data_set.data_array import DataArray
 
 
 class DocumentNotFoundError(Exception):
@@ -150,7 +150,7 @@ class MongoDataSetIO:
 
     @staticmethod
     def encode_numpy_array(
-            array: Union[np.ndarray, DataArray]) -> Dict[str, Dict[str, Union[str, Tuple[int, ...], bytes]]]:
+            array: Union[np.ndarray, DataArray]) -> EncodedNumpyArray:
         """ Encode numpy array to store in database.
         Args:
             array: Numpy array to encode.

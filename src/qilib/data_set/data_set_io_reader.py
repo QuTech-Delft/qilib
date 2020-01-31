@@ -19,7 +19,7 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 """
 from abc import ABC, abstractmethod
 
-from qilib.data_set import DataSet
+from qilib.data_set.data_set import DataSet
 
 
 class DataSetIOReader(ABC):

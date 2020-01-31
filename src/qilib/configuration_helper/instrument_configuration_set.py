@@ -19,7 +19,7 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 """
 from typing import Union, List, Optional
 
-from qilib.configuration_helper import InstrumentConfiguration
+from qilib.configuration_helper.instrument_configuration import InstrumentConfiguration
 from qilib.configuration_helper.visitor import Visitor
 from qilib.configuration_helper.exceptions import DuplicateTagError
 from qilib.utils.storage.interface import StorageInterface
@@ -46,7 +46,7 @@ class InstrumentConfigurationSet:
             instrument_configurations = []
         self._instrument_configurations = instrument_configurations
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         repr_string = f'{self.__class__.__name__}({self._storage!r}, {self._tag!r}, ' \
             f'{self._instrument_configurations!r})'
         return repr_string
@@ -140,7 +140,7 @@ class InstrumentConfigurationSet:
 
         Args:
             visitor: An implementation of the Visitor interface.
-        
+
         """
         for instrument_configuration in self.instrument_configurations:
             instrument_configuration.accept(visitor)

@@ -21,9 +21,10 @@ from typing import Any, Optional
 
 from qcodes_contrib_drivers.drivers.QuTech.D5a import D5a
 
-from qilib.configuration_helper.adapters.read_only_configuration_instrument_adapter import ReadOnlyConfigurationInstrumentAdapter
+from qilib.configuration_helper.adapters.read_only_configuration_instrument_adapter import \
+    ReadOnlyConfigurationInstrumentAdapter
 from qilib.configuration_helper.adapters.spi_module_instrument_adapter import SpiModuleInstrumentAdapter
-from qilib.utils import PythonJsonStructure
+from qilib.utils.python_json_structure import PythonJsonStructure
 
 
 class SpanValueError(Exception):
@@ -40,9 +41,9 @@ class D5aInstrumentAdapter(ReadOnlyConfigurationInstrumentAdapter, SpiModuleInst
 
     def __init__(self, address: str, instrument_name: Optional[str] = None) -> None:
         super().__init__(address, instrument_name)
-        self._instrument = D5a(self._instrument_name, self._spi_rack, self._module_number, mV=MV,
-                               inter_delay=INTER_DELAY,
-                               reset_voltages=RESET_VOLTAGE, dac_step=DAC_STEP)
+        self._instrument: D5a = D5a(self._instrument_name, self._spi_rack, self._module_number, mV=MV,
+                                    inter_delay=INTER_DELAY,
+                                    reset_voltages=RESET_VOLTAGE, dac_step=DAC_STEP)
         if self._instrument.span3() != '4v bi':
             raise SpanValueError('D5a instrument has span unequal to "4v bi"')
 

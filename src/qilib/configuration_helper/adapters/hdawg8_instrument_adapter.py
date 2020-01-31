@@ -22,7 +22,7 @@ from typing import Optional
 from qcodes_contrib_drivers.drivers.ZurichInstruments.ZIHDAWG8 import ZIHDAWG8
 
 from qilib.configuration_helper.adapters.common_instrument_adapter import CommonInstrumentAdapter
-from qilib.utils import PythonJsonStructure
+from qilib.utils.python_json_structure import PythonJsonStructure
 
 
 class ZIHDAWG8InstrumentAdapter(CommonInstrumentAdapter):
