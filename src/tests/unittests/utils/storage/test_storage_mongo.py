@@ -25,7 +25,8 @@ class TestStorageMongo(unittest.TestCase):
 
     def test_server_timeout(self):
         error_msg = 'Failed to connect to Mongo database within 0.01 milliseconds$'
-        self.assertRaisesRegex(ConnectionTimeoutError, error_msg, StorageMongoDb, 'test', port=-1, connection_timeout=0.01)
+        self.assertRaisesRegex(ConnectionTimeoutError, error_msg, StorageMongoDb, 'test', port=-1,
+                               connection_timeout=0.01)
 
     def test_save_load_basic_data(self):
         for index, value in enumerate(self.test_data):
@@ -220,3 +221,104 @@ class TestStorageMongo(unittest.TestCase):
 
     def test_decode_str(self):
         self.assertEqual(StorageMongoDb._decode_str('hello.world'), 'hello.world')
+
+    def test_update_individual_data(self):
+        data = {
+            1: 'integer_value',
+            '1': 'string_value',
+            'dict': {
+                1: 'another_integer_value',
+                '1': {
+                    1: 'last_integer_value',
+                    'something.with.dot': 'another.key.with.dot'
+                }
+            },
+            'something.with.dot': 'key.with.dot',
+            'something.else.with.dots': {
+                'key.dot': 123
+            },
+            'something': {
+                'with.dot': 'nested values',
+                'with': {
+                    'dot': 123
+                }
+            },
+            'li.st': ['is', {'a': 'list', 12: 34}],
+            'tu.ple': (1, 2, 'tuple', (1, 2, 3))
+        }
+
+        tag = ['system', 'properties']
+        self.storage.save_data(data, tag)
+        self.assertEqual(data, self.storage.load_data(tag))
+
+        test_tuple = (1, 2, 3)
+        test_list = ['was', {'b': 'string', 24: 68}]
+        test_string = 'New.Key.with.dot'
+        test_dict = {
+            2: 'another_integer_value',
+            '2': {
+                2: 'last_integer_value',
+                'new.with.dot': 'new.key.with.dot'
+            }
+        }
+
+        self.storage.update_individual_data('something', test_tuple, tag)
+        self.storage.update_individual_data('li.st', test_list, tag)
+        self.storage.update_individual_data('something.with.dot', test_string, tag)
+        self.storage.update_individual_data('dict', test_dict, tag)
+        self.storage.update_individual_data(1, test_dict, tag)
+
+        data = self.storage.load_data(tag)
+
+        self.assertEqual(data['something'], test_tuple)
+        self.assertEqual(data['li.st'], test_list)
+        self.assertEqual(data['something.with.dot'], test_string)
+        self.assertEqual(data['dict'], test_dict)
+        self.assertEqual(data[1], test_dict)
+
+        self.assertRaises(NodeAlreadyExistsError,
+                          self.storage.update_individual_data, 1, test_dict, ['system'])
+
+        self.assertRaises(NoDataAtKeyError,
+                          self.storage.update_individual_data, 1, test_dict, ['system', 'something'])
+
+        self.assertRaises(Exception, self.storage.update_individual_data,
+                          1, test_dict, ['something', 'another'])
+
+        self.storage.update_individual_data("new key", test_dict, tag)
+        data = self.storage.load_data(tag)
+        self.assertEqual(data["new key"], test_dict)
+
+        self.assertRaises(NodeAlreadyExistsError, self.storage.update_individual_data,
+                          'a key', test_dict, tag + ['extra'])
+
+    def test_load_individual_data(self):
+        data = {
+            1: 'integer_value',
+            '1.1': 'string_value',
+            'something.dot': {'value': 273, 'unit': 'K'}
+        }
+
+        tag = ['system', 'properties', 'level 2']
+        self.storage.save_data(data, tag)
+        self.assertEqual(data, self.storage.load_data(tag))
+
+        individual_data = self.storage.load_individual_data(1, tag)
+        self.assertEqual(data[1], individual_data)
+
+        individual_data = self.storage.load_individual_data('1.1', tag)
+        self.assertEqual(data['1.1'], individual_data)
+
+        individual_data = self.storage.load_individual_data('something.dot', tag)
+        self.assertEqual(data['something.dot'], individual_data)
+
+        self.assertRaises(NoDataAtKeyError, self.storage.load_individual_data, 1, ['undefined tag'])
+        self.assertRaises(NoDataAtKeyError, self.storage.load_individual_data, 1, ['system'])
+        self.assertRaises(NoDataAtKeyError, self.storage.load_individual_data, 1, [])
+
+        self.assertRaises(NoDataAtKeyError,
+                          self.storage.load_individual_data,
+                          1, ['system', 'new', 'another'])
+
+        self.assertRaises(NoDataAtKeyError,
+                          self.storage.load_individual_data, 'something.dot.NEW', tag)

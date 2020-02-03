@@ -100,6 +100,21 @@ class StorageInterface(ABC):
             NoDataAtKeyException: if there is no data for the specified tag.
         """
 
+    @abstractmethod
+    def load_individual_data(self, property_name: Any, tag: TagType) -> Any:
+        """ Load individual property from storage.
+
+        Args:
+            property_name: Name of the property to be loaded
+            tag: tag for property to load
+
+        Returns:
+            Data found of the property of the node identified by the tag.
+
+        Raises:
+            NoDataAtKeyError: if there is no data for the specified tag.
+        """
+
     @staticmethod
     def _tag_to_list(tag: Union[str, TagType]) -> TagType:
         """ Convert a str or list tag to list format. """
@@ -134,6 +149,21 @@ class StorageInterface(ABC):
             tag: reference tag to store the data
         """
         pass
+
+    @abstractmethod
+    def update_individual_data(self, property_name: Any, data: Any, tag: TagType) -> None:
+        """ Update data for a property in storage.
+
+        Args:
+            property_name: Property
+            data: data to store
+            tag: reference tag to store the data
+
+        Returns:
+            None
+        Raises:
+            NoDataAtKeyError: if there is no data for the specified tag.
+        """
 
     @abstractmethod
     def get_latest_subtag(self, tag: TagType) -> Optional[TagType]:

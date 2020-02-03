@@ -114,3 +114,9 @@ class TestStorageMemory(unittest.TestCase):
         self.storage.save_data('some-dat', ['some-other-tag'])
         tag_in_storage = self.storage.tag_in_storage(['some-other-tag'])
         self.assertTrue(tag_in_storage)
+
+    def test_load_individual_data(self):
+        self.assertRaises(NotImplementedError, self.storage.load_individual_data, None, None)
+
+    def test_update_individual_data(self):
+        self.assertRaises(NotImplementedError, self.storage.update_individual_data, None, None, None)

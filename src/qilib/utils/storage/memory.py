@@ -122,3 +122,8 @@ class StorageMemory(StorageInterface):
                 return False
         return True
 
+    def load_individual_data(self, property_name: Any, tag: TagType) -> Any:
+        raise NotImplementedError()
+
+    def update_individual_data(self, property_name: Any, data: Any, tag: TagType) -> None:
+        raise NotImplementedError()
