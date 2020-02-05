@@ -429,6 +429,9 @@ class StorageMongoDb(StorageInterface):
         elif isinstance(data, str):
             return StorageMongoDb._encode_str(data)
 
+        elif isinstance(data, bool):
+            return data
+
         elif isinstance(data, int):
             return StorageMongoDb._encode_int(data)
 

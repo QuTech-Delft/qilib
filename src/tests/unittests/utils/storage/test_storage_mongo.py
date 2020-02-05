@@ -40,7 +40,8 @@ class TestStorageMongo(unittest.TestCase):
                     }
                 },
                 'li.st': ['is', {'a': 'list', 12: 34}],
-                'tu.ple': (1, 2, 'tuple', (1, 2, 3))
+                'tu.ple': (1, 2, 'tuple', (1, 2, 3)),
+                'boolean_value': False
             }
 
     def tearDown(self) -> None:
@@ -266,6 +267,7 @@ class TestStorageMongo(unittest.TestCase):
         self.storage.update_individual_data('something.with.dot', test_string, tag)
         self.storage.update_individual_data('dict', test_dict, tag)
         self.storage.update_individual_data(1, test_dict, tag)
+        self.storage.update_individual_data('boolean_value', True, tag)
 
         data = self.storage.load_data(tag)
 
@@ -274,6 +276,7 @@ class TestStorageMongo(unittest.TestCase):
         self.assertEqual(data['something.with.dot'], test_string)
         self.assertEqual(data['dict'], test_dict)
         self.assertEqual(data[1], test_dict)
+        self.assertEqual(data['boolean_value'], True)
 
     def test_update_individual_data_raises_error(self):
         tag = ['system', 'properties']
@@ -322,7 +325,8 @@ class TestStorageMongo(unittest.TestCase):
         data = {
             1: 'integer_value',
             '1.1': 'string_value',
-            'something.dot': {'value': 273, 'unit': 'K'}
+            'something.dot': {'value': 273, 'unit': 'K'},
+            'boolean_value': False
         }
 
         tag = ['system', 'properties', 'level 2']
@@ -337,6 +341,9 @@ class TestStorageMongo(unittest.TestCase):
 
         individual_data = self.storage.load_individual_data('something.dot', tag)
         self.assertEqual(data['something.dot'], individual_data)
+
+        individual_data = self.storage.load_individual_data('boolean_value', tag)
+        self.assertEqual(data['boolean_value'], individual_data)
 
     def test_load_individual_data_raises_error(self):
         data = {
