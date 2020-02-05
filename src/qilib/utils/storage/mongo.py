@@ -286,7 +286,7 @@ class StorageMongoDb(StorageInterface):
         StorageInterface._validate_tag(tag)
         self._store_value_by_tag(tag, self._encode_data(self._serialize(data)), self._get_root())
 
-    def load_individual_data(self, property_name: Any, tag: TagType):
+    def load_individual_data(self, property_name: Any, tag: TagType) -> Any:
         StorageInterface._validate_tag(tag)
 
         if len(tag) == 0:
