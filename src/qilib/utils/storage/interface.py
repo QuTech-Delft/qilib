@@ -102,7 +102,7 @@ class StorageInterface(ABC):
 
     @abstractmethod
     def load_individual_data(self, property_name: Any, tag: TagType) -> Any:
-        """ Load individual property from storage.
+        """ Load an individual property at a given tag from storage.
 
         Args:
             property_name: Name of the property to be loaded
@@ -112,8 +112,9 @@ class StorageInterface(ABC):
             Data found of the property of the node identified by the tag.
 
         Raises:
-            NoDataAtKeyError: if there is no data for the specified tag.
+            NoDataAtKeyError: if there is no data for the specified tag/property.
         """
+        pass
 
     @staticmethod
     def _tag_to_list(tag: Union[str, TagType]) -> TagType:
@@ -152,18 +153,17 @@ class StorageInterface(ABC):
 
     @abstractmethod
     def update_individual_data(self, property_name: Any, data: Any, tag: TagType) -> None:
-        """ Update data for a property in storage.
+        """ Update an individual property at a given tag with data
 
         Args:
             property_name: Property
             data: data to store
             tag: reference tag to store the data
 
-        Returns:
-            None
         Raises:
-            NoDataAtKeyError: if there is no data for the specified tag.
+            NoDataAtKeyError: if there is no data for the specified tag/property.
         """
+        pass
 
     @abstractmethod
     def get_latest_subtag(self, tag: TagType) -> Optional[TagType]:

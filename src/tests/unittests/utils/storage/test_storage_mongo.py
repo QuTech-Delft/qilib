@@ -305,6 +305,10 @@ class TestStorageMongo(unittest.TestCase):
                           self.storage.update_individual_data,
                           'a key', test_dict, tag + ['extra'])
 
+        self.assertRaises(NoDataAtKeyError,
+                          self.storage.update_individual_data,
+                          'new key', test_dict, tag)
+
     def test_update_individual_data_with_new_key(self):
         tag = ['system', 'properties']
         self.storage.save_data(self.test_individual_data, tag)
@@ -317,9 +321,9 @@ class TestStorageMongo(unittest.TestCase):
             }
         }
 
-        self.storage.update_individual_data("new key", test_dict, tag)
-        data = self.storage.load_data(tag)
-        self.assertEqual(data["new key"], test_dict)
+        self.assertRaises(NoDataAtKeyError,
+                          self.storage.update_individual_data,
+                          'new key', test_dict, tag)
 
     def test_load_individual_data(self):
         data = {

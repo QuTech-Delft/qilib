@@ -254,10 +254,13 @@ class StorageMongoDb(StorageInterface):
                 if 'value' not in doc:
                     raise NodeAlreadyExistsError(f'Tag "{tag[0]}" is not a leaf')
                 else:
-                    self._collection.update_one({'parent': parent,
-                                                 'tag': tag[0]},
-                                                {'$set': {'value.' +
-                                                          property_name: data}})
+                    if property_name not in doc['value']:
+                        raise NoDataAtKeyError(f'The property "{property_name}" does not exists')
+                    else:
+                        self._collection.update_one({'parent': parent,
+                                                     'tag': tag[0]},
+                                                    {'$set': {'value.' +
+                                                              property_name: data}})
             else:
                 raise NoDataAtKeyError(f'Tag "{tag[0]}" does not exist')
 
@@ -287,6 +290,16 @@ class StorageMongoDb(StorageInterface):
         self._store_value_by_tag(tag, self._encode_data(self._serialize(data)), self._get_root())
 
     def load_individual_data(self, property_name: Any, tag: TagType) -> Any:
+        """ Retrieve an individual property value at a given tag
+
+                Args:
+                    property_name: Name of the individual property to be retrieved
+                    tag: The tag
+
+                Returns:
+                    Value of the property
+        """
+
         StorageInterface._validate_tag(tag)
 
         if len(tag) == 0:
@@ -298,6 +311,14 @@ class StorageMongoDb(StorageInterface):
             self._retrieve_individual_value_by_tag(encoded_property_name, tag, self._get_root())))
 
     def update_individual_data(self, property_name: Any, data: Any, tag: TagType) -> None:
+        """ Update an individual property at a given tag with the given data
+
+                Args:
+                    property_name: Name of the individual property to updated
+                    data: Data to update
+                    tag: The tag
+        """
+
         StorageInterface._validate_tag(tag)
 
         encoded_property_name = self._encode_data(self._serialize(property_name))
