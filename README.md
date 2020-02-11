@@ -49,6 +49,11 @@ Run all unittests and collect the code coverage:
 (env) $ coverage run --source="./src/qilib" -m unittest discover -s src/tests -t src
 (env) $ coverage report -m
 ```
+###Type Checking
+For static type checking, mypy --strict can be used
+```
+(env) MYPYPATH=./src python -m mypy --strict --ignore-missing-imports --allow-untyped-calls -p qilib
+```
 
 ## Data set
 The three main building blocks of the qilib data set are a DataArray, DataSet and a DataSetIO that provides a
