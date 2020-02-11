@@ -136,7 +136,7 @@ class StorageMongoDb(StorageInterface):
             else:
                 return self._retrieve_nodes_by_tag(tag[1:], doc['_id'])
 
-    def _retrieve_value_by_tag(self, tag: TagType, parent: ObjectId, field=None) -> Any:
+    def _retrieve_value_by_tag(self, tag: TagType, parent: ObjectId, field: Any = None) -> Any:
         """Traverse the tree and retrieves the value / field value of a given leaf tag
 
         Args:
@@ -188,7 +188,7 @@ class StorageMongoDb(StorageInterface):
         """
         return self._retrieve_value_by_tag(tag, parent, field)
 
-    def _store_value_by_tag(self, tag: TagType, data: Any, parent: ObjectId, field=None) -> None:
+    def _store_value_by_tag(self, tag: TagType, data: Any, parent: ObjectId, field: Any = None) -> None:
         """ Store a value at a given tag
 
         Args:

@@ -48,7 +48,7 @@ class StorageMemory(StorageInterface):
         self._data: Dict[str, Any] = {}
 
     @staticmethod
-    def _retrieve_value_from_dict_by_tag(dictionary: Dict[str, Any], tag: TagType, field=None) -> Any:
+    def _retrieve_value_from_dict_by_tag(dictionary: Dict[str, Any], tag: TagType, field: Any = None) -> Any:
         if len(tag) == 0:
             if not isinstance(dictionary, StorageMemory.__Leaf):
                 raise NoDataAtKeyError()
@@ -79,7 +79,7 @@ class StorageMemory(StorageInterface):
         return StorageMemory._retrieve_nodes_from_dict_by_tag(dictionary[tag_prefix], tag[1:])
 
     @staticmethod
-    def _store_value_to_dict_by_tag(dictionary: Dict[str, Any], tag: TagType, value: Any, field=None) -> None:
+    def _store_value_to_dict_by_tag(dictionary: Dict[str, Any], tag: TagType, value: Any, field: Any = None) -> None:
         if len(tag) == 1:
             if tag[0] in dictionary:
                 if isinstance(dictionary[tag[0]], StorageMemory.__Node):
