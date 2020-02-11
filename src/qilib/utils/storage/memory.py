@@ -48,23 +48,22 @@ class StorageMemory(StorageInterface):
         self._data: Dict[str, Any] = {}
 
     @staticmethod
-    def _retrieve_value_from_dict_by_tag(dictionary: Dict[str, Any],
-                                         tag: TagType, property_name=None) -> Any:
+    def _retrieve_value_from_dict_by_tag(dictionary: Dict[str, Any], tag: TagType, field=None) -> Any:
         if len(tag) == 0:
             if not isinstance(dictionary, StorageMemory.__Leaf):
                 raise NoDataAtKeyError()
-            if property_name is None:
+            if field is None:
                 return dictionary.data
             else:
-                if property_name in dictionary.data:
-                    return dictionary.data[property_name]
+                if field in dictionary.data:
+                    return dictionary.data[field]
                 else:
-                    raise NoDataAtKeyError(f'The property {property_name} does not exist.')
+                    raise NoDataAtKeyError(f'The field {field} does not exist.')
 
         tag_prefix: str = tag[0]
         if tag_prefix not in dictionary:
             raise NoDataAtKeyError(tag)
-        return StorageMemory._retrieve_value_from_dict_by_tag(dictionary[tag_prefix], tag[1:], property_name)
+        return StorageMemory._retrieve_value_from_dict_by_tag(dictionary[tag_prefix], tag[1:], field)
 
     @staticmethod
     def _retrieve_nodes_from_dict_by_tag(dictionary: Dict[str, Any],
@@ -80,26 +79,25 @@ class StorageMemory(StorageInterface):
         return StorageMemory._retrieve_nodes_from_dict_by_tag(dictionary[tag_prefix], tag[1:])
 
     @staticmethod
-    def _store_value_to_dict_by_tag(dictionary: Dict[str, Any], tag: TagType, value: Any,
-                                    property_name=None) -> None:
+    def _store_value_to_dict_by_tag(dictionary: Dict[str, Any], tag: TagType, value: Any, field=None) -> None:
         if len(tag) == 1:
             if tag[0] in dictionary:
                 if isinstance(dictionary[tag[0]], StorageMemory.__Node):
                     raise NodeAlreadyExistsError()
-            if property_name is None:
+            if field is None:
                 dictionary[tag[0]] = StorageMemory.__Leaf(value)
             else:
-                if property_name in dictionary[tag[0]].data:
-                    dictionary[tag[0]].data[property_name] = value
+                if field in dictionary[tag[0]].data:
+                    dictionary[tag[0]].data[field] = value
                 else:
-                    raise NoDataAtKeyError(f'The property {property_name} does not exist.')
+                    raise NoDataAtKeyError(f'The field {field} does not exist.')
         else:
             if not tag[0] in dictionary:
                 dictionary[tag[0]] = StorageMemory.__Node()
             elif isinstance(dictionary[tag[0]], StorageMemory.__Leaf):
                 raise NodeAlreadyExistsError(f'Cannot store or replace data, because \'{tag[0]}\' is already a node')
 
-            StorageMemory._store_value_to_dict_by_tag(dictionary[tag[0]], tag[1:], value, property_name)
+            StorageMemory._store_value_to_dict_by_tag(dictionary[tag[0]], tag[1:], value, field)
 
     def load_data(self, tag: TagType) -> Any:
         if not isinstance(tag, list):
@@ -136,30 +134,28 @@ class StorageMemory(StorageInterface):
                 return False
         return True
 
-    def load_individual_data(self, property_name: Any, tag: TagType) -> Any:
-        """ Retrieve the value of an individual property at the given tag
+    def load_individual_data(self, field: Any, tag: TagType) -> Any:
+        """ Retrieve the value of an individual field at the given tag
 
         Args:
-            property_name: Name of the property to load
+            field: Name of the field to load
             tag: The tag
 
         Returns:
-            Value of the property
+            Value of the field
 
         """
         StorageInterface._validate_tag(tag)
-        return self._unserialize(StorageMemory._retrieve_value_from_dict_by_tag(
-            self._data, tag, property_name))
+        return self._unserialize(StorageMemory._retrieve_value_from_dict_by_tag(self._data, tag, field))
 
-    def update_individual_data(self, property_name: Any, data: Any, tag: TagType) -> None:
-        """ Update the value of an individual property at the given tag
+    def update_individual_data(self, field: Any, data: Any, tag: TagType) -> None:
+        """ Update the value of an individual field at the given tag
 
          Args:
-             property_name: Name of the property to update
-             data: The data to be used for updating the property
+             field: Name of the field to update
+             data: The data to be used for updating the field
              tag: The tag
 
          """
         StorageInterface._validate_tag(tag)
-        StorageMemory._store_value_to_dict_by_tag(self._data, tag, self._serialize(data),
-                                                  property_name)
+        StorageMemory._store_value_to_dict_by_tag(self._data, tag, self._serialize(data), field)

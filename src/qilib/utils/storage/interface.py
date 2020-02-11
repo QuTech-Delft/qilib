@@ -101,18 +101,18 @@ class StorageInterface(ABC):
         """
 
     @abstractmethod
-    def load_individual_data(self, property_name: Any, tag: TagType) -> Any:
-        """ Load an individual property at a given tag from storage.
+    def load_individual_data(self, field: Any, tag: TagType) -> Any:
+        """ Load an individual field at a given tag from storage.
 
         Args:
-            property_name: Name of the property to be loaded
-            tag: tag for property to load
+            field: Name of the field to be loaded
+            tag: tag for field to load
 
         Returns:
-            Data found of the property of the node identified by the tag.
+            Data found of the field of the node identified by the tag.
 
         Raises:
-            NoDataAtKeyError: if there is no data for the specified tag/property.
+            NoDataAtKeyError: if there is no data for the specified tag/field.
         """
         pass
 
@@ -152,16 +152,16 @@ class StorageInterface(ABC):
         pass
 
     @abstractmethod
-    def update_individual_data(self, property_name: Any, data: Any, tag: TagType) -> None:
-        """ Update an individual property at a given tag with data
+    def update_individual_data(self, field: Any, data: Any, tag: TagType) -> None:
+        """ Update an individual field at a given tag with data
 
         Args:
-            property_name: Property
+            field: Name of field
             data: data to store
             tag: reference tag to store the data
 
         Raises:
-            NoDataAtKeyError: if there is no data for the specified tag/property.
+            NoDataAtKeyError: if there is no data for the specified tag/field.
         """
         pass
 
