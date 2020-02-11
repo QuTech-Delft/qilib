@@ -116,7 +116,28 @@ class TestStorageMemory(unittest.TestCase):
         self.assertTrue(tag_in_storage)
 
     def test_load_individual_data(self):
-        self.assertRaises(NotImplementedError, self.storage.load_individual_data, None, None)
+        for index, value in enumerate(self.testdata):
+            self.storage.save_data(value, ['data', str(index)])
+
+        value_loaded = self.storage.load_individual_data('a', ['data', str(3)])
+        self.assertEqual(1, value_loaded)
+
+        value_loaded = self.storage.load_individual_data('b', ['data', str(3)])
+        self.assertEqual(2, value_loaded)
+
+        self.assertRaises(TypeError, self.storage.load_individual_data, 1, 1)
+
+        self.assertRaises(NoDataAtKeyError, self.storage.load_individual_data,
+                          'C', ['data', str(3)])
 
     def test_update_individual_data(self):
-        self.assertRaises(NotImplementedError, self.storage.update_individual_data, None, None, None)
+        for index, value in enumerate(self.testdata):
+            self.storage.save_data(value, ['data', str(index)])
+
+        self.storage.update_individual_data('a', 42, ['data', str(3)])
+
+        value_loaded = self.storage.load_individual_data('a', ['data', str(3)])
+        self.assertEqual(42, value_loaded)
+
+        self.assertRaises(NoDataAtKeyError, self.storage.update_individual_data,
+                          'C', 42, ['data', str(3)])
