@@ -136,15 +136,21 @@ class StorageMongoDb(StorageInterface):
             else:
                 return self._retrieve_nodes_by_tag(tag[1:], doc['_id'])
 
-    def _retrieve_value_by_tag(self, tag: TagType, parent: ObjectId) -> Any:
-        """Traverse the tree and give the value a given leaf tag
+    def _retrieve_value_by_tag(self, tag: TagType, parent: ObjectId, property_name=None) -> Any:
+        """Traverse the tree and retrieves the value a given leaf tag
 
         Args:
             tag: The leaf tag
             parent: The ObjectID of the leaf's parent
+            property_name: The property to be retrieved. Default value is none.
 
         Returns:
-            Data held by the leaf
+            Data held by the leaf. If property_name is provided, returns the value of the
+            property stored in the leaf
+
+        Raises:
+            NoDataAtKeyError: If a tag in Tag list does not exist
+            or if the property_name does not exist
         """
 
         if len(tag) == 1:
@@ -154,14 +160,19 @@ class StorageMongoDb(StorageInterface):
             elif 'value' not in doc:
                 raise NoDataAtKeyError(f'Tag "{tag[0]}" is not a leaf')
             else:
-                return doc['value']
+                if property_name is None:
+                    return doc['value']
+                elif property_name in doc['value']:
+                    return doc['value'][property_name]
+                else:
+                    raise NoDataAtKeyError(f'The property "{property_name}" does not exists')
 
         else:
             doc = self._collection.find_one({'parent': parent, 'tag': tag[0], 'value': {'$exists': False}})
             if doc is None:
                 raise NoDataAtKeyError(f'Tag "{tag[0]}" cannot be found')
             else:
-                return self._retrieve_value_by_tag(tag[1:], doc['_id'])
+                return self._retrieve_value_by_tag(tag[1:], doc['_id'], property_name)
 
     def _retrieve_individual_value_by_tag(self, property_name: Any, tag: TagType, parent: ObjectId) -> Any:
         """Traverse the tree and retrieve the value of a property present in given leaf tag
@@ -174,37 +185,22 @@ class StorageMongoDb(StorageInterface):
         Returns:
             The property_name Data held by the leaf
 
-        Raises:
-            NoDataAtKeyError: If a tag in Tag list does not exist,
-            or if the property_name does not exist
         """
+        return self._retrieve_value_by_tag(tag, parent, property_name)
 
-        if len(tag) == 1:
-            doc = self._collection.find_one({'parent': parent, 'tag': tag[0]})
-            if doc is None:
-                raise NoDataAtKeyError(f'Tag "{tag[0]}" cannot be found')
-            elif 'value' not in doc:
-                raise NoDataAtKeyError(f'Tag "{tag[0]}" is not a leaf')
-            else:
-                if property_name in doc['value']:
-                    return doc['value'][property_name]
-                else:
-                    raise NoDataAtKeyError(f'The property "{property_name}" does not exists')
-
-        else:
-            doc = self._collection.find_one({'parent': parent, 'tag': tag[0], 'value': {'$exists': False}})
-            if doc is None:
-                raise NoDataAtKeyError(f'Tag "{tag[0]}" cannot be found')
-            else:
-                return self._retrieve_individual_value_by_tag(property_name, tag[1:], doc['_id'])
-
-    def _store_value_by_tag(self, tag: TagType, data: Any, parent: ObjectId) -> None:
+    def _store_value_by_tag(self, tag: TagType, data: Any, parent: ObjectId,
+                            property_name=None) -> None:
         """ Store a value at a given tag
 
         Args:
             tag: The tag
             data: Data to store
             parent: An ObjectID of the node's parent
+            property_name: Property to be updated. Default value is None
+
+        Raises:
+              NodeAlreadyExistsError: If a tag in Tag List is an unexpected node/leaf
+              NoDataAtKeyError:  If a tag in Tag List does not exist or if the property_name does not exist
         """
 
         if len(tag) == 1:
@@ -212,23 +208,35 @@ class StorageMongoDb(StorageInterface):
             if doc:
                 if 'value' not in doc:
                     raise NodeAlreadyExistsError(f'Tag "{tag[0]}" is not a leaf')
-                else:
+                elif property_name is None:
                     self._collection.update_one({'parent': parent, 'tag': tag[0]},
                                                 {'$set': {'value': data}})
-            else:
-                self._collection.insert_one({'parent': parent, 'tag': tag[0], 'value': data})
+                elif property_name in doc['value']:
+                    self._collection.update_one({'parent': parent,
+                                                 'tag': tag[0]},
+                                                {'$set': {'value.' +
+                                                          property_name: data}})
+                else:
+                    raise NoDataAtKeyError(f'The property "{property_name}" does not exists')
 
+            elif property_name is None:
+                self._collection.insert_one({'parent': parent, 'tag': tag[0], 'value': data})
+            else:
+                raise NoDataAtKeyError(f'Tag "{tag[0]}" does not exist')
         else:
             doc = self._collection.find_one({'parent': parent, 'tag': tag[0]})
             if doc is None:
-                parent = self._collection.insert_one({'parent': parent, 'tag': tag[0]}).inserted_id
+                if property_name is None:
+                    parent = self._collection.insert_one({'parent': parent, 'tag': tag[0]}).inserted_id
+                else:
+                    raise NoDataAtKeyError(f'Tag "{tag[0]}" does not exist')
             else:
                 if 'value' in doc:
                     raise NodeAlreadyExistsError(f'Tag "{tag[0]}" is a leaf')
                 else:
                     parent = doc['_id']
 
-            self._store_value_by_tag(tag[1:], data, parent)
+            self._store_value_by_tag(tag[1:], data, parent, property_name)
 
     def _update_individual_value_by_tag(self, tag: TagType, property_name: Any,
                                         data: Any, parent: ObjectId) -> None:
@@ -240,41 +248,8 @@ class StorageMongoDb(StorageInterface):
             data: Data to update
             parent: An ObjectID of the node's parent
 
-        Returns:
-            None
-
-        Raises:
-              NodeAlreadyExistsError: If a tag in Tag List is an unexpected node/leaf
-              NoDataAtKeyError:  If a tag in Tag List does not exist
         """
-
-        if len(tag) == 1:
-            doc = self._collection.find_one({'parent': parent, 'tag': tag[0]})
-            if doc:
-                if 'value' not in doc:
-                    raise NodeAlreadyExistsError(f'Tag "{tag[0]}" is not a leaf')
-                else:
-                    if property_name not in doc['value']:
-                        raise NoDataAtKeyError(f'The property "{property_name}" does not exists')
-                    else:
-                        self._collection.update_one({'parent': parent,
-                                                     'tag': tag[0]},
-                                                    {'$set': {'value.' +
-                                                              property_name: data}})
-            else:
-                raise NoDataAtKeyError(f'Tag "{tag[0]}" does not exist')
-
-        else:
-            doc = self._collection.find_one({'parent': parent, 'tag': tag[0]})
-            if doc is None:
-                raise NoDataAtKeyError(f'Tag "{tag[0]}" does not exist')
-            else:
-                if 'value' in doc:
-                    raise NodeAlreadyExistsError(f'Tag "{tag[0]}" is a leaf')
-                else:
-                    parent = doc['_id']
-
-            self._update_individual_value_by_tag(tag[1:], property_name, data, parent)
+        self._store_value_by_tag(tag, data, parent, property_name)
 
     def load_data(self, tag: TagType) -> Any:
         if not isinstance(tag, list):
@@ -292,12 +267,12 @@ class StorageMongoDb(StorageInterface):
     def load_individual_data(self, property_name: Any, tag: TagType) -> Any:
         """ Retrieve an individual property value at a given tag
 
-                Args:
-                    property_name: Name of the individual property to be retrieved
-                    tag: The tag
+            Args:
+                property_name: Name of the individual property to be retrieved
+                tag: The tag
 
-                Returns:
-                    Value of the property
+            Returns:
+                Value of the property
         """
 
         StorageInterface._validate_tag(tag)
@@ -313,10 +288,10 @@ class StorageMongoDb(StorageInterface):
     def update_individual_data(self, property_name: Any, data: Any, tag: TagType) -> None:
         """ Update an individual property at a given tag with the given data
 
-                Args:
-                    property_name: Name of the individual property to updated
-                    data: Data to update
-                    tag: The tag
+            Args:
+                property_name: Name of the individual property to updated
+                data: Data to update
+                tag: The tag
         """
 
         StorageInterface._validate_tag(tag)
