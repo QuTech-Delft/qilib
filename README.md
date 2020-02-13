@@ -50,7 +50,7 @@ Run all unittests and collect the code coverage:
 (env) $ coverage report -m
 ```
 ###Type Checking
-For static type checking, mypy --strict can be used
+For static type checking, mypy can be used
 ```
 (env) mypy --strict --ignore-missing-imports --allow-untyped-calls -p qilib
 ```
