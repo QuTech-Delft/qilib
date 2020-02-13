@@ -52,7 +52,7 @@ Run all unittests and collect the code coverage:
 ###Type Checking
 For static type checking, mypy --strict can be used
 ```
-(env) MYPYPATH=./src python -m mypy --strict --ignore-missing-imports --allow-untyped-calls -p qilib
+(env) mypy --strict --ignore-missing-imports --allow-untyped-calls -p qilib
 ```
 
 ## Data set
