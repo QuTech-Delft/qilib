@@ -262,12 +262,12 @@ class TestStorageMongo(unittest.TestCase):
             }
         }
 
-        self.storage.update_individual_data('something', test_tuple, tag)
-        self.storage.update_individual_data('li.st', test_list, tag)
-        self.storage.update_individual_data('something.with.dot', test_string, tag)
-        self.storage.update_individual_data('dict', test_dict, tag)
-        self.storage.update_individual_data(1, test_dict, tag)
-        self.storage.update_individual_data('boolean_value', True, tag)
+        self.storage.update_individual_data(test_tuple, tag, 'something')
+        self.storage.update_individual_data(test_list, tag, 'li.st')
+        self.storage.update_individual_data(test_string, tag, 'something.with.dot')
+        self.storage.update_individual_data(test_dict, tag, 'dict')
+        self.storage.update_individual_data(test_dict, tag, 1)
+        self.storage.update_individual_data(True, tag, 'boolean_value')
 
         data = self.storage.load_data(tag)
 
@@ -291,23 +291,19 @@ class TestStorageMongo(unittest.TestCase):
         }
         self.assertRaises(NodeAlreadyExistsError,
                           self.storage.update_individual_data,
-                          1, test_dict, ['system'])
+                          test_dict, ['system'], 1)
 
         self.assertRaises(NoDataAtKeyError,
                           self.storage.update_individual_data,
-                          1, test_dict, ['system', 'something'])
+                          test_dict, ['system', 'something'], 1)
 
         self.assertRaises(NoDataAtKeyError,
                           self.storage.update_individual_data,
-                          1, test_dict, ['something', 'another'])
+                          test_dict, ['something', 'another'], 1)
 
         self.assertRaises(NodeAlreadyExistsError,
                           self.storage.update_individual_data,
-                          'a key', test_dict, tag + ['extra'])
-
-        self.assertRaises(NoDataAtKeyError,
-                          self.storage.update_individual_data,
-                          'new key', test_dict, tag)
+                          test_dict, tag + ['extra'], 'a key')
 
     def test_update_individual_data_with_new_key(self):
         tag = ['system', 'properties']
@@ -321,9 +317,20 @@ class TestStorageMongo(unittest.TestCase):
             }
         }
 
-        self.assertRaises(NoDataAtKeyError,
-                          self.storage.update_individual_data,
-                          'new key', test_dict, tag)
+        test_string = 'hello'
+        test_int = 236
+
+        self.storage.update_individual_data(test_dict, tag, 'new key')
+        data = self.storage.load_individual_data(tag, 'new key')
+        self.assertEqual(test_dict, data)
+
+        self.storage.update_individual_data(test_string, tag, 42)
+        data = self.storage.load_individual_data(tag, 42)
+        self.assertEqual(test_string, data)
+
+        self.storage.update_individual_data(test_int, tag, 42)
+        data = self.storage.load_individual_data(tag, 42)
+        self.assertEqual(test_int, data)
 
     def test_load_individual_data(self):
         data = {
@@ -337,16 +344,16 @@ class TestStorageMongo(unittest.TestCase):
         self.storage.save_data(data, tag)
         self.assertEqual(data, self.storage.load_data(tag))
 
-        individual_data = self.storage.load_individual_data(1, tag)
+        individual_data = self.storage.load_individual_data(tag, 1)
         self.assertEqual(data[1], individual_data)
 
-        individual_data = self.storage.load_individual_data('1.1', tag)
+        individual_data = self.storage.load_individual_data(tag, '1.1')
         self.assertEqual(data['1.1'], individual_data)
 
-        individual_data = self.storage.load_individual_data('something.dot', tag)
+        individual_data = self.storage.load_individual_data(tag, 'something.dot')
         self.assertEqual(data['something.dot'], individual_data)
 
-        individual_data = self.storage.load_individual_data('boolean_value', tag)
+        individual_data = self.storage.load_individual_data(tag, 'boolean_value')
         self.assertEqual(data['boolean_value'], individual_data)
 
     def test_load_individual_data_raises_error(self):
@@ -360,16 +367,16 @@ class TestStorageMongo(unittest.TestCase):
 
         self.assertRaises(NoDataAtKeyError,
                           self.storage.load_individual_data,
-                          1, ['undefined tag'])
+                          ['undefined tag'], 1)
         self.assertRaises(NoDataAtKeyError,
                           self.storage.load_individual_data,
-                          1, ['system'])
+                          ['system'], 1)
         self.assertRaises(NoDataAtKeyError,
                           self.storage.load_individual_data,
-                          1, [])
+                          [], 1)
         self.assertRaises(NoDataAtKeyError,
                           self.storage.load_individual_data,
-                          1, ['system', 'new', 'another'])
+                          ['system', 'new', 'another'], 1)
 
     def test_load_individual_data_with_new_key(self):
         data = {
@@ -382,4 +389,8 @@ class TestStorageMongo(unittest.TestCase):
 
         self.assertRaises(NoDataAtKeyError,
                           self.storage.load_individual_data,
-                          'something.dot.NEW', tag)
+                          tag, 'something.dot.NEW')
+
+        self.assertRaises(NoDataAtKeyError,
+                          self.storage.load_individual_data,
+                          tag, 11)

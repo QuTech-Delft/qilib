@@ -119,25 +119,30 @@ class TestStorageMemory(unittest.TestCase):
         for index, value in enumerate(self.testdata):
             self.storage.save_data(value, ['data', str(index)])
 
-        value_loaded = self.storage.load_individual_data('a', ['data', str(3)])
+        value_loaded = self.storage.load_individual_data(['data', str(3)], 'a')
         self.assertEqual(1, value_loaded)
 
-        value_loaded = self.storage.load_individual_data('b', ['data', str(3)])
+        value_loaded = self.storage.load_individual_data(['data', str(3)], 'b')
         self.assertEqual(2, value_loaded)
 
         self.assertRaises(TypeError, self.storage.load_individual_data, 1, 1)
 
         self.assertRaises(NoDataAtKeyError, self.storage.load_individual_data,
-                          'C', ['data', str(3)])
+                          ['data', str(3)], 'C')
 
     def test_update_individual_data(self):
         for index, value in enumerate(self.testdata):
             self.storage.save_data(value, ['data', str(index)])
 
-        self.storage.update_individual_data('a', 42, ['data', str(3)])
-
-        value_loaded = self.storage.load_individual_data('a', ['data', str(3)])
+        self.storage.update_individual_data(42, ['data', str(3)], 'a')
+        value_loaded = self.storage.load_individual_data(['data', str(3)], 'a')
         self.assertEqual(42, value_loaded)
 
-        self.assertRaises(NoDataAtKeyError, self.storage.update_individual_data,
-                          'C', 42, ['data', str(3)])
+        self.storage.update_individual_data(42, ['data', str(3)], 'NEW KEY')
+        value_loaded = self.storage.load_individual_data(['data', str(3)], 'NEW KEY')
+        self.assertEqual(42, value_loaded)
+
+        self.storage.update_individual_data(42, ['data', str(3)], 9999999)
+        value_loaded = self.storage.load_individual_data(['data', str(3)], 9999999)
+        self.assertEqual(42, value_loaded)
+

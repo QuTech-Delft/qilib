@@ -101,12 +101,12 @@ class StorageInterface(ABC):
         """
 
     @abstractmethod
-    def load_individual_data(self, field: Any, tag: TagType) -> Any:
+    def load_individual_data(self, tag: TagType, field: Union[str, int]) -> Any:
         """ Load an individual field at a given tag from storage.
 
         Args:
-            field: Name of the field to be loaded
             tag: tag for field to load
+            field: Name of the field to be loaded
 
         Returns:
             Data found of the field of the node identified by the tag.
@@ -152,16 +152,15 @@ class StorageInterface(ABC):
         pass
 
     @abstractmethod
-    def update_individual_data(self, field: Any, data: Any, tag: TagType) -> None:
-        """ Update an individual field at a given tag with data
+    def update_individual_data(self, data: Any, tag: TagType, field: Union[str, int]) -> None:
+        """ Update an individual field at a given tag with data.
+        If the field does not exist, it will be created.
 
         Args:
-            field: Name of field
             data: data to store
             tag: reference tag to store the data
+            field: Name of field
 
-        Raises:
-            NoDataAtKeyError: if there is no data for the specified tag/field.
         """
         pass
 

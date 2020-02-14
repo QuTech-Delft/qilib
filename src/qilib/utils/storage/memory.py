@@ -17,7 +17,7 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 from qilib.utils.storage.interface import (NoDataAtKeyError,
                                            NodeAlreadyExistsError,
@@ -48,7 +48,7 @@ class StorageMemory(StorageInterface):
         self._data: Dict[str, Any] = {}
 
     @staticmethod
-    def _retrieve_value_from_dict_by_tag(dictionary: Dict[str, Any], tag: TagType, field: Any = None) -> Any:
+    def _retrieve_value_from_dict_by_tag(dictionary: Dict[str, Any], tag: TagType, field: Union[str, int, None] = None) -> Any:
         if len(tag) == 0:
             if not isinstance(dictionary, StorageMemory.__Leaf):
                 raise NoDataAtKeyError()
@@ -79,7 +79,7 @@ class StorageMemory(StorageInterface):
         return StorageMemory._retrieve_nodes_from_dict_by_tag(dictionary[tag_prefix], tag[1:])
 
     @staticmethod
-    def _store_value_to_dict_by_tag(dictionary: Dict[str, Any], tag: TagType, value: Any, field: Any = None) -> None:
+    def _store_value_to_dict_by_tag(dictionary: Dict[str, Any], tag: TagType, value: Any, field: Union[str, int, None] = None) -> None:
         if len(tag) == 1:
             if tag[0] in dictionary:
                 if isinstance(dictionary[tag[0]], StorageMemory.__Node):
@@ -87,10 +87,7 @@ class StorageMemory(StorageInterface):
             if field is None:
                 dictionary[tag[0]] = StorageMemory.__Leaf(value)
             else:
-                if field in dictionary[tag[0]].data:
-                    dictionary[tag[0]].data[field] = value
-                else:
-                    raise NoDataAtKeyError(f'The field {field} does not exist.')
+                dictionary[tag[0]].data[field] = value
         else:
             if not tag[0] in dictionary:
                 dictionary[tag[0]] = StorageMemory.__Node()
@@ -105,7 +102,7 @@ class StorageMemory(StorageInterface):
         return self._unserialize(StorageMemory._retrieve_value_from_dict_by_tag(self._data, tag))
 
     def save_data(self, data: Any, tag: TagType) -> None:
-        StorageInterface._validate_tag(tag)
+        self._validate_tag(tag)
         StorageMemory._store_value_to_dict_by_tag(self._data, tag, self._serialize(data))
 
     def get_latest_subtag(self, tag: TagType) -> Optional[TagType]:
@@ -134,28 +131,29 @@ class StorageMemory(StorageInterface):
                 return False
         return True
 
-    def load_individual_data(self, field: Any, tag: TagType) -> Any:
+    def load_individual_data(self, tag: TagType, field: Union[str, int, None]) -> Any:
         """ Retrieve the value of an individual field at the given tag
 
         Args:
-            field: Name of the field to load
             tag: The tag
+            field: Name of the field to load
 
         Returns:
             Value of the field
 
         """
-        StorageInterface._validate_tag(tag)
+        self._validate_tag(tag)
         return self._unserialize(StorageMemory._retrieve_value_from_dict_by_tag(self._data, tag, field))
 
-    def update_individual_data(self, field: Any, data: Any, tag: TagType) -> None:
-        """ Update the value of an individual field at the given tag
+    def update_individual_data(self, data: Any, tag: TagType, field: Union[str, int, None]) -> None:
+        """ Update the value of an individual field at the given tag.
+        If the field does not already exist, then it will be created.
 
          Args:
-             field: Name of the field to update
              data: The data to be used for updating the field
              tag: The tag
+             field: Name of the field to update
 
          """
-        StorageInterface._validate_tag(tag)
+        self._validate_tag(tag)
         StorageMemory._store_value_to_dict_by_tag(self._data, tag, self._serialize(data), field)
