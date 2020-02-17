@@ -34,6 +34,10 @@ class NodeAlreadyExistsError(Exception):
     """ Raised when trying to create a node or leave when node already exists."""
 
 
+class NodeDoesNotExistsError(Exception):
+    """ Raised when trying to update/create a field on a node which cannot be found."""
+
+
 class ConnectionTimeoutError(Exception):
     """ Raised when connection to storage can not be established."""
 

@@ -2,7 +2,7 @@ import datetime
 import unittest
 import numpy as np
 
-from qilib.utils.storage.interface import NoDataAtKeyError, NodeAlreadyExistsError
+from qilib.utils.storage.interface import NoDataAtKeyError, NodeAlreadyExistsError, NodeDoesNotExistsError
 from qilib.utils.storage.memory import StorageMemory
 
 
@@ -147,3 +147,7 @@ class TestStorageMemory(unittest.TestCase):
         self.assertEqual(42, value_loaded)
 
         self.assertRaises(TypeError, self.storage.update_individual_data, 42, ['data', str(3)], {'dict_as_field': 1})
+
+        self.assertRaises(NodeDoesNotExistsError, self.storage.update_individual_data, 42, ['data', str(3000)], 'a')
+        self.assertRaises(NodeDoesNotExistsError, self.storage.update_individual_data, 42, ['data3000'], 'a')
+

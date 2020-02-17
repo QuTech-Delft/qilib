@@ -21,7 +21,7 @@ from typing import Any, Dict, List, Optional, Union
 
 from qilib.utils.storage.interface import (NoDataAtKeyError,
                                            NodeAlreadyExistsError,
-                                           StorageInterface)
+                                           StorageInterface, NodeDoesNotExistsError)
 from qilib.utils.type_aliases import TagType
 
 
@@ -89,7 +89,10 @@ class StorageMemory(StorageInterface):
             if field is None:
                 dictionary[tag[0]] = StorageMemory.__Leaf(value)
             else:
-                dictionary[tag[0]].data[field] = value
+                if tag[0] in dictionary:
+                    dictionary[tag[0]].data[field] = value
+                else:
+                    raise NodeDoesNotExistsError(f'The Node {tag[0]} does not exist')
         else:
             if not tag[0] in dictionary:
                 dictionary[tag[0]] = StorageMemory.__Node()
