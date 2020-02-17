@@ -146,3 +146,4 @@ class TestStorageMemory(unittest.TestCase):
         value_loaded = self.storage.load_individual_data(['data', str(3)], 9999999)
         self.assertEqual(42, value_loaded)
 
+        self.assertRaises(TypeError, self.storage.update_individual_data, 42, ['data', str(3)], {'dict_as_field': 1})

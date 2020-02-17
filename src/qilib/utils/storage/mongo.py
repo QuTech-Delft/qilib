@@ -136,7 +136,7 @@ class StorageMongoDb(StorageInterface):
             else:
                 return self._retrieve_nodes_by_tag(tag[1:], doc['_id'])
 
-    def _retrieve_value_by_tag(self, tag: TagType, parent: ObjectId, field: Union[str, int, None] = None) -> Any:
+    def _retrieve_value_by_tag(self, tag: TagType, parent: ObjectId, field: Optional[Union[str, int]] = None) -> Any:
         """Traverse the tree and retrieves the value / field value of a given leaf tag
         If the field is specified, it returns the value of the field instead of tag value
         If the specified field does not exist, it will raise a NoDataAtKeyError
@@ -176,21 +176,8 @@ class StorageMongoDb(StorageInterface):
             else:
                 return self._retrieve_value_by_tag(tag[1:], doc['_id'], field)
 
-    def _retrieve_individual_value_by_tag(self, tag: TagType, parent: ObjectId, field: Union[str, int]) -> Any:
-        """Traverse the tree and retrieve the value of a field present in given leaf tag
-
-        Args:
-            tag: The leaf tag
-            parent: The ObjectID of the leaf's parent
-            field: The name of the field to be retrieved
-
-        Returns:
-            The field Data held by the leaf
-
-        """
-        return self._retrieve_value_by_tag(tag, parent, field)
-
-    def _store_value_by_tag(self, tag: TagType, data: Any, parent: ObjectId, field: Union[str, int, None] = None) -> None:
+    def _store_value_by_tag(self, tag: TagType, data: Any, parent: ObjectId,
+                            field: Optional[Union[str, int]] = None) -> None:
         """ Store a value at a given tag. In case a field is specified, function will update the value of the
         field with data. If the field does not already exists, the field will be created
 
@@ -237,18 +224,6 @@ class StorageMongoDb(StorageInterface):
 
             self._store_value_by_tag(tag[1:], data, parent, field)
 
-    def _update_individual_value_by_tag(self, tag: TagType, data: Any, parent: ObjectId, field: Union[str, int, None]) -> None:
-        """ Update a field value at a given tag. If field does not exist, then it will be created
-
-        Args:
-            tag: The tag
-            data: Data to update
-            parent: An ObjectID of the node's parent
-            field: Name of the individual field to updated
-
-        """
-        self._store_value_by_tag(tag, data, parent, field)
-
     def load_data(self, tag: TagType) -> Any:
         if not isinstance(tag, list):
             raise TypeError('Tag should be a list of strings')
@@ -262,7 +237,7 @@ class StorageMongoDb(StorageInterface):
         self._validate_tag(tag)
         self._store_value_by_tag(tag, self._encode_data(self._serialize(data)), self._get_root())
 
-    def load_individual_data(self, tag: TagType, field: Union[str, int, None]) -> Any:
+    def load_individual_data(self, tag: TagType, field: Union[str, int]) -> Any:
         """ Retrieve an individual field value at a given tag
 
             Args:
@@ -277,6 +252,7 @@ class StorageMongoDb(StorageInterface):
         """
 
         self._validate_tag(tag)
+        self._validate_field(field)
 
         if len(tag) == 0:
             raise NoDataAtKeyError('Tag cannot be empty')
@@ -284,9 +260,9 @@ class StorageMongoDb(StorageInterface):
         encoded_field_name = self._encode_data(self._serialize(field))
 
         return self._unserialize(self._decode_data(
-            self._retrieve_individual_value_by_tag(tag, self._get_root(), encoded_field_name)))
+            self._retrieve_value_by_tag(tag, self._get_root(), encoded_field_name)))
 
-    def update_individual_data(self, data: Any, tag: TagType, field: Union[str, int, None]) -> None:
+    def update_individual_data(self, data: Any, tag: TagType, field: Union[str, int]) -> None:
         """ Update an individual field at a given tag with the given data.
         If the field does not exist, it will be created.
 
@@ -298,9 +274,10 @@ class StorageMongoDb(StorageInterface):
         """
 
         self._validate_tag(tag)
+        self._validate_field(field)
         encoded_field_name = self._encode_data(self._serialize(field))
-        self._update_individual_value_by_tag(tag, self._encode_data(self._serialize(data)), self._get_root(),
-                                             encoded_field_name)
+        self._store_value_by_tag(tag, self._encode_data(self._serialize(data)), self._get_root(),
+                                 encoded_field_name)
 
     def get_latest_subtag(self, tag: TagType) -> Optional[TagType]:
         child_tags = sorted(self.list_data_subtags(tag))

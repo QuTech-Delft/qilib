@@ -141,6 +141,13 @@ class StorageInterface(ABC):
         if not isinstance(tag, list) or not all(isinstance(item, str) for item in tag):
             raise TypeError(f'Tag {tag} should be a list of strings')
 
+    @staticmethod
+    def _validate_field(field: Union[str, int]) -> None:
+        """ Assert that field is an int or string. """
+
+        if not (isinstance(field, int) or isinstance(field, str)):
+            raise TypeError(f'Field {field} should be an integer or a string')
+
     @abstractmethod
     def save_data(self, data: Any, tag: TagType) -> None:
         """ Save data to storage.

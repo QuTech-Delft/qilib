@@ -305,6 +305,10 @@ class TestStorageMongo(unittest.TestCase):
                           self.storage.update_individual_data,
                           test_dict, tag + ['extra'], 'a key')
 
+        self.assertRaises(TypeError,
+                          self.storage.update_individual_data,
+                          test_dict, tag, {'dict_as_field': 1})
+
     def test_update_individual_data_with_new_key(self):
         tag = ['system', 'properties']
         self.storage.save_data(self.test_individual_data, tag)

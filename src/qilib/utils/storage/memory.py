@@ -48,7 +48,8 @@ class StorageMemory(StorageInterface):
         self._data: Dict[str, Any] = {}
 
     @staticmethod
-    def _retrieve_value_from_dict_by_tag(dictionary: Dict[str, Any], tag: TagType, field: Union[str, int, None] = None) -> Any:
+    def _retrieve_value_from_dict_by_tag(dictionary: Dict[str, Any], tag: TagType,
+                                         field: Optional[Union[str, int]] = None) -> Any:
         if len(tag) == 0:
             if not isinstance(dictionary, StorageMemory.__Leaf):
                 raise NoDataAtKeyError()
@@ -79,7 +80,8 @@ class StorageMemory(StorageInterface):
         return StorageMemory._retrieve_nodes_from_dict_by_tag(dictionary[tag_prefix], tag[1:])
 
     @staticmethod
-    def _store_value_to_dict_by_tag(dictionary: Dict[str, Any], tag: TagType, value: Any, field: Union[str, int, None] = None) -> None:
+    def _store_value_to_dict_by_tag(dictionary: Dict[str, Any], tag: TagType, value: Any,
+                                    field: Optional[Union[str, int]] = None) -> None:
         if len(tag) == 1:
             if tag[0] in dictionary:
                 if isinstance(dictionary[tag[0]], StorageMemory.__Node):
@@ -131,7 +133,7 @@ class StorageMemory(StorageInterface):
                 return False
         return True
 
-    def load_individual_data(self, tag: TagType, field: Union[str, int, None]) -> Any:
+    def load_individual_data(self, tag: TagType, field: Union[str, int]) -> Any:
         """ Retrieve the value of an individual field at the given tag
 
         Args:
@@ -143,9 +145,10 @@ class StorageMemory(StorageInterface):
 
         """
         self._validate_tag(tag)
+        self._validate_field(field)
         return self._unserialize(StorageMemory._retrieve_value_from_dict_by_tag(self._data, tag, field))
 
-    def update_individual_data(self, data: Any, tag: TagType, field: Union[str, int, None]) -> None:
+    def update_individual_data(self, data: Any, tag: TagType, field: Union[str, int]) -> None:
         """ Update the value of an individual field at the given tag.
         If the field does not already exist, then it will be created.
 
@@ -156,4 +159,5 @@ class StorageMemory(StorageInterface):
 
          """
         self._validate_tag(tag)
+        self._validate_field(field)
         StorageMemory._store_value_to_dict_by_tag(self._data, tag, self._serialize(data), field)
