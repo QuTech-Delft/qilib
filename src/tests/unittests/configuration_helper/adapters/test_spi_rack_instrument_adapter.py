@@ -52,3 +52,14 @@ class TestSpiRackInstrumentAdapter(TestCase):
             parameters = MagicMock()
             reply = spi_adapter._filter_parameters(parameters)
             self.assertEqual(parameters, reply)
+
+    def test_close_instrument(self):
+        with patch('qilib.configuration_helper.adapters.spi_rack_instrument_adapter.SPI_rack') as spi_mock:
+            address = 'COM_testport_apply'
+            spi_adapter = InstrumentAdapterFactory.get_instrument_adapter('SpiRackInstrumentAdapter', address)
+
+            self.assertIsInstance(spi_adapter.instrument, MagicMock)
+            spi_mock.assert_called_once_with(address, baud='115200', timeout=1)
+
+            spi_adapter.close_instrument()
+            spi_adapter.instrument.close.assert_called_once()

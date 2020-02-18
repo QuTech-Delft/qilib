@@ -17,12 +17,12 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
-from typing import List, Union, Optional
+from typing import List, Optional
 
-from qilib.configuration_helper import InstrumentAdapterFactory
+from qilib.configuration_helper.instrument_adapter_factory import InstrumentAdapterFactory
 from qilib.configuration_helper.exceptions import DuplicateTagError
 from qilib.configuration_helper.visitor import Visitor
-from qilib.utils import PythonJsonStructure
+from qilib.utils.python_json_structure import PythonJsonStructure
 from qilib.utils.storage.interface import StorageInterface
 
 
@@ -32,7 +32,7 @@ class InstrumentConfiguration:
     STORAGE_BASE_TAG = 'configuration'
 
     def __init__(self, adapter_class_name: str, address: str, storage: StorageInterface,
-                 tag: Union[None, List[str]] = None, configuration: Union[None, PythonJsonStructure] = None,
+                 tag: Optional[List[str]] = None, configuration: Optional[PythonJsonStructure] = None,
                  instrument_name: Optional[str] = None) -> None:
         """ A set of instrument configurations
 
@@ -47,10 +47,15 @@ class InstrumentConfiguration:
         self._adapter_class_name = adapter_class_name
         self._address = address
         self._storage = storage
-        self._instrument = InstrumentAdapterFactory.get_instrument_adapter(adapter_class_name, address, instrument_name)
         self._instrument_name = instrument_name
+        self._adapter = InstrumentAdapterFactory.get_instrument_adapter(adapter_class_name, address, instrument_name)
         self._configuration = PythonJsonStructure() if configuration is None else configuration
         self._tag = [self.STORAGE_BASE_TAG, adapter_class_name, StorageInterface.datetag_part()] if tag is None else tag
+
+    def __repr__(self) -> str:
+        repr_string = f'{self.__class__.__name__}({self._adapter_class_name!r}, {self._address!r}, {self._storage!r}, '\
+            f'{self._tag!r}, {self._configuration!r}, {self._instrument_name!r})'
+        return repr_string
 
     @property
     def tag(self) -> List[str]:
@@ -109,7 +114,7 @@ class InstrumentConfiguration:
 
     def apply(self) -> None:
         """ Uploads the configuration to the instrument."""
-        self._instrument.apply(self._configuration)
+        self._adapter.apply(self._configuration)
 
     def apply_delta(self, update: bool = True) -> None:
         """ Compare configuration with instrument and apply configuration that differs.
@@ -118,9 +123,9 @@ class InstrumentConfiguration:
             update: If True, request all parameter values from instrument, else use latest set values.
 
         """
-        instrument_config = self._instrument.read(update=update)
+        instrument_config = self._adapter.read(update=update)
         delta = self._get_configuration_delta(instrument_config)
-        self._instrument.apply(delta)
+        self._adapter.apply(delta)
 
     def _get_configuration_delta(self, instrument_config: PythonJsonStructure) -> PythonJsonStructure:
         delta = PythonJsonStructure()
@@ -138,7 +143,7 @@ class InstrumentConfiguration:
 
         If the settings read from the instrument differs from the configuration the tag is also updated.
         """
-        instrument_config = self._instrument.read(update=True)
+        instrument_config = self._adapter.read(update=True)
         delta = self._get_configuration_delta(instrument_config)
         if len(delta) > 0 or len(instrument_config) != len(self._configuration):
             self._configuration = instrument_config
@@ -152,12 +157,4 @@ class InstrumentConfiguration:
 
         """
         visitor.visit(self)
-        self._instrument.accept(visitor)
-
-    def __str__(self):
-        """Returns string representation for the underlying InstrumentAdapter.
-
-        Returns:
-            String representation for the underlying InstrumentAdapter.
-        """
-        return f'Configuration for {self._instrument}'
+        self._adapter.accept(visitor)

@@ -29,4 +29,6 @@ class TestStorage(unittest.TestCase):
             storage_interface.load_data(None)
             storage_interface.get_latest_subtag(None)
             storage_interface.list_data_subtags(None)
+            storage_interface.load_individual_data(None, None)
+            storage_interface.update_individual_data(None, None, None)
             self.assertRaises(NotImplementedError, storage_interface.search, None)

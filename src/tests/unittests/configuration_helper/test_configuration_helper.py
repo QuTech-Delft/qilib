@@ -26,9 +26,9 @@ class TestConfigurationHelper(unittest.TestCase):
             configuration_helper.retrieve_inactive_configuration_from_storage(tag)
         inactive_configuration = configuration_helper._inactive_configuration
         self.assertListEqual(inactive_configuration.tag, tag)
-        self.assertListEqual(inactive_configuration.instruments[0].tag, ['some_tag'])
-        self.assertEqual(inactive_configuration.instruments[0].address, 'fake')
-        self.assertDictEqual(inactive_configuration.instruments[0].configuration, {'param': 'value'})
+        self.assertListEqual(inactive_configuration.instrument_configurations[0].tag, ['some_tag'])
+        self.assertEqual(inactive_configuration.instrument_configurations[0].address, 'fake')
+        self.assertDictEqual(inactive_configuration.instrument_configurations[0].configuration, {'param': 'value'})
 
     def test_configuration_helper_integration(self):
         storage = StorageMemory('some_name')
@@ -40,17 +40,25 @@ class TestConfigurationHelper(unittest.TestCase):
             instrument_2 = InstrumentConfiguration('DummyClass', 'fake-address-2', storage, tag=['instrument_2'],
                                                    configuration=configuration_2)
             instrument_configuration_set = InstrumentConfigurationSet(storage, tag=['set'],
-                                                                      instruments=[instrument_1, instrument_2])
+                                                                      instrument_configurations=[instrument_1,
+                                                                                                 instrument_2])
             instrument_configuration_set.store()
 
             configuration_helper = ConfigurationHelper(storage)
             configuration_helper.retrieve_inactive_configuration_from_storage(['set'])
         inactive_configuration = configuration_helper.inactive_configuration
         self.assertListEqual(inactive_configuration.tag, ['set'])
-        self.assertListEqual(inactive_configuration.instruments[0].tag, ['instrument_1'])
-        self.assertListEqual(inactive_configuration.instruments[1].tag, ['instrument_2'])
-        self.assertDictEqual(configuration_1, inactive_configuration.instruments[0].configuration)
-        self.assertDictEqual(configuration_2, inactive_configuration.instruments[1].configuration)
+        self.assertListEqual(inactive_configuration.instrument_configurations[0].tag, ['instrument_1'])
+        self.assertListEqual(inactive_configuration.instrument_configurations[1].tag, ['instrument_2'])
+        self.assertDictEqual(configuration_1, inactive_configuration.instrument_configurations[0].configuration)
+        self.assertDictEqual(configuration_2, inactive_configuration.instrument_configurations[1].configuration)
+        repr_str = r"ConfigurationHelper\(StorageMemory\('some_name'\), InstrumentConfigurationSet\(StorageMemory\(" \
+                   r"'some_name'\), \['configuration_set', '.*'\], \[\]\), " \
+                   r"InstrumentConfigurationSet\(StorageMemory\('some_name'\), \['set'\], \[InstrumentConfiguration\(" \
+                   r"'DummyClass', 'fake-address-1', StorageMemory\('some_name'\), \['instrument_1'\], " \
+                   r"\{'amper': 0.005\}, None\), InstrumentConfiguration\('DummyClass', 'fake-address-2', " \
+                   r"StorageMemory\('some_name'\), \['instrument_2'\], \{'frequency': '2.4 GHz'\}, None\)\]\)\)"
+        self.assertRegex(repr(configuration_helper), repr_str)
 
     def test_write_active_configuration_to_storage(self):
         storage = Mock()

@@ -136,15 +136,23 @@ class StorageMongoDb(StorageInterface):
             else:
                 return self._retrieve_nodes_by_tag(tag[1:], doc['_id'])
 
-    def _retrieve_value_by_tag(self, tag: TagType, parent: ObjectId) -> Any:
-        """Traverse the tree and give the value a given leaf tag
+    def _retrieve_value_by_tag(self, tag: TagType, parent: ObjectId, field: Optional[Union[str, int]] = None) -> Any:
+        """Traverse the tree and retrieves the value / field value of a given leaf tag
+        If the field is specified, it returns the value of the field instead of tag value
+        If the specified field does not exist, it will raise a NoDataAtKeyError
 
         Args:
             tag: The leaf tag
             parent: The ObjectID of the leaf's parent
+            field: The field to be retrieved. Default value is none.
 
         Returns:
-            Data held by the leaf
+            Data held by the leaf. If field is provided, returns the value of the
+            field stored in the leaf
+
+        Raises:
+            NoDataAtKeyError: If a tag in Tag list does not exist
+            or if the field does not exist
         """
 
         if len(tag) == 1:
@@ -154,22 +162,34 @@ class StorageMongoDb(StorageInterface):
             elif 'value' not in doc:
                 raise NoDataAtKeyError(f'Tag "{tag[0]}" is not a leaf')
             else:
-                return doc['value']
+                if field is None:
+                    return doc['value']
+                elif field in doc['value']:
+                    return doc['value'][field]
+                else:
+                    raise NoDataAtKeyError(f'The field "{field}" does not exists')
 
         else:
             doc = self._collection.find_one({'parent': parent, 'tag': tag[0], 'value': {'$exists': False}})
             if doc is None:
                 raise NoDataAtKeyError(f'Tag "{tag[0]}" cannot be found')
             else:
-                return self._retrieve_value_by_tag(tag[1:], doc['_id'])
+                return self._retrieve_value_by_tag(tag[1:], doc['_id'], field)
 
-    def _store_value_by_tag(self, tag: TagType, data: Any, parent: ObjectId) -> None:
-        """ Store a value at a given tag
+    def _store_value_by_tag(self, tag: TagType, data: Any, parent: ObjectId,
+                            field: Optional[Union[str, int]] = None) -> None:
+        """ Store a value at a given tag. In case a field is specified, function will update the value of the
+        field with data. If the field does not already exists, the field will be created
 
         Args:
             tag: The tag
             data: Data to store
             parent: An ObjectID of the node's parent
+            field: Field to be updated. Default value is None
+
+        Raises:
+              NodeAlreadyExistsError: If a tag in Tag List is an unexpected node/leaf
+              NoDataAtKeyError:  If a tag in Tag List does not exist
         """
 
         if len(tag) == 1:
@@ -177,23 +197,32 @@ class StorageMongoDb(StorageInterface):
             if doc:
                 if 'value' not in doc:
                     raise NodeAlreadyExistsError(f'Tag "{tag[0]}" is not a leaf')
-                else:
+                elif field is None:
                     self._collection.update_one({'parent': parent, 'tag': tag[0]},
                                                 {'$set': {'value': data}})
-            else:
+                else:
+                    self._collection.update_one({'parent': parent,
+                                                 'tag': tag[0]},
+                                                {'$set': {'value.' +
+                                                          str(field): data}})
+            elif field is None:
                 self._collection.insert_one({'parent': parent, 'tag': tag[0], 'value': data})
-
+            else:
+                raise NoDataAtKeyError(f'Tag "{tag[0]}" does not exist')
         else:
             doc = self._collection.find_one({'parent': parent, 'tag': tag[0]})
             if doc is None:
-                parent = self._collection.insert_one({'parent': parent, 'tag': tag[0]}).inserted_id
+                if field is None:
+                    parent = self._collection.insert_one({'parent': parent, 'tag': tag[0]}).inserted_id
+                else:
+                    raise NoDataAtKeyError(f'Tag "{tag[0]}" does not exist')
             else:
                 if 'value' in doc:
                     raise NodeAlreadyExistsError(f'Tag "{tag[0]}" is a leaf')
                 else:
                     parent = doc['_id']
 
-            self._store_value_by_tag(tag[1:], data, parent)
+            self._store_value_by_tag(tag[1:], data, parent, field)
 
     def load_data(self, tag: TagType) -> Any:
         if not isinstance(tag, list):
@@ -205,8 +234,50 @@ class StorageMongoDb(StorageInterface):
         return self._unserialize(self._decode_data(self._retrieve_value_by_tag(tag, self._get_root())))
 
     def save_data(self, data: Any, tag: TagType) -> None:
-        StorageInterface._validate_tag(tag)
+        self._validate_tag(tag)
         self._store_value_by_tag(tag, self._encode_data(self._serialize(data)), self._get_root())
+
+    def load_individual_data(self, tag: TagType, field: Union[str, int]) -> Any:
+        """ Retrieve an individual field value at a given tag
+
+            Args:
+                tag: The tag
+                field: Name of the individual field to be retrieved
+
+            Raises:
+                NoDataAtKeyError if the tag is empty
+
+            Returns:
+                Value of the field
+        """
+
+        self._validate_tag(tag)
+        self._validate_field(field)
+
+        if len(tag) == 0:
+            raise NoDataAtKeyError('Tag cannot be empty')
+
+        encoded_field_name = self._encode_data(self._serialize(field))
+
+        return self._unserialize(self._decode_data(
+            self._retrieve_value_by_tag(tag, self._get_root(), encoded_field_name)))
+
+    def update_individual_data(self, data: Any, tag: TagType, field: Union[str, int]) -> None:
+        """ Update an individual field at a given tag with the given data.
+        If the field does not exist, it will be created.
+
+            Args:
+                data: Data to update
+                tag: The tag
+                field: Name of the individual field to updated
+
+        """
+
+        self._validate_tag(tag)
+        self._validate_field(field)
+        encoded_field_name = self._encode_data(self._serialize(field))
+        self._store_value_by_tag(tag, self._encode_data(self._serialize(data)), self._get_root(),
+                                 encoded_field_name)
 
     def get_latest_subtag(self, tag: TagType) -> Optional[TagType]:
         child_tags = sorted(self.list_data_subtags(tag))
@@ -327,6 +398,15 @@ class StorageMongoDb(StorageInterface):
         elif isinstance(data, list):
             return [StorageMongoDb._encode_data(item) for item in data]
 
+        elif isinstance(data, str):
+            return StorageMongoDb._encode_str(data)
+
+        elif isinstance(data, bool):
+            return data
+
+        elif isinstance(data, int):
+            return StorageMongoDb._encode_int(data)
+
         return data
 
     @staticmethod
@@ -349,5 +429,9 @@ class StorageMongoDb(StorageInterface):
 
         elif isinstance(data, list):
             return [StorageMongoDb._decode_data(item) for item in data]
+
+        elif isinstance(data, str):
+            return StorageMongoDb._decode_int(StorageMongoDb._decode_str(data)) \
+                if StorageMongoDb._is_encoded_int(data) else StorageMongoDb._decode_str(data)
 
         return data

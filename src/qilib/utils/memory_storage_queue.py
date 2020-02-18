@@ -20,7 +20,7 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 from queue import Queue
 from typing import Union, Dict, Any, Tuple
 
-from qilib.data_set import DataArray
+from qilib.data_set.data_array import DataArray
 from qilib.data_set.data_set_io_reader import DataSetIOReader
 
 

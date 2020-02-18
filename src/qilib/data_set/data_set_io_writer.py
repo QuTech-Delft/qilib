@@ -20,7 +20,7 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 from abc import ABC, abstractmethod
 from typing import Any, Union, Dict, Tuple
 
-from qilib.data_set import DataArray
+from qilib.data_set.data_array import DataArray
 
 
 class DataSetIOWriter(ABC):

@@ -2,7 +2,7 @@ import datetime
 import unittest
 import numpy as np
 
-from qilib.utils.storage.interface import NoDataAtKeyError, NodeAlreadyExistsError
+from qilib.utils.storage.interface import NoDataAtKeyError, NodeAlreadyExistsError, NodeDoesNotExistsError
 from qilib.utils.storage.memory import StorageMemory
 
 
@@ -114,3 +114,40 @@ class TestStorageMemory(unittest.TestCase):
         self.storage.save_data('some-dat', ['some-other-tag'])
         tag_in_storage = self.storage.tag_in_storage(['some-other-tag'])
         self.assertTrue(tag_in_storage)
+
+    def test_load_individual_data(self):
+        for index, value in enumerate(self.testdata):
+            self.storage.save_data(value, ['data', str(index)])
+
+        value_loaded = self.storage.load_individual_data(['data', str(3)], 'a')
+        self.assertEqual(1, value_loaded)
+
+        value_loaded = self.storage.load_individual_data(['data', str(3)], 'b')
+        self.assertEqual(2, value_loaded)
+
+        self.assertRaises(TypeError, self.storage.load_individual_data, 1, 1)
+
+        self.assertRaises(NoDataAtKeyError, self.storage.load_individual_data,
+                          ['data', str(3)], 'C')
+
+    def test_update_individual_data(self):
+        for index, value in enumerate(self.testdata):
+            self.storage.save_data(value, ['data', str(index)])
+
+        self.storage.update_individual_data(42, ['data', str(3)], 'a')
+        value_loaded = self.storage.load_individual_data(['data', str(3)], 'a')
+        self.assertEqual(42, value_loaded)
+
+        self.storage.update_individual_data(42, ['data', str(3)], 'NEW KEY')
+        value_loaded = self.storage.load_individual_data(['data', str(3)], 'NEW KEY')
+        self.assertEqual(42, value_loaded)
+
+        self.storage.update_individual_data(42, ['data', str(3)], 9999999)
+        value_loaded = self.storage.load_individual_data(['data', str(3)], 9999999)
+        self.assertEqual(42, value_loaded)
+
+        self.assertRaises(TypeError, self.storage.update_individual_data, 42, ['data', str(3)], {'dict_as_field': 1})
+
+        self.assertRaises(NodeDoesNotExistsError, self.storage.update_individual_data, 42, ['data', str(3000)], 'a')
+        self.assertRaises(NodeDoesNotExistsError, self.storage.update_individual_data, 42, ['data3000'], 'a')
+

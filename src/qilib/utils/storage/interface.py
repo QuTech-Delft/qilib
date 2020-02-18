@@ -34,6 +34,10 @@ class NodeAlreadyExistsError(Exception):
     """ Raised when trying to create a node or leave when node already exists."""
 
 
+class NodeDoesNotExistsError(Exception):
+    """ Raised when trying to update/create a field on a node which cannot be found."""
+
+
 class ConnectionTimeoutError(Exception):
     """ Raised when connection to storage can not be established."""
 
@@ -64,6 +68,9 @@ class StorageInterface(ABC):
         self._unserialize: Callable[[Any], Any] = lambda x: x
         self.logger: Any = logging.getLogger(self.name)
         self.logger.info('created StorageInterface %s', self.name)
+
+    def __repr__(self) -> str:
+        return f'{self.__class__.__name__}({self.name!r})'
 
     @staticmethod
     def datetag_part(date_with_time: Optional[datetime] = None) -> str:
@@ -97,6 +104,22 @@ class StorageInterface(ABC):
             NoDataAtKeyException: if there is no data for the specified tag.
         """
 
+    @abstractmethod
+    def load_individual_data(self, tag: TagType, field: Union[str, int]) -> Any:
+        """ Load an individual field at a given tag from storage.
+
+        Args:
+            tag: tag for field to load
+            field: Name of the field to be loaded
+
+        Returns:
+            Data found of the field of the node identified by the tag.
+
+        Raises:
+            NoDataAtKeyError: if there is no data for the specified tag/field.
+        """
+        pass
+
     @staticmethod
     def _tag_to_list(tag: Union[str, TagType]) -> TagType:
         """ Convert a str or list tag to list format. """
@@ -122,6 +145,13 @@ class StorageInterface(ABC):
         if not isinstance(tag, list) or not all(isinstance(item, str) for item in tag):
             raise TypeError(f'Tag {tag} should be a list of strings')
 
+    @staticmethod
+    def _validate_field(field: Union[str, int]) -> None:
+        """ Assert that field is an int or string. """
+
+        if not (isinstance(field, int) or isinstance(field, str)):
+            raise TypeError(f'Field {field} should be an integer or a string')
+
     @abstractmethod
     def save_data(self, data: Any, tag: TagType) -> None:
         """ Save data to storage.
@@ -129,6 +159,19 @@ class StorageInterface(ABC):
         Args:
             data: data to store
             tag: reference tag to store the data
+        """
+        pass
+
+    @abstractmethod
+    def update_individual_data(self, data: Any, tag: TagType, field: Union[str, int]) -> None:
+        """ Update an individual field at a given tag with data.
+        If the field does not exist, it will be created.
+
+        Args:
+            data: data to store
+            tag: reference tag to store the data
+            field: Name of field
+
         """
         pass
 

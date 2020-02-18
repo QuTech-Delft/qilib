@@ -25,5 +25,5 @@ class Visitor(ABC):
     """ An interface for a visitor."""
 
     @abstractmethod
-    def visit(self, element: Any)-> None:
+    def visit(self, element: Any) -> None:
         """ An abstract visit method to be implemented in subclasses."""

@@ -18,13 +18,13 @@ COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER I
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 import re
-from typing import Tuple, Optional
-
-from qilib.configuration_helper import SerialPortResolver
+from typing import Tuple, Optional, cast
+from spirack import SPI_rack
+from qilib.configuration_helper.serial_port_resolver import SerialPortResolver
 from qilib.configuration_helper.adapters.spi_rack_instrument_adapter import SpiRackInstrumentAdapter
 from qilib.configuration_helper.adapters.common_instrument_adapter import CommonInstrumentAdapter
 
-from qilib.utils import PythonJsonStructure
+from qilib.utils.python_json_structure import PythonJsonStructure
 
 
 class SpiModuleInstrumentAdapter(CommonInstrumentAdapter):
@@ -43,8 +43,10 @@ class SpiModuleInstrumentAdapter(CommonInstrumentAdapter):
         """
         super().__init__(address, instrument_name)
         identifier, self._module_number = SpiModuleInstrumentAdapter.__collect_settings(address)
-        adapter = SerialPortResolver.get_serial_port_adapter('SpiRackInstrumentAdapter', identifier)
-        self._spi_rack: SpiRackInstrumentAdapter = adapter.instrument
+        adapter: SpiRackInstrumentAdapter = cast(SpiRackInstrumentAdapter,
+                                                 SerialPortResolver.get_serial_port_adapter('SpiRackInstrumentAdapter',
+                                                                                            identifier))
+        self._spi_rack: SPI_rack = adapter.spi_rack
 
     def read(self, update: bool = True) -> PythonJsonStructure:
         """ Reads and returns all SPI rack module settings from the device.

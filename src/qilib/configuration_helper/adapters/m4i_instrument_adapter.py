@@ -19,8 +19,8 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 """
 from typing import Optional
 
-from qilib.configuration_helper.adapters import CommonInstrumentAdapter
-from qilib.utils import PythonJsonStructure
+from qilib.configuration_helper.adapters.common_instrument_adapter import CommonInstrumentAdapter
+from qilib.utils.python_json_structure import PythonJsonStructure
 
 
 class M4iInstrumentAdapter(CommonInstrumentAdapter):
@@ -29,8 +29,9 @@ class M4iInstrumentAdapter(CommonInstrumentAdapter):
     def __init__(self, address: str, instrument_name: Optional[str] = None) -> None:
         super().__init__(address, instrument_name)
         from qcodes_contrib_drivers.drivers.Spectrum.M4i import M4i
-        self._instrument = M4i(self._instrument_name, cardid=address)
-        self._instrument.initialize_channels()
+        self._instrument: M4i = M4i(self._instrument_name, cardid=address)
+        if self._instrument is not None:
+            self._instrument.initialize_channels()
 
     def _filter_parameters(self, parameters: PythonJsonStructure) -> PythonJsonStructure:
         if parameters['box_averages']['value'] == 1:

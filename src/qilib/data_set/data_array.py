@@ -55,10 +55,11 @@ class DataArray:
         self._label: str = label
         self._unit: str = unit
         self._is_setpoint: bool = is_setpoint
+        self._data: numpy.ndarray
         if preset_data is not None:
-            self._data: numpy.ndarray = np.array(preset_data).copy()
+            self._data = np.array(preset_data).copy()
         elif shape is not None:
-            self._data: numpy.ndarray = np.ndarray(shape) * np.NAN
+            self._data = np.ndarray(shape) * np.NAN
         else:
             raise TypeError("Required arguments 'shape' or 'preset_data' not found")
         self._set_arrays = set_arrays if set_arrays is not None else []

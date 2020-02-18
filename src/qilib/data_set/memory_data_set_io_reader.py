@@ -19,7 +19,7 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 """
 from queue import Empty
 
-from qilib.data_set import DataSet
+from qilib.data_set.data_set import DataSet
 from qilib.data_set.data_set_io_reader import DataSetIOReader
 from qilib.utils.memory_storage_queue import MemoryStorageQueue
 

@@ -18,10 +18,10 @@ COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER I
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List
+from typing import List
 
-from qilib.configuration_helper import InstrumentAdapter
-from qilib.utils import PythonJsonStructure
+from qilib.configuration_helper.instrument_adapter import InstrumentAdapter
+from qilib.utils.python_json_structure import PythonJsonStructure
 
 
 class CommonInstrumentAdapter(InstrumentAdapter, ABC):
@@ -37,14 +37,15 @@ class CommonInstrumentAdapter(InstrumentAdapter, ABC):
         Args:
             config: The configuration with settings for the adapters instrument.
         """
-        parameters = []
-        for parameter in config:
-            if parameter in self._instrument.parameters and hasattr(self._instrument.parameters[parameter], 'set'):
-                parameters.append(parameter)
+        if self._instrument is not None:
+            parameters = []
+            for parameter in config:
+                if parameter in self._instrument.parameters and hasattr(self._instrument.parameters[parameter], 'set'):
+                    parameters.append(parameter)
 
-        self.__raise_none_value_parameters(config, parameters)
-        for parameter in parameters:
-            self._instrument.set(parameter, config[parameter]['value'])
+            self.__raise_none_value_parameters(config, parameters)
+            for parameter in parameters:
+                self._instrument.set(parameter, config[parameter]['value'])
 
     @abstractmethod
     def _filter_parameters(self, parameters: PythonJsonStructure) -> PythonJsonStructure:
@@ -68,8 +69,9 @@ class CommonInstrumentAdapter(InstrumentAdapter, ABC):
             config: A configuration with settings for the instrument adapter.
             parameters: A list with settable instrument parameters.
         """
-        none_value_parameters = list(filter(lambda parameter: config[parameter]['value'] is None, parameters))
-        if none_value_parameters:
-            error_message = f'The following parameter(s) of {self._instrument.name} have value ' \
-                            f'None and cannot be set: {none_value_parameters}!'
-            raise ValueError(error_message)
+        if self._instrument is not None:
+            none_value_parameters = list(filter(lambda parameter: config[parameter]['value'] is None, parameters))
+            if none_value_parameters:
+                error_message = f'The following parameter(s) of {self._instrument.name} have value ' \
+                                f'None and cannot be set: {none_value_parameters}!'
+                raise ValueError(error_message)
