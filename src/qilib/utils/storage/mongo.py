@@ -306,13 +306,14 @@ class StorageMongoDb(StorageInterface):
 
     @staticmethod
     def _encode_field(field: Union[int, str]) -> str:
-        """Encodes a field value
+        """Encodes a field value. A field can be an individual key in a structure like dict which is to be
+        read or updated
 
         Args:
             field: An integer or a string
 
         Returns:
-            Encoded value for the field  in string format
+            Encoded value for the field in string format
 
         """
 

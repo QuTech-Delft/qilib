@@ -48,6 +48,7 @@ class TestStorageMongo(unittest.TestCase):
 
     def tearDown(self) -> None:
         self.storage._collection.drop()
+        self.dummy_storage._collection.drop()
 
     def test_server_timeout(self):
         error_msg = 'Failed to connect to Mongo database within 0.01 milliseconds$'

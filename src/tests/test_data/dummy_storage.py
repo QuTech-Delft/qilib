@@ -11,4 +11,4 @@ class DummyStorage(StorageMongoDb, ABC):
         super().__init__(name, **kwargs)
 
     def encode_serialize_data(self, data: Any) -> Any:
-        return super()._encode_data(self._serialize(data))
+        return self._encode_data(self._serialize(data))
