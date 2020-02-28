@@ -257,10 +257,8 @@ class StorageMongoDb(StorageInterface):
         if len(tag) == 0:
             raise NoDataAtKeyError('Tag cannot be empty')
 
-        encoded_field_name = self._encode_data(self._serialize(field))
-
         return self._unserialize(self._decode_data(
-            self._retrieve_value_by_tag(tag, self._get_root(), encoded_field_name)))
+            self._retrieve_value_by_tag(tag, self._get_root(), self._encode_field(self._serialize(field)))))
 
     def update_individual_data(self, data: Any, tag: TagType, field: Union[str, int]) -> None:
         """ Update an individual field at a given tag with the given data.
@@ -275,9 +273,8 @@ class StorageMongoDb(StorageInterface):
 
         self._validate_tag(tag)
         self._validate_field(field)
-        encoded_field_name = self._encode_data(self._serialize(field))
         self._store_value_by_tag(tag, self._encode_data(self._serialize(data)), self._get_root(),
-                                 encoded_field_name)
+                                 self._encode_field(self._serialize(field)))
 
     def get_latest_subtag(self, tag: TagType) -> Optional[TagType]:
         child_tags = sorted(self.list_data_subtags(tag))
@@ -306,6 +303,21 @@ class StorageMongoDb(StorageInterface):
             else:
                 parent = doc['_id']
         return True
+
+    @staticmethod
+    def _encode_field(field: Union[int, str]) -> str:
+        """Encodes a field value
+
+        Args:
+            field: An integer or a string
+
+        Returns:
+            Encoded value for the field  in string format
+
+        """
+
+        return StorageMongoDb._encode_int(field) if isinstance(field, int) \
+            else StorageMongoDb._encode_str(field)
 
     @staticmethod
     def _encode_int(value: int) -> str:
@@ -398,15 +410,6 @@ class StorageMongoDb(StorageInterface):
         elif isinstance(data, list):
             return [StorageMongoDb._encode_data(item) for item in data]
 
-        elif isinstance(data, str):
-            return StorageMongoDb._encode_str(data)
-
-        elif isinstance(data, bool):
-            return data
-
-        elif isinstance(data, int):
-            return StorageMongoDb._encode_int(data)
-
         return data
 
     @staticmethod
@@ -429,9 +432,5 @@ class StorageMongoDb(StorageInterface):
 
         elif isinstance(data, list):
             return [StorageMongoDb._decode_data(item) for item in data]
-
-        elif isinstance(data, str):
-            return StorageMongoDb._decode_int(StorageMongoDb._decode_str(data)) \
-                if StorageMongoDb._is_encoded_int(data) else StorageMongoDb._decode_str(data)
 
         return data
