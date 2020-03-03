@@ -10,6 +10,7 @@ from mongomock import MongoClient
 from qilib.utils.storage import StorageMongoDb
 from qilib.utils.storage.interface import NoDataAtKeyError, NodeAlreadyExistsError, ConnectionTimeoutError
 from qilib.utils.storage.mongo import NumpyArrayCodec
+from tests.test_data.dummy_storage import DummyStorage
 
 
 class TestStorageMongo(unittest.TestCase):
@@ -43,9 +44,11 @@ class TestStorageMongo(unittest.TestCase):
                 'tu.ple': (1, 2, 'tuple', (1, 2, 3)),
                 'boolean_value': False
             }
+            self.dummy_storage = DummyStorage('dummy')
 
     def tearDown(self) -> None:
         self.storage._collection.drop()
+        self.dummy_storage._collection.drop()
 
     def test_server_timeout(self):
         error_msg = 'Failed to connect to Mongo database within 0.01 milliseconds$'
@@ -261,6 +264,7 @@ class TestStorageMongo(unittest.TestCase):
                 'new.with.dot': 'new.key.with.dot'
             }
         }
+        test_array = np.array([4., 5.])
 
         self.storage.update_individual_data(test_tuple, tag, 'something')
         self.storage.update_individual_data(test_list, tag, 'li.st')
@@ -268,6 +272,7 @@ class TestStorageMongo(unittest.TestCase):
         self.storage.update_individual_data(test_dict, tag, 'dict')
         self.storage.update_individual_data(test_dict, tag, 1)
         self.storage.update_individual_data(True, tag, 'boolean_value')
+        self.storage.update_individual_data(test_array, tag, 'numpy.array')
 
         data = self.storage.load_data(tag)
 
@@ -277,6 +282,7 @@ class TestStorageMongo(unittest.TestCase):
         self.assertEqual(data['dict'], test_dict)
         self.assertEqual(data[1], test_dict)
         self.assertEqual(data['boolean_value'], True)
+        np.testing.assert_array_equal(data['numpy.array'], test_array)
 
     def test_update_individual_data_raises_error(self):
         tag = ['system', 'properties']
@@ -398,3 +404,25 @@ class TestStorageMongo(unittest.TestCase):
         self.assertRaises(NoDataAtKeyError,
                           self.storage.load_individual_data,
                           tag, 11)
+
+    def test_numpy_array_encoded_data(self):
+        np_array = np.array([10., 20., 30.])
+        data = self.dummy_storage.encode_serialize_data(np_array)
+        shape = data['__content__']['__shape__']
+
+        self.assertEqual(shape, [3])
+        self.assertIsInstance(shape[0], int)
+
+    def test_list_encoded_data(self):
+        list_of_integers = [42, 43, 44]
+        data = self.dummy_storage.encode_serialize_data(list_of_integers)
+
+        self.assertIsInstance(data[0], int)
+        self.assertEqual(data, list_of_integers)
+
+        list_of_strings_with_dots = ['hello.world', 'string.with.dots']
+        data = self.dummy_storage.encode_serialize_data(list_of_strings_with_dots)
+
+        self.assertNotIn('\\u002e', data[0])
+        self.assertIn('.', data[0])
+        self.assertListEqual(data, list_of_strings_with_dots)
