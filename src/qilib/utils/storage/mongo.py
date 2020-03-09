@@ -125,7 +125,8 @@ class StorageMongoDb(StorageInterface):
         """
         if len(tag) == 0:
             return list(map(itemgetter('tag'),
-                            self._collection.find({'parent': parent, 'tag': {'$exists': True}}, {'value': 0}, limit = document_limit)))
+                            self._collection.find({'parent': parent, 'tag': {'$exists': True}}, {'value': 0},
+                                              limit = document_limit, sort=[('tag', -1)])))
 
         else:
             doc = self._collection.find_one({'parent': parent, 'tag': tag[0]})
