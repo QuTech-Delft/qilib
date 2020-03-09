@@ -112,20 +112,20 @@ class StorageMongoDb(StorageInterface):
         else:
             return self._collection.insert_one({'tag': ''}).inserted_id
 
-    def _retrieve_nodes_by_tag(self, tag: TagType, parent: ObjectId) -> TagType:
+    def _retrieve_nodes_by_tag(self, tag: TagType, parent: ObjectId, document_limit : int = 0) -> TagType:
         """Traverse the tree and list the children of a given tag
 
         Args:
             tag: The node tag
             parent: The ObjectID of the node's parent
+            document_limit: Maximum number of documents to return. If set to zero there is no limit
 
         Returns:
             A list of names of the children
         """
-
         if len(tag) == 0:
             return list(map(itemgetter('tag'),
-                            self._collection.find({'parent': parent, 'tag': {'$exists': True}}, {'value': 0})))
+                            self._collection.find({'parent': parent, 'tag': {'$exists': True}}, {'value': 0}, limit = document_limit)))
 
         else:
             doc = self._collection.find_one({'parent': parent, 'tag': tag[0]})
@@ -134,7 +134,7 @@ class StorageMongoDb(StorageInterface):
             elif 'value' in doc:
                 raise NoDataAtKeyError(f'Tag "{tag[0]}" is not a node')
             else:
-                return self._retrieve_nodes_by_tag(tag[1:], doc['_id'])
+                return self._retrieve_nodes_by_tag(tag[1:], doc['_id'], document_limit= document_limit)
 
     def _retrieve_value_by_tag(self, tag: TagType, parent: ObjectId, field: Optional[Union[str, int]] = None) -> Any:
         """Traverse the tree and retrieves the value / field value of a given leaf tag
@@ -277,15 +277,23 @@ class StorageMongoDb(StorageInterface):
                                  self._encode_field(self._serialize(field)))
 
     def get_latest_subtag(self, tag: TagType) -> Optional[TagType]:
-        child_tags = sorted(self.list_data_subtags(tag))
+        child_tags = sorted(self.list_data_subtags(tag, document_limit = 1))
         if len(child_tags) == 0:
             return None
 
         return tag + [child_tags[-1]]
 
-    def list_data_subtags(self, tag: TagType) -> TagType:
+    def list_data_subtags(self, tag: TagType, document_limit : int = 0) -> TagType:
+        """ List all subtags
+
+        Args:
+            tag: Tag to search from
+            document_limit: Maximum number of documents to return. If set to zero there is no limit
+        Returns:
+            List of subtags found
+        """
         try:
-            tags = self._retrieve_nodes_by_tag(tag, self._get_root())
+            tags = self._retrieve_nodes_by_tag(tag, self._get_root(), document_limit = document_limit)
         except NoDataAtKeyError:
             tags = []
 
