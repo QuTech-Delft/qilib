@@ -283,7 +283,7 @@ class StorageMongoDb(StorageInterface):
                                  self._encode_field(self._serialize(field)))
 
     def get_latest_subtag(self, tag: TagType) -> Optional[TagType]:
-        child_tags = sorted(self.list_data_subtags(tag, document_limit = 1))
+        child_tags = self.list_data_subtags(tag, document_limit=1)
         if len(child_tags) == 0:
             return None
 
