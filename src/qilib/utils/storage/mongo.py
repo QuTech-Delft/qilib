@@ -112,7 +112,7 @@ class StorageMongoDb(StorageInterface):
         else:
             return self._collection.insert_one({'tag': ''}).inserted_id
 
-    def _retrieve_nodes_by_tag(self, tag: TagType, parent: ObjectId, document_limit : int = 0) -> TagType:
+    def _retrieve_nodes_by_tag(self, tag: TagType, parent: ObjectId, document_limit: int = 0) -> TagType:
         """Traverse the tree and list the children of a given tag
 
         Args:
@@ -125,8 +125,10 @@ class StorageMongoDb(StorageInterface):
         """
         if len(tag) == 0:
             return list(map(itemgetter('tag'),
-                            self._collection.find({'parent': parent, 'tag': {'$exists': True}}, {'value': 0},
-                                              limit = document_limit, sort=[('tag', -1)])))
+                            self._collection.find({'parent': parent, 'tag': {'$exists': True}},
+                                                  {'value': 0},
+                                                  limit=document_limit,
+                                                  sort=[('tag', -1)])))
 
         else:
             doc = self._collection.find_one({'parent': parent, 'tag': tag[0]})
@@ -135,7 +137,7 @@ class StorageMongoDb(StorageInterface):
             elif 'value' in doc:
                 raise NoDataAtKeyError(f'Tag "{tag[0]}" is not a node')
             else:
-                return self._retrieve_nodes_by_tag(tag[1:], doc['_id'], document_limit= document_limit)
+                return self._retrieve_nodes_by_tag(tag[1:], doc['_id'], document_limit=document_limit)
 
     def _retrieve_value_by_tag(self, tag: TagType, parent: ObjectId, field: Optional[Union[str, int]] = None) -> Any:
         """Traverse the tree and retrieves the value / field value of a given leaf tag
@@ -162,7 +164,6 @@ class StorageMongoDb(StorageInterface):
             else:
                 doc = self._collection.find_one({'parent': parent, 'tag': tag[0]}, {'value.' + str(field): 1})
 
-            doc = self._collection.find_one({'parent': parent, 'tag': tag[0]})
             if doc is None:
                 raise NoDataAtKeyError(f'Tag "{tag[0]}" cannot be found')
             elif 'value' not in doc:
@@ -289,7 +290,7 @@ class StorageMongoDb(StorageInterface):
 
         return tag + [child_tags[-1]]
 
-    def list_data_subtags(self, tag: TagType, document_limit : int = 0) -> TagType:
+    def list_data_subtags(self, tag: TagType, document_limit: int = 0) -> TagType:
         """ List all subtags
 
         Args:
@@ -299,7 +300,7 @@ class StorageMongoDb(StorageInterface):
             List of subtags found
         """
         try:
-            tags = self._retrieve_nodes_by_tag(tag, self._get_root(), document_limit = document_limit)
+            tags = self._retrieve_nodes_by_tag(tag, self._get_root(), document_limit=document_limit)
         except NoDataAtKeyError:
             tags = []
 

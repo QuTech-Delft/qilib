@@ -163,6 +163,7 @@ class TestStorageMongo(unittest.TestCase):
         for index in range(len(test_tags)):
             storage.save_data(index, ['times', test_tags[index]])
         latest_tag = storage.get_latest_subtag(['times'])
+        self.assertEqual(len(latest_tag), 2)
         self.assertEqual(storage.load_data(latest_tag), index)
         tag = storage.get_latest_subtag(['nosuchtag'])
         self.assertIsNone(tag)
