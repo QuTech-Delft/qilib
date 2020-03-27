@@ -157,6 +157,11 @@ class StorageMongoDb(StorageInterface):
         """
 
         if len(tag) == 1:
+            if field is None:
+                doc = self._collection.find_one({'parent': parent, 'tag': tag[0]})
+            else:
+                doc = self._collection.find_one({'parent': parent, 'tag': tag[0]}, {'value.' + str(field): 1})
+
             doc = self._collection.find_one({'parent': parent, 'tag': tag[0]})
             if doc is None:
                 raise NoDataAtKeyError(f'Tag "{tag[0]}" cannot be found')
