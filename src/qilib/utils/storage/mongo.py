@@ -289,7 +289,7 @@ class StorageMongoDb(StorageInterface):
         Args:
             tag: Tag to search from
         Returns:
-            Latest subtag found among subtags
+            Latest subtag found among subtags or None if there are no subtags
         """
         child_tags = self.list_data_subtags(tag, limit=1)
         if len(child_tags) == 0:
