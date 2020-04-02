@@ -112,20 +112,23 @@ class StorageMongoDb(StorageInterface):
         else:
             return self._collection.insert_one({'tag': ''}).inserted_id
 
-    def _retrieve_nodes_by_tag(self, tag: TagType, parent: ObjectId) -> TagType:
+    def _retrieve_nodes_by_tag(self, tag: TagType, parent: ObjectId, document_limit: int = 0) -> TagType:
         """Traverse the tree and list the children of a given tag
 
         Args:
             tag: The node tag
             parent: The ObjectID of the node's parent
+            document_limit: Maximum number of documents to return. If set to zero there is no limit
 
         Returns:
             A list of names of the children
         """
-
         if len(tag) == 0:
             return list(map(itemgetter('tag'),
-                            self._collection.find({'parent': parent, 'tag': {'$exists': True}}, {'value': 0})))
+                            self._collection.find({'parent': parent, 'tag': {'$exists': True}},
+                                                  {'value': 0},
+                                                  limit=document_limit,
+                                                  sort=[('tag', -1)])))
 
         else:
             doc = self._collection.find_one({'parent': parent, 'tag': tag[0]})
@@ -134,7 +137,7 @@ class StorageMongoDb(StorageInterface):
             elif 'value' in doc:
                 raise NoDataAtKeyError(f'Tag "{tag[0]}" is not a node')
             else:
-                return self._retrieve_nodes_by_tag(tag[1:], doc['_id'])
+                return self._retrieve_nodes_by_tag(tag[1:], doc['_id'], document_limit)
 
     def _retrieve_value_by_tag(self, tag: TagType, parent: ObjectId, field: Optional[Union[str, int]] = None) -> Any:
         """Traverse the tree and retrieves the value / field value of a given leaf tag
@@ -156,7 +159,11 @@ class StorageMongoDb(StorageInterface):
         """
 
         if len(tag) == 1:
-            doc = self._collection.find_one({'parent': parent, 'tag': tag[0]})
+            if field is None:
+                doc = self._collection.find_one({'parent': parent, 'tag': tag[0]})
+            else:
+                doc = self._collection.find_one({'parent': parent, 'tag': tag[0]}, {f'value.{field}': 1})
+
             if doc is None:
                 raise NoDataAtKeyError(f'Tag "{tag[0]}" cannot be found')
             elif 'value' not in doc:
@@ -277,15 +284,31 @@ class StorageMongoDb(StorageInterface):
                                  self._encode_field(self._serialize(field)))
 
     def get_latest_subtag(self, tag: TagType) -> Optional[TagType]:
-        child_tags = sorted(self.list_data_subtags(tag))
+        """ Get the latest subtag
+
+        Args:
+            tag: Tag to search from
+        Returns:
+            Latest subtag found among subtags or None if there are no subtags
+        """
+        child_tags = self.list_data_subtags(tag, limit=1)
         if len(child_tags) == 0:
             return None
 
-        return tag + [child_tags[-1]]
+        return tag + [child_tags[0]]
 
-    def list_data_subtags(self, tag: TagType) -> TagType:
+    def list_data_subtags(self, tag: TagType, limit: int = 0) -> TagType:
+        """ List subtags for the given tag. The number of subtags listed is based on the limit parameter (0 for
+        listing all subtags)
+
+        Args:
+            tag: Tag to search from
+            limit: Maximum number of subtags to return. If set to zero there is no limit
+        Returns:
+            List of subtags found, sorted in descending order
+        """
         try:
-            tags = self._retrieve_nodes_by_tag(tag, self._get_root())
+            tags = self._retrieve_nodes_by_tag(tag, self._get_root(), limit)
         except NoDataAtKeyError:
             tags = []
 

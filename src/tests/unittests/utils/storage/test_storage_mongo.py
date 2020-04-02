@@ -127,6 +127,16 @@ class TestStorageMongo(unittest.TestCase):
         results = self.storage.list_data_subtags(['hello'])
         self.assertEqual(results, ['world'])
 
+        self.storage.save_data('test', ['hello', 'planet'])
+        self.storage.save_data('test', ['hello', 'universe'])
+        self.storage.save_data('test', ['hello', 'galaxy'])
+        results = self.storage.list_data_subtags(['hello'])
+        self.assertEqual(len(results), 4)
+        results = self.storage.list_data_subtags(['hello'], 2)
+        self.assertEqual(len(results), 2)
+        self.assertEqual(results[0], 'world')
+        self.assertEqual(results[1], 'universe')
+
     def test_save_load(self):
         storage = self.storage
         storage.save_data((1, 2), ['aap'])
@@ -163,6 +173,7 @@ class TestStorageMongo(unittest.TestCase):
         for index in range(len(test_tags)):
             storage.save_data(index, ['times', test_tags[index]])
         latest_tag = storage.get_latest_subtag(['times'])
+        self.assertEqual(len(latest_tag), 2)
         self.assertEqual(storage.load_data(latest_tag), index)
         tag = storage.get_latest_subtag(['nosuchtag'])
         self.assertIsNone(tag)
