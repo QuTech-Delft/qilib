@@ -60,6 +60,8 @@ class StorageMongoDb(StorageInterface):
     """Reference implementation of StorageInterface with an mongodb backend
 
     Implements a storage tree in a MongoDB collection
+    Performance Note: Creating index(es) in mongodb will help improve query performance
+    eg: An index on (parent, tag) will improve the performance of queries in _retrieve_nodes_by_tag
     """
 
     def __init__(self, name: str, host: str = 'localhost', port: int = 27017, database: str = '',
