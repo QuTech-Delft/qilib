@@ -77,7 +77,7 @@ class StorageMongoDb(StorageInterface):
             port: MongoDB port
             database: The database to use, if empty the name of the storage is used
             connection_timeout: How long to try to connect to database before raising an error in milliseconds
-            read_only: If  True then only reading from the database is allowed
+            read_only: If True then only reading from the database is allowed
         Raises:
             StorageTimeoutError: If connection to database has not been established before connection_timeout is reached
         """

@@ -437,3 +437,9 @@ class TestStorageMongo(unittest.TestCase):
         self.assertNotIn('\\u002e', data[0])
         self.assertIn('.', data[0])
         self.assertListEqual(data, list_of_strings_with_dots)
+
+    def test_read_only_connection(self):
+        with patch('qilib.utils.storage.mongo.MongoClient', return_value=MongoClient()):
+            storage = StorageMongoDb('readonly', read_only=True)
+            with self.assertRaises(Exception):
+                storage.save_data({'a': 1}, ['test'])
