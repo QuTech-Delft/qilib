@@ -65,7 +65,8 @@ class StorageMongoDb(StorageInterface):
     """
 
     def __init__(self, name: str, host: str = 'localhost', port: int = 27017, database: str = '',
-                 serializer: Union[Serializer, None] = None, connection_timeout: float = 30000) -> None:
+                 serializer: Union[Serializer, None] = None, connection_timeout: float = 30000,
+                 read_only : bool  = False) -> None:
         """MongoDB implementation of storage class
 
         See also: `StorageInterface`
@@ -76,6 +77,7 @@ class StorageMongoDb(StorageInterface):
             port: MongoDB port
             database: The database to use, if empty the name of the storage is used
             connection_timeout: How long to try to connect to database before raising an error in milliseconds
+            read_only: If  True then only reading from the database is allowed
         Raises:
             StorageTimeoutError: If connection to database has not been established before connection_timeout is reached
         """
@@ -87,6 +89,7 @@ class StorageMongoDb(StorageInterface):
         self._check_server_connection(connection_timeout)
         self._db = self._client.get_database(database or name, codec_options=codec_options)
         self._collection = self._db.get_collection('storage')
+        self._read_only = read_only
 
         if serializer is None:
             serializer = _serializer
@@ -200,6 +203,8 @@ class StorageMongoDb(StorageInterface):
               NodeAlreadyExistsError: If a tag in Tag List is an unexpected node/leaf
               NoDataAtKeyError:  If a tag in Tag List does not exist
         """
+        if self._read_only:
+            raise Exception('database {self._db.name} is read-only')
 
         if len(tag) == 1:
             doc = self._collection.find_one({'parent': parent, 'tag': tag[0]})
