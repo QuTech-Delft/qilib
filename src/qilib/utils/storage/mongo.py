@@ -32,7 +32,8 @@ from qilib.utils.serialization import Serializer, serializer as _serializer
 from qilib.utils.storage.interface import (NoDataAtKeyError,
                                            NodeAlreadyExistsError,
                                            StorageInterface,
-                                           ConnectionTimeoutError)
+                                           ConnectionTimeoutError,
+                                           ReadOnlyStorageError)
 from qilib.utils.type_aliases import TagType
 
 
@@ -202,9 +203,10 @@ class StorageMongoDb(StorageInterface):
         Raises:
               NodeAlreadyExistsError: If a tag in Tag List is an unexpected node/leaf
               NoDataAtKeyError:  If a tag in Tag List does not exist
+              ReadOnlyStorageError: If the database is read-only
         """
         if self._read_only:
-            raise Exception('database {self._db.name} is read-only')
+            raise ReadOnlyStorageError(f'database {self._db.name} is read-only')
 
         if len(tag) == 1:
             doc = self._collection.find_one({'parent': parent, 'tag': tag[0]})
