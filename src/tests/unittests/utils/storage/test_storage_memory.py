@@ -68,9 +68,9 @@ class TestStorageMemory(unittest.TestCase):
     def test_list_subtags_limit(self):
         self.storage.save_data('1', ['a', '1'])
         self.storage.save_data('1', ['a', '2'])
-        tags = self.storage.list_data_subtags(['a'], limit = 0)
+        tags = self.storage.list_data_subtags(['a'], limit=0)
         self.assertEqual(tags, ['1', '2'])
-        tags = self.storage.list_data_subtags(['a'], limit = 1)
+        tags = self.storage.list_data_subtags(['a'], limit=1)
         self.assertEqual(tags, ['1'])
 
     def test_save_load(self):
@@ -158,4 +158,3 @@ class TestStorageMemory(unittest.TestCase):
 
         self.assertRaises(NodeDoesNotExistsError, self.storage.update_individual_data, 42, ['data', str(3000)], 'a')
         self.assertRaises(NodeDoesNotExistsError, self.storage.update_individual_data, 42, ['data3000'], 'a')
-
