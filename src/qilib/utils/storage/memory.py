@@ -68,16 +68,19 @@ class StorageMemory(StorageInterface):
 
     @staticmethod
     def _retrieve_nodes_from_dict_by_tag(dictionary: Dict[str, Any],
-                                         tag: TagType) -> TagType:
+                                         tag: TagType, limit: int = 0) -> TagType:
         if len(tag) == 0:
-            return list(dictionary.keys())
+            results = list(dictionary.keys())
+            if limit > 0:
+                results = results[:limit]
+            return results
         tag_prefix = tag[0]
         if tag_prefix not in dictionary:
             raise NoDataAtKeyError(tag)
         if isinstance(dictionary[tag_prefix], StorageMemory.__Leaf):
             raise NoDataAtKeyError(tag)
 
-        return StorageMemory._retrieve_nodes_from_dict_by_tag(dictionary[tag_prefix], tag[1:])
+        return StorageMemory._retrieve_nodes_from_dict_by_tag(dictionary[tag_prefix], tag[1:], limit=limit)
 
     @staticmethod
     def _store_value_to_dict_by_tag(dictionary: Dict[str, Any], tag: TagType, value: Any,
@@ -117,9 +120,9 @@ class StorageMemory(StorageInterface):
         child_tags = sorted(child_tags)
         return tag + [child_tags[-1]]
 
-    def list_data_subtags(self, tag: TagType) -> TagType:
+    def list_data_subtags(self, tag: TagType, limit: int = 0) -> TagType:
         try:
-            tags: TagType = self._retrieve_nodes_from_dict_by_tag(self._data, tag)
+            tags: TagType = self._retrieve_nodes_from_dict_by_tag(self._data, tag, limit=limit)
         except NoDataAtKeyError:
             return []
         return list(tags)
