@@ -8,7 +8,8 @@ from bson.codec_options import TypeRegistry, CodecOptions
 from mongomock import MongoClient
 
 from qilib.utils.storage import StorageMongoDb
-from qilib.utils.storage.interface import NoDataAtKeyError, NodeAlreadyExistsError, ConnectionTimeoutError
+from qilib.utils.storage.interface import (NoDataAtKeyError, NodeAlreadyExistsError, ConnectionTimeoutError,
+                                           ReadOnlyStorageError)
 from qilib.utils.storage.mongo import NumpyArrayCodec
 from tests.test_data.dummy_storage import DummyStorage
 
@@ -437,3 +438,9 @@ class TestStorageMongo(unittest.TestCase):
         self.assertNotIn('\\u002e', data[0])
         self.assertIn('.', data[0])
         self.assertListEqual(data, list_of_strings_with_dots)
+
+    def test_read_only_connection(self):
+        with patch('qilib.utils.storage.mongo.MongoClient', return_value=MongoClient()):
+            storage = StorageMongoDb('readonly', read_only=True)
+            with self.assertRaises(ReadOnlyStorageError):
+                storage.save_data({'a': 1}, ['test'])
