@@ -44,8 +44,8 @@ class D5aInstrumentAdapter(ReadOnlyConfigurationInstrumentAdapter, SpiModuleInst
         self._instrument: D5a = D5a(self._instrument_name, self._spi_rack, self._module_number, mV=MV,
                                     inter_delay=INTER_DELAY,
                                     reset_voltages=RESET_VOLTAGE, dac_step=DAC_STEP)
-        if self._instrument.span3() != '4v bi':
-            raise SpanValueError('D5a instrument has span unequal to "4v bi"')
+        if self._instrument.span3() != '4v bi' and self._instrument.span3() != '2v bi':
+            raise SpanValueError(f'D5a instrument has span {self._instrument.span3()} unequal to "4v bi" or "2v bi"')
 
     def apply(self, config: PythonJsonStructure) -> None:
         """ Applies configuration
