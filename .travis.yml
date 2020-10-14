@@ -16,7 +16,7 @@ script:
 - echo "running mypy"
 - MYPYPATH=./src python -m mypy --strict --ignore-missing-imports --allow-untyped-calls -p qilib
 - echo "running pylint"
-- pylint src || true
+- pylint qilib || true
 after_success:
 - python -m coveralls
 deploy:
