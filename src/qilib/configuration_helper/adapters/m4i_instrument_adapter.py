@@ -17,7 +17,7 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
-from typing import Optional
+from typing import Any, Optional, Type
 
 from qilib.configuration_helper.adapters.common_instrument_adapter import CommonInstrumentAdapter
 from qilib.utils.python_json_structure import PythonJsonStructure
@@ -26,7 +26,8 @@ from qilib.utils.python_json_structure import PythonJsonStructure
 class M4iInstrumentAdapter(CommonInstrumentAdapter):
     """ Adapter for the Spectrum M4i digitizer."""
 
-    def __init__(self, address: str, instrument_name: Optional[str] = None, instrument_class=None) -> None:
+    def __init__(self, address: str, instrument_name: Optional[str] = None,
+                 instrument_class: Optional[Type[Any]] = None) -> None:
         from qcodes_contrib_drivers.drivers.Spectrum.M4i import M4i
         super().__init__(address, instrument_name)
         if instrument_class is None:
