@@ -17,7 +17,7 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
-from typing import Optional
+from typing import Optional, Type
 
 import requests
 from qcodes.instrument_drivers.tektronix.Keithley_6500 import Keithley_6500
@@ -27,13 +27,16 @@ from qilib.utils.python_json_structure import PythonJsonStructure
 
 
 class Keithley6500InstrumentAdapter(CommonInstrumentAdapter):
-    def __init__(self, address: str, instrument_name: Optional[str] = None) -> None:
+    def __init__(self, address: str, instrument_name: Optional[str] = None,
+                 instrument_class: Optional[Type[Keithley_6500]] = None) -> None:
         super().__init__(address, instrument_name)
         if address[0:5] == 'TCPIP':
             # Perform a http request to the instrument's IP address before opening the device to make sure any
             # stuck state is unstuck.
             self._send_request_to_instrument(address)
-        self._instrument: Keithley_6500 = Keithley_6500(self._instrument_name, address)
+        if instrument_class is None:
+            instrument_class = Keithley_6500
+        self._instrument: Keithley_6500 = instrument_class(self._instrument_name, address)
 
     def _filter_parameters(self, parameters: PythonJsonStructure) -> PythonJsonStructure:
         return parameters

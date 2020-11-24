@@ -17,7 +17,7 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
-from typing import Optional
+from typing import Optional, Type
 
 from qcodes_contrib_drivers.drivers.QuTech.F1d import F1d
 
@@ -26,6 +26,9 @@ from qilib.configuration_helper.adapters.spi_module_instrument_adapter import Sp
 
 class F1dInstrumentAdapter(SpiModuleInstrumentAdapter):
 
-    def __init__(self, address: str, instrument_name: Optional[str] = None) -> None:
+    def __init__(self, address: str, instrument_name: Optional[str] = None,
+                 instrument_class: Optional[Type[F1d]] = None) -> None:
         super().__init__(address, instrument_name)
-        self._instrument: F1d = F1d(self._instrument_name, self._spi_rack, self._module_number)
+        if instrument_class is None:
+            instrument_class = F1d
+        self._instrument: F1d = instrument_class(self._instrument_name, self._spi_rack, self._module_number)

@@ -26,10 +26,12 @@ from qilib.utils.python_json_structure import PythonJsonStructure
 class M4iInstrumentAdapter(CommonInstrumentAdapter):
     """ Adapter for the Spectrum M4i digitizer."""
 
-    def __init__(self, address: str, instrument_name: Optional[str] = None) -> None:
-        super().__init__(address, instrument_name)
+    def __init__(self, address: str, instrument_name: Optional[str] = None, instrument_class=None) -> None:
         from qcodes_contrib_drivers.drivers.Spectrum.M4i import M4i
-        self._instrument: M4i = M4i(self._instrument_name, cardid=address)
+        super().__init__(address, instrument_name)
+        if instrument_class is None:
+            instrument_class = M4i
+        self._instrument: M4i = instrument_class(self._instrument_name, cardid=address)
         if self._instrument is not None:
             self._instrument.initialize_channels()
 

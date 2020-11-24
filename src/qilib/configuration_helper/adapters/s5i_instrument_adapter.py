@@ -17,7 +17,7 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
-from typing import Optional
+from typing import Optional, Type
 
 from qcodes_contrib_drivers.drivers.QuTech.S5i import S5i
 
@@ -26,6 +26,9 @@ from qilib.configuration_helper.adapters.spi_module_instrument_adapter import Sp
 
 class S5iInstrumentAdapter(SpiModuleInstrumentAdapter):
 
-    def __init__(self, address: str, instrument_name: Optional[str] = None) -> None:
+    def __init__(self, address: str, instrument_name: Optional[str] = None,
+                 instrument_class: Optional[Type[S5i]] = None) -> None:
         super().__init__(address, instrument_name)
-        self._instrument: S5i = S5i(self._instrument_name, self._spi_rack, self._module_number)
+        if instrument_class is None:
+            instrument_class = S5i
+        self._instrument: S5i = instrument_class(self._instrument_name, self._spi_rack, self._module_number)

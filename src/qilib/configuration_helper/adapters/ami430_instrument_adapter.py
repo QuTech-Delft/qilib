@@ -18,7 +18,7 @@ COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER I
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 import math
-from typing import Any, Optional
+from typing import Any, Optional, Type
 
 from qcodes.instrument_drivers.american_magnetics.AMI430 import AMI430
 
@@ -30,7 +30,8 @@ from qilib.utils.python_json_structure import PythonJsonStructure
 class AMI430InstrumentAdapter(ReadOnlyConfigurationInstrumentAdapter):
     """ Adapter for the AMI430 QCoDeS driver."""
 
-    def __init__(self, address: str, instrument_name: Optional[str] = None) -> None:
+    def __init__(self, address: str, instrument_name: Optional[str] = None,
+                 instrument_class: Optional[Type[AMI430]] = None) -> None:
         """ Instantiate a new AMI430 instrument adapter.
 
         Args:
@@ -40,7 +41,9 @@ class AMI430InstrumentAdapter(ReadOnlyConfigurationInstrumentAdapter):
         super().__init__(address)
         ip_and_port = address.split(':')
         name = instrument_name if instrument_name is not None else self.name
-        self._instrument: AMI430 = AMI430(name=name, address=ip_and_port[0], port=int(ip_and_port[1]))
+        if instrument_class is None:
+            instrument_class = AMI430
+        self._instrument: AMI430 = instrument_class(name=name, address=ip_and_port[0], port=int(ip_and_port[1]))
         self.field_variation_tolerance = 0.01
 
     def apply(self, config: PythonJsonStructure) -> None:
