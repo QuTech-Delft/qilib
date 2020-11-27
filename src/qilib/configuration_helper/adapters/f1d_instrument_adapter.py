@@ -21,14 +21,16 @@ from typing import Optional, Type
 
 from qcodes_contrib_drivers.drivers.QuTech.F1d import F1d
 
+from qilib.configuration_helper.adapters.spi_rack_instrument_adapter import SpiRackInstrumentAdapter
 from qilib.configuration_helper.adapters.spi_module_instrument_adapter import SpiModuleInstrumentAdapter
 
 
 class F1dInstrumentAdapter(SpiModuleInstrumentAdapter):
 
     def __init__(self, address: str, instrument_name: Optional[str] = None,
-                 instrument_class: Optional[Type[F1d]] = None) -> None:
-        super().__init__(address, instrument_name)
+                 instrument_class: Optional[Type[F1d]] = None,
+                 spi_rack_instrument_adapter_class: Optional[Type[SpiRackInstrumentAdapter]] = None) -> None:
+        super().__init__(address, instrument_name, spi_rack_instrument_adapter_class)
         if instrument_class is None:
             instrument_class = F1d
         self._instrument: F1d = instrument_class(self._instrument_name, self._spi_rack, self._module_number)
