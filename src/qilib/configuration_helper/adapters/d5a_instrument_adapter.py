@@ -21,6 +21,7 @@ from typing import Any, Optional, Type
 
 from qcodes_contrib_drivers.drivers.QuTech.D5a import D5a
 
+from qilib.configuration_helper.adapters.spi_rack_instrument_adapter import SpiRackInstrumentAdapter
 from qilib.configuration_helper.adapters.read_only_configuration_instrument_adapter import \
     ReadOnlyConfigurationInstrumentAdapter
 from qilib.configuration_helper.adapters.spi_module_instrument_adapter import SpiModuleInstrumentAdapter
@@ -40,8 +41,9 @@ MV = True
 class D5aInstrumentAdapter(ReadOnlyConfigurationInstrumentAdapter, SpiModuleInstrumentAdapter):
 
     def __init__(self, address: str, instrument_name: Optional[str] = None,
-                 instrument_class: Optional[Type[D5a]] = None) -> None:
-        super().__init__(address, instrument_name)
+                 instrument_class: Optional[Type[D5a]] = None,
+                 spi_rack_instrument_adapter_class: Optional[Type[SpiRackInstrumentAdapter]] = None) -> None:
+        super().__init__(address, instrument_name, spi_rack_instrument_adapter_class)
         if instrument_class is None:
             instrument_class = D5a
         self._instrument: D5a = instrument_class(self._instrument_name, self._spi_rack, self._module_number, mV=MV,
