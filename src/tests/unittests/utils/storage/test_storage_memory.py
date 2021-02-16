@@ -158,3 +158,11 @@ class TestStorageMemory(unittest.TestCase):
 
         self.assertRaises(NodeDoesNotExistsError, self.storage.update_individual_data, 42, ['data', str(3000)], 'a')
         self.assertRaises(NodeDoesNotExistsError, self.storage.update_individual_data, 42, ['data3000'], 'a')
+
+    def test_load_data_from_subtag(self):
+        storage_interface = StorageMemory('test')
+        for ii in range(4):
+            storage_interface.save_data(ii, ['s', f's{ii}'])        
+        self.assertEqual(list(storage_interface.load_data_from_subtag(['s'])), [0,1,2,4])
+        self.assertEqual(next(storage_interface.load_data_from_subtag(['s'])), 0)
+        

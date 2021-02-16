@@ -21,7 +21,7 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 import logging
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import Any, Callable, Optional, Union
+from typing import Any, Callable, Optional, Union, Iterator
 
 from qilib.utils.type_aliases import TagType
 
