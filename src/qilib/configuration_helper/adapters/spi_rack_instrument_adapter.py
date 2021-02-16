@@ -18,6 +18,7 @@ COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER I
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 from spirack import SPI_rack
+from typing import Optional, Type
 
 from qilib.configuration_helper.instrument_adapter import InstrumentAdapter
 from qilib.utils.python_json_structure import PythonJsonStructure
@@ -25,9 +26,11 @@ from qilib.utils.python_json_structure import PythonJsonStructure
 
 class SpiRackInstrumentAdapter(InstrumentAdapter):
 
-    def __init__(self, address: str) -> None:
+    def __init__(self, address: str, instrument_class: Optional[Type[SPI_rack]] = None) -> None:
         super().__init__(address)
-        self._spi_rack: SPI_rack = SPI_rack(address, baud='115200', timeout=1)
+        if instrument_class is None:
+            instrument_class = SPI_rack
+        self._spi_rack: SPI_rack = instrument_class(address, baud='115200', timeout=1)
 
     @property
     def instrument(self) -> SPI_rack:

@@ -17,15 +17,20 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
-from typing import Optional
+from typing import Optional, Type
 
 from qcodes_contrib_drivers.drivers.QuTech.M2j import M2j
 
+from qilib.configuration_helper.adapters.spi_rack_instrument_adapter import SpiRackInstrumentAdapter
 from qilib.configuration_helper.adapters.spi_module_instrument_adapter import SpiModuleInstrumentAdapter
 
 
 class M2jInstrumentAdapter(SpiModuleInstrumentAdapter):
 
-    def __init__(self, address: str, instrument_name: Optional[str] = None) -> None:
-        super().__init__(address, instrument_name)
-        self._instrument: M2j = M2j(self._instrument_name, self._spi_rack, self._module_number)
+    def __init__(self, address: str, instrument_name: Optional[str] = None,
+                 instrument_class: Optional[Type[M2j]] = None,
+                 spi_rack_instrument_adapter_class: Optional[Type[SpiRackInstrumentAdapter]] = None) -> None:
+        super().__init__(address, instrument_name, spi_rack_instrument_adapter_class)
+        if instrument_class is None:
+            instrument_class = M2j
+        self._instrument: M2j = instrument_class(self._instrument_name, self._spi_rack, self._module_number)

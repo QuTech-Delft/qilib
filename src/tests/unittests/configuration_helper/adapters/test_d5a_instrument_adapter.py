@@ -99,7 +99,7 @@ class TestD5aInstrumentAdapter(unittest.TestCase):
         with patch('qilib.configuration_helper.adapters.spi_rack_instrument_adapter.SPI_rack'), \
              patch('qilib.configuration_helper.adapters.d5a_instrument_adapter.D5a') as d5a_mock:
             d5a_mock.span3.return_value = '4v uni'
-            error_msg = 'D5a instrument has span unequal to "4v bi"'
+            error_msg = 'D5a instrument has span .* unequal to "4v bi"'
             self.assertRaisesRegex(SpanValueError, error_msg, D5aInstrumentAdapter, 'spirack1_module3')
 
     def test_read_config(self):

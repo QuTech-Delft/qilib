@@ -18,7 +18,7 @@ COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER I
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 import re
-from typing import Tuple, Optional, cast
+from typing import Tuple, Type, Optional, cast
 from spirack import SPI_rack
 from qilib.configuration_helper.serial_port_resolver import SerialPortResolver
 from qilib.configuration_helper.adapters.spi_rack_instrument_adapter import SpiRackInstrumentAdapter
@@ -29,7 +29,8 @@ from qilib.utils.python_json_structure import PythonJsonStructure
 
 class SpiModuleInstrumentAdapter(CommonInstrumentAdapter):
 
-    def __init__(self, address: str, instrument_name: Optional[str] = None) -> None:
+    def __init__(self, address: str, instrument_name: Optional[str] = None,
+                 spi_rack_instrument_adapter_class: Optional[Type[SpiRackInstrumentAdapter]] = None) -> None:
         """ The base instrument adapter for each SPI rack module.
 
         Each module is identified using the name of the spirack the module number. The address is
@@ -43,9 +44,11 @@ class SpiModuleInstrumentAdapter(CommonInstrumentAdapter):
         """
         super().__init__(address, instrument_name)
         identifier, self._module_number = SpiModuleInstrumentAdapter.__collect_settings(address)
+        if spi_rack_instrument_adapter_class is None:
+            spi_rack_instrument_adapter_class = SpiRackInstrumentAdapter
         adapter: SpiRackInstrumentAdapter = cast(SpiRackInstrumentAdapter,
-                                                 SerialPortResolver.get_serial_port_adapter('SpiRackInstrumentAdapter',
-                                                                                            identifier))
+                                                 SerialPortResolver.get_serial_port_adapter(
+                                                     spi_rack_instrument_adapter_class.__name__, identifier))
         self._spi_rack: SPI_rack = adapter.spi_rack
 
     def read(self, update: bool = True) -> PythonJsonStructure:

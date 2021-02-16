@@ -17,7 +17,7 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
-from typing import Optional
+from typing import Optional, Type
 
 from qcodes_contrib_drivers.drivers.ZurichInstruments.ZIHDAWG8 import ZIHDAWG8
 
@@ -26,9 +26,12 @@ from qilib.utils.python_json_structure import PythonJsonStructure
 
 
 class ZIHDAWG8InstrumentAdapter(CommonInstrumentAdapter):
-    def __init__(self, address: str, instrument_name: Optional[str] = None) -> None:
+    def __init__(self, address: str, instrument_name: Optional[str] = None,
+                 instrument_class: Optional[Type[ZIHDAWG8]] = None) -> None:
         super().__init__(address, instrument_name)
-        self._instrument: ZIHDAWG8 = ZIHDAWG8(self._instrument_name, address)
+        if instrument_class is None:
+            instrument_class = ZIHDAWG8
+        self._instrument: ZIHDAWG8 = instrument_class(self._instrument_name, address)
 
     def read(self, update: bool = True) -> PythonJsonStructure:
         return PythonJsonStructure(super().read(update))
