@@ -21,7 +21,7 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 import logging
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import Any, Callable, Optional, Union
+from typing import Any, Callable, Optional, Union, Iterator
 
 from qilib.utils.type_aliases import TagType
 
@@ -213,6 +213,20 @@ class StorageInterface(ABC):
             list is returned.
         """
         pass
+
+    def load_data_from_subtag(self, tag: TagType, limit: int = 0) -> Iterator[Any]:
+        """ Return all results under the specified tag
+
+        Args:
+            tag: Tag to search for results
+            limit: Maximum number of results to generate. If 0 then return all results
+        Returns:
+            Generator for all the results
+        """
+        subtags = self.list_data_subtags(tag, limit=limit)
+
+        for subtag in subtags:
+            yield self.load_data(tag+[subtag])
 
     @abstractmethod
     def search(self, query: str) -> Any:
