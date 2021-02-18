@@ -21,9 +21,34 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 import logging
 from abc import ABC, abstractmethod
 from datetime import datetime
+from collections.abc import Sequence
 from typing import Any, Callable, Optional, Union, Iterator
 
 from qilib.utils.type_aliases import TagType
+
+
+class LazyList(Sequence):
+    def __init__(self, length: int, item_getter: Callable[[int], Any]):
+        """ Convert a length and method to retrieve an indexed item into a sequence with lazy evaluation """
+        super(Sequence, self).__init__()
+        self._length = length
+        self._item_getter = item_getter
+
+    def __repr__(self):
+        classname = ".".join([self.__module__, self.__class__.__qualname__])
+        return f'<{classname} at %x{id(self)} length {self._length} >'
+
+    def __len__(self) -> int:
+        r = self._length
+        return r
+
+    def __getitem__(self, index):
+        if isinstance(index, slice):
+            slice_range = range(index.start or 0, index.stop or len(self), index.step or 1)
+            return [self._item_getter(i) for i in slice_range]
+        else:
+            r = self._item_getter(index)
+            return r
 
 
 class NoDataAtKeyError(Exception):
@@ -193,7 +218,7 @@ class StorageInterface(ABC):
         pass
 
     @abstractmethod
-    def list_data_subtags(self, tag: TagType, limit : int = 0) -> TagType:
+    def list_data_subtags(self, tag: TagType, limit: int = 0) -> TagType:
         """ List available result tags of at tag.
 
         Args:
@@ -213,7 +238,7 @@ class StorageInterface(ABC):
         """
         pass
 
-    def load_data_from_subtag(self, tag: TagType, limit: int = 0) -> Iterator[Any]:
+    def load_data_from_subtag(self, tag: TagType, limit: int = 0) -> Sequence[Any]:
         """ Return all results under the specified tag
 
         Args:
@@ -224,8 +249,10 @@ class StorageInterface(ABC):
         """
         subtags = self.list_data_subtags(tag, limit=limit)
 
-        for subtag in subtags:
-            yield self.load_data(tag+[subtag])
+        def item_getter(index: int) -> Any:
+            subtag = subtags[index]
+            return self.load_data(tag+[subtag])
+        return LazyList(len(subtags), item_getter)
 
     @abstractmethod
     def search(self, query: str) -> Any:
