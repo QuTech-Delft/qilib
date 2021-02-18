@@ -21,13 +21,13 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 import logging
 from abc import ABC, abstractmethod
 from datetime import datetime
-from collections.abc import Sequence
-from typing import Any, Callable, Optional, Union, Iterator
+from collections.abc import Sequence as SequenceBaseClass
+from typing import Any, Callable, Optional, Union, Sequence
 
 from qilib.utils.type_aliases import TagType
 
 
-class LazyList(Sequence):
+class LazyList(SequenceBaseClass):
     def __init__(self, length: int, item_getter: Callable[[int], Any]):
         """ Convert a length and method to retrieve an indexed item into a sequence with lazy evaluation """
         super(Sequence, self).__init__()
