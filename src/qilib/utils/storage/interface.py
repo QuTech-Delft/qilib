@@ -193,11 +193,12 @@ class StorageInterface(ABC):
         pass
 
     @abstractmethod
-    def list_data_subtags(self, tag: TagType) -> TagType:
+    def list_data_subtags(self, tag: TagType, limit : int = 0) -> TagType:
         """ List available result tags of at tag.
 
         Args:
             tag: hdf5 tag
+            limit: Maximum number of results to generate. If 0 then return all results
         Returns:
             results: List of child tags for tag
 
