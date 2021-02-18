@@ -34,7 +34,7 @@ class LazyList(SequenceBaseClass):
         self._length = length
         self._item_getter = item_getter
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         classname = ".".join([self.__module__, self.__class__.__qualname__])
         return f'<{classname} at %x{id(self)} length {self._length} >'
 
@@ -42,7 +42,7 @@ class LazyList(SequenceBaseClass):
         r = self._length
         return r
 
-    def __getitem__(self, index):
+    def __getitem__(self, index : Union[int, slice]) -> Any:
         if isinstance(index, slice):
             slice_range = range(index.start or 0, index.stop or len(self), index.step or 1)
             return [self._item_getter(i) for i in slice_range]
