@@ -163,6 +163,6 @@ class TestStorageMemory(unittest.TestCase):
         storage_interface = StorageMemory('test')
         for ii in range(4):
             storage_interface.save_data(ii, ['s', f's{ii}'])        
-        self.assertEqual(list(storage_interface.load_data_from_subtag(['s'])), [0,1,2,4])
+        self.assertEqual(list(storage_interface.load_data_from_subtag(['s'])), [0,1,2,3])
         self.assertEqual(next(storage_interface.load_data_from_subtag(['s'])), 0)
         
