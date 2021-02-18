@@ -30,7 +30,7 @@ from qilib.utils.type_aliases import TagType
 class LazyList(SequenceBaseClass):
     def __init__(self, length: int, item_getter: Callable[[int], Any]):
         """ Convert a length and method to retrieve an indexed item into a sequence with lazy evaluation """
-        super(Sequence, self).__init__()
+        super(SequenceBaseClass, self).__init__()
         self._length = length
         self._item_getter = item_getter
 
