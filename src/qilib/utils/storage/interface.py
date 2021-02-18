@@ -27,7 +27,7 @@ from typing import Any, Callable, Optional, Union, Sequence
 from qilib.utils.type_aliases import TagType
 
 
-class LazyList(SequenceBaseClass):
+class LazyList(SequenceBaseClass): #type: ignore
     def __init__(self, length: int, item_getter: Callable[[int], Any]):
         """ Convert a length and method to retrieve an indexed item into a sequence with lazy evaluation """
         super(SequenceBaseClass, self).__init__()
