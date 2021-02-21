@@ -21,7 +21,7 @@ class TestD5aInstrumentAdapter(unittest.TestCase):
                 'raw_value': 39.97802734375, '__class__': 'qcodes.instrument.parameter.Parameter',
                 'full_name': 'D5aInstrumentAdapterD5a_COM3_MODULE4_dac1', 'inter_delay': 0.05,
                 'vals': '<Numbers -4000.0<=v<=4000.0>', 'label': 'DAC 1',
-                'name': 'dac1', 'instrument': 'qcodes.instrument_drivers.QuTech.D5a.D5a',
+                'name': 'dac1', 'instrument': 'qcodes_contrib_drivers.drivers.QuTech.D5a.D5a',
                 'instrument_name': 'D5aInstrumentAdapterD5a_COM3_MODULE4', 'step': 20,
                 'post_delay': 0, 'unit': 'V'
             },
@@ -29,7 +29,7 @@ class TestD5aInstrumentAdapter(unittest.TestCase):
                 'value': 3.0517578125e-05, 'ts': '2019-01-03 16:06:36',
                 'raw_value': 3.0517578125e-05, '__class__': 'qcodes.instrument.parameter.Parameter',
                 'full_name': 'D5aInstrumentAdapterD5a_COM3_MODULE4_stepsize1', 'inter_delay': 0,
-                'label': 'stepsize1', 'name': 'stepsize1', 'instrument': 'qcodes.instrument_drivers.QuTech.D5a.D5a',
+                'label': 'stepsize1', 'name': 'stepsize1', 'instrument': 'qcodes_contrib_drivers.drivers.QuTech.D5a.D5a',
                 'instrument_name': 'D5aInstrumentAdapterD5a_COM3_MODULE4', 'post_delay': 0, 'unit': 'V'
             },
             'span1': {
@@ -37,7 +37,7 @@ class TestD5aInstrumentAdapter(unittest.TestCase):
                 '__class__': 'qcodes.instrument.parameter.Parameter',
                 'full_name': 'D5aInstrumentAdapterD5a_COM3_MODULE4_span1', 'inter_delay': 0,
                 'vals': "<Enum: {'4v uni', '4v bi', '2v bi'}>", 'label': 'span1', 'name': 'span1',
-                'instrument': 'qcodes.instrument_drivers.QuTech.D5a.D5a', 'instrument_name':
+                'instrument': 'qcodes_contrib_drivers.drivers.QuTech.D5a.D5a', 'instrument_name':
                     'D5aInstrumentAdapterD5a_COM3_MODULE4', 'post_delay': 0, 'unit': ''
             }
         }
