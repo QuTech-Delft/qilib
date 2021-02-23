@@ -27,9 +27,14 @@ from typing import Any, Callable, Optional, Union, Sequence
 from qilib.utils.type_aliases import TagType
 
 
-class LazyList(SequenceBaseClass): #type: ignore
+class LazySequence(SequenceBaseClass):  # type: ignore
     def __init__(self, length: int, item_getter: Callable[[int], Any]):
-        """ Convert a length and method to retrieve an indexed item into a sequence with lazy evaluation """
+        """ Convert a length and method to retrieve an indexed item into a sequence with lazy evaluation
+
+        Args:
+            length: Length of the sequence to be represented
+            item_getter: Method to retrieve an item at the specified index
+        """
         super(SequenceBaseClass, self).__init__()
         self._length = length
         self._item_getter = item_getter
@@ -42,7 +47,7 @@ class LazyList(SequenceBaseClass): #type: ignore
         r = self._length
         return r
 
-    def __getitem__(self, index : Union[int, slice]) -> Any:
+    def __getitem__(self, index: Union[int, slice]) -> Any:
         if isinstance(index, slice):
             slice_range = range(index.start or 0, index.stop or len(self), index.step or 1)
             return [self._item_getter(i) for i in slice_range]
@@ -252,7 +257,7 @@ class StorageInterface(ABC):
         def item_getter(index: int) -> Any:
             subtag = subtags[index]
             return self.load_data(tag+[subtag])
-        return LazyList(len(subtags), item_getter)
+        return LazySequence(len(subtags), item_getter)
 
     @abstractmethod
     def search(self, query: str) -> Any:
