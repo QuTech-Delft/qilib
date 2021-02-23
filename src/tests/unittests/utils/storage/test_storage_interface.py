@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import patch
 
-from qilib.utils.storage.interface import StorageInterface, LazyList
+from qilib.utils.storage.interface import StorageInterface, LazySequence
 
 
 class TestStorage(unittest.TestCase):
@@ -33,9 +33,9 @@ class TestStorage(unittest.TestCase):
             storage_interface.update_individual_data(None, None, None)
             self.assertRaises(NotImplementedError, storage_interface.search, None)
 
-    def test_LazyList(self):
+    def test_LazySequence(self):
         getter = lambda i: i
-        lazy_list = LazyList(10, getter)
+        lazy_list = LazySequence(10, getter)
         self.assertEqual(lazy_list[2], 2)
         self.assertEqual(lazy_list[6:], [6,7,8,9])
         self.assertIn('length 10', repr(lazy_list) )
