@@ -27,7 +27,7 @@ from typing import Any, Callable, Optional, Union, Sequence
 from qilib.utils.type_aliases import TagType
 
 
-class LazySequence(SequenceBaseClass):  # type: ignore
+class _LazySequence(SequenceBaseClass):  # type: ignore
     def __init__(self, length: int, item_getter: Callable[[int], Any]):
         """ Convert a length and method to retrieve an indexed item into a sequence with lazy evaluation
 
@@ -257,7 +257,7 @@ class StorageInterface(ABC):
         def item_getter(index: int) -> Any:
             subtag = subtags[index]
             return self.load_data(tag+[subtag])
-        return LazySequence(len(subtags), item_getter)
+        return _LazySequence(len(subtags), item_getter)
 
     @abstractmethod
     def search(self, query: str) -> Any:
