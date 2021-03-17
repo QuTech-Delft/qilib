@@ -49,8 +49,8 @@ class _LazySequence(SequenceBaseClass):  # type: ignore
 
     def __getitem__(self, index: Union[int, slice]) -> Any:
         if isinstance(index, slice):
-            slice_range = range(index.start or 0, index.stop or len(self), index.step or 1)
-            return [self._item_getter(i) for i in slice_range]
+            slice_range = range(*index.indices(len(self)))
+            return (self._item_getter(i) for i in slice_range)
         else:
             r = self._item_getter(index)
             return r
