@@ -37,5 +37,5 @@ class TestStorage(unittest.TestCase):
         getter = lambda i: i
         lazy_list = _LazySequence(10, getter)
         self.assertEqual(lazy_list[2], 2)
-        self.assertEqual(lazy_list[6:], [6,7,8,9])
+        self.assertEqual(list(lazy_list[6:]), [6,7,8,9])
         self.assertIn('length 10', repr(lazy_list) )
