@@ -21,9 +21,39 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 import logging
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import Any, Callable, Optional, Union
+from collections.abc import Sequence as SequenceBaseClass
+from typing import Any, Callable, Optional, Union, Sequence
 
 from qilib.utils.type_aliases import TagType
+
+
+class _LazySequence(SequenceBaseClass):  # type: ignore
+    def __init__(self, length: int, item_getter: Callable[[int], Any]):
+        """ Convert a length and method to retrieve an indexed item into a sequence with lazy evaluation
+
+        Args:
+            length: Length of the sequence to be represented
+            item_getter: Method to retrieve an item at the specified index
+        """
+        super(SequenceBaseClass, self).__init__()
+        self._length = length
+        self._item_getter = item_getter
+
+    def __repr__(self) -> str:
+        classname = ".".join([self.__module__, self.__class__.__qualname__])
+        return f'<{classname} at %x{id(self)} length {self._length} >'
+
+    def __len__(self) -> int:
+        r = self._length
+        return r
+
+    def __getitem__(self, index: Union[int, slice]) -> Any:
+        if isinstance(index, slice):
+            slice_range = range(*index.indices(len(self)))
+            return (self._item_getter(i) for i in slice_range)
+        else:
+            r = self._item_getter(index)
+            return r
 
 
 class NoDataAtKeyError(Exception):
@@ -193,11 +223,12 @@ class StorageInterface(ABC):
         pass
 
     @abstractmethod
-    def list_data_subtags(self, tag: TagType) -> TagType:
+    def list_data_subtags(self, tag: TagType, limit: int = 0) -> TagType:
         """ List available result tags of at tag.
 
         Args:
             tag: hdf5 tag
+            limit: Maximum number of results to generate. If 0 then return all results
         Returns:
             results: List of child tags for tag
 
@@ -211,6 +242,22 @@ class StorageInterface(ABC):
             list is returned.
         """
         pass
+
+    def load_data_from_subtag(self, tag: TagType, limit: int = 0) -> Sequence[Any]:
+        """ Return all results under the specified tag
+
+        Args:
+            tag: Tag to search for results
+            limit: Maximum number of results to generate. If 0 then return all results
+        Returns:
+            Generator for all the results
+        """
+        subtags = self.list_data_subtags(tag, limit=limit)
+
+        def item_getter(index: int) -> Any:
+            subtag = subtags[index]
+            return self.load_data(tag+[subtag])
+        return _LazySequence(len(subtags), item_getter)
 
     @abstractmethod
     def search(self, query: str) -> Any:
