@@ -3,13 +3,13 @@ matrix:
   include:
   - python: 3.7
     sudo: true
-    dist: xenial
+    dist: bionic
   - python: 3.8
     sudo: true
-    dist: xenial
+    dist: bionic
   - python: 3.9
     sudo: true
-    dist: xenial
+    dist: focal
 install:
 - pip install --upgrade mypy
 - pip install --upgrade .[dev] coveralls
