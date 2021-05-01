@@ -67,6 +67,8 @@ class NodeAlreadyExistsError(Exception):
 class NodeDoesNotExistsError(Exception):
     """ Raised when trying to update/create a field on a node which cannot be found."""
 
+class ReadOnlyStorageError(Exception):
+    """ Raised when trying to modify a read-only storage interface."""
 
 class ConnectionTimeoutError(Exception):
     """ Raised when connection to storage can not be established."""
