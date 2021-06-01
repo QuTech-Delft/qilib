@@ -18,7 +18,7 @@ COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER I
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 
-import collections
+from collections.abc import Sequence
 from datetime import datetime
 from typing import Any, Union, Tuple, List, Dict, Optional
 
@@ -54,7 +54,7 @@ class DataSet:
         """
         self._finalized = False
         self._storage_writer = storage_writer if storage_writer is not None else []
-        if not isinstance(self._storage_writer, collections.Sequence):
+        if not isinstance(self._storage_writer, Sequence):
             self._storage_writer = [self._storage_writer]
         self._storage_reader = storage_reader
         self._name = name
@@ -230,7 +230,7 @@ class DataSet:
     def _add_set_arrays(self, set_arrays: DataArrays) -> None:
         if isinstance(set_arrays, DataArray):
             set_arrays = [set_arrays]
-        elif not isinstance(set_arrays, collections.Sequence):
+        elif not isinstance(set_arrays, Sequence):
             raise TypeError("'set_arrays' have to be of type 'DataArray', not {}".format(type(set_arrays)))
 
         for array in set_arrays:
@@ -249,7 +249,7 @@ class DataSet:
             raise ValueError("DataSet already contains an array with the name '{}'".format(name))
 
     def _add_data_arrays(self, data_arrays: DataArrays) -> None:
-        if isinstance(data_arrays, collections.Sequence):
+        if isinstance(data_arrays, Sequence):
             for array in data_arrays:
                 self._add_data_arrays(array)
         elif isinstance(data_arrays, DataArray):
