@@ -52,12 +52,13 @@ Run all unittests and collect the code coverage:
 ###Type Checking
 For static type checking, mypy can be used
 ```
-(env) mypy --strict --ignore-missing-imports --allow-untyped-calls -p qilib
+(env) $ cd src
+(env) $ mypy --strict --ignore-missing-imports --allow-untyped-calls -p qilib
 ```
 
 ## Data set
 The three main building blocks of the qilib data set are a DataArray, DataSet and a DataSetIO that provides a
-storage backend for the DataSet.  
+storage backend for the DataSet.
 
 ### DataArray
 A DataArray is a wrapper around a numpy array and can be used as one. A data array can also have another, or multiple,
