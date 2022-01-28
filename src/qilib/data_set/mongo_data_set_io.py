@@ -18,7 +18,7 @@ COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER I
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 import base64
-from typing import Optional, Dict, Any, Union, List
+from typing import Optional, Dict, Any, Union
 
 import numpy as np
 from bson import ObjectId
@@ -26,7 +26,7 @@ from pymongo import MongoClient
 from pymongo.change_stream import CollectionChangeStream
 from pymongo.errors import DuplicateKeyError
 from qilib.data_set.type_aliases import EncodedNumpyArray
-from qilib.data_set.data_array import DataArray
+from qilib.data_set.data_array import DataArray, numpy_ndarray_type
 
 
 class DocumentNotFoundError(Exception):
@@ -150,7 +150,7 @@ class MongoDataSetIO:
 
     @staticmethod
     def encode_numpy_array(
-            array: Union[np.ndarray, DataArray]) -> EncodedNumpyArray:
+            array: Union[numpy_ndarray_type, DataArray]) -> EncodedNumpyArray:
         """ Encode numpy array to store in database.
         Args:
             array: Numpy array to encode.
@@ -169,7 +169,7 @@ class MongoDataSetIO:
         }
 
     @staticmethod
-    def decode_numpy_array(encoded_array: Dict[str, Any]) -> np.ndarray:
+    def decode_numpy_array(encoded_array: Dict[str, Any]) -> numpy_ndarray_type:
         """ Decode a numpy array from database.
 
         Args:
@@ -178,6 +178,7 @@ class MongoDataSetIO:
         Returns:
             The decoded array.
         """
+        array: numpy_ndarray_type
         content = encoded_array[NumpyKeys.CONTENT]
         array = np.frombuffer(base64.b64decode(content[NumpyKeys.ARRAY]),
                               dtype=np.dtype(content[NumpyKeys.DATA_TYPE])).reshape(content[NumpyKeys.SHAPE])
