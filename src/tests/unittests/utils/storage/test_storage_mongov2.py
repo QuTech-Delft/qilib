@@ -13,8 +13,6 @@ from qilib.utils.storage.mongov2 import NumpyArrayCodec
 from abc import ABC
 from typing import Any
 
-
-
 class DummyStorage(StorageMongoDb, ABC):
 
     def __init__(self, name, **kwargs):
@@ -26,7 +24,7 @@ class DummyStorage(StorageMongoDb, ABC):
 
 class TestStorageMongo(unittest.TestCase):
     def setUp(self) -> None:
-        with patch('qilib.utils.storage.mongo.MongoClient', return_value=MongoClient()):
+        with patch('qilib.utils.storage.mongov2.MongoClient', return_value=MongoClient()):
             self.storage = StorageMongoDb('test')
             self.test_data = [10, 3.14, 'string', {'a': 1, 'b': 2}, [1, 2], [1, [2, 3]], {'test': {'test': 2}},
                               {'tuple': (1, 2, 3, 4, 5)}, (1, 2, 3, 4, 5), (1, 2, {'he.llo': 'world'}),
@@ -128,6 +126,11 @@ class TestStorageMongo(unittest.TestCase):
 
     def test_load(self):
         self.assertRaises(NoDataAtKeyError, self.storage.load_data, [])
+
+    def test_list_subtags(self):
+        self.storage.save_data(1, 'a.b.c.d')
+        results = self.storage.list_data_subtags('a.b')
+        self.assertEqual(results, ['c'])
 
     def test_list_subtags(self):
         results = self.storage.list_data_subtags(['nodata'])
