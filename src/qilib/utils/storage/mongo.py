@@ -92,6 +92,7 @@ class StorageMongoDb(StorageInterface):
             serializer = _serializer
         self._serialize = serializer.encode_data
         self._unserialize = serializer.decode_data
+        self._root = None
 
     def _check_server_connection(self, timeout: float) -> None:
         """ Check if connection has been established to database server."""
@@ -106,13 +107,14 @@ class StorageMongoDb(StorageInterface):
         Returns:
             An ObjectID of the root node
         """
+        if self._root is None:
+            node = self._collection.find_one({'tag': '', 'parent': {'$exists': False}})
 
-        node = self._collection.find_one({'tag': '', 'parent': {'$exists': False}})
-
-        if node is not None:
-            return node['_id']
-        else:
-            return self._collection.insert_one({'tag': ''}).inserted_id
+            if node is not None:
+                self._root = node['_id']
+            else:
+                self._root = self._collection.insert_one({'tag': ''}).inserted_id
+        return self._root
 
     def _retrieve_nodes_by_tag(self, tag: TagType, parent: ObjectId, document_limit: int = 0) -> TagType:
         """Traverse the tree and list the children of a given tag
@@ -428,8 +430,7 @@ class StorageMongoDb(StorageInterface):
 
         if isinstance(data, dict):
             return {
-                StorageMongoDb._encode_str(StorageMongoDb._encode_int(key) if isinstance(key, int) else key)
-                : StorageMongoDb._encode_data(value)
+                StorageMongoDb._encode_str(StorageMongoDb._encode_int(key) if isinstance(key, int) else key): StorageMongoDb._encode_data(value)
                 for key, value in data.items()
             }
 
@@ -451,8 +452,7 @@ class StorageMongoDb(StorageInterface):
         if isinstance(data, dict):
             return {
                 StorageMongoDb._decode_int(StorageMongoDb._decode_str(key))
-                if StorageMongoDb._is_encoded_int(key) else StorageMongoDb._decode_str(key)
-                : StorageMongoDb._decode_data(value)
+                if StorageMongoDb._is_encoded_int(key) else StorageMongoDb._decode_str(key): StorageMongoDb._decode_data(value)
                 for key, value in data.items()
             }
 
