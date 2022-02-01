@@ -282,13 +282,30 @@ class StorageMongoDb(StorageInterface):
         """
         try:
             validated_tag = self._validate_tag(tag)
-            if validated_tag == '':
-                tag_query = {'$regex': f'^[^{tag_separator}]*$'}
+            if 0:
+                # efficienct, but not backwards compatible
+                
+                if validated_tag == '':
+                    tag_query = {'$regex': f'^[^{tag_separator}]*$'}
+                else:
+                    tag_query = {'$regex': f'^{validated_tag}{tag_separator}[^{tag_separator}]*$'}
+                c = self._collection.find({qi_tag: tag_query}, {'value': 0},  limit=limit,  sort=[(qi_tag, -1)])
+                tags = list(map(itemgetter(qi_tag), c))            
             else:
-                tag_query = {'$regex': f'^{validated_tag}{tag_separator}[^{tag_separator}]*$'}
-            c = self._collection.find({qi_tag: tag_query}, {'value': 0},  limit=limit,  sort=[(qi_tag, -1)])
-            tags = list(map(itemgetter(qi_tag), c))            
-
+                if validated_tag == '':
+                    tag_query = {'$regex': '^.*$'}
+                else:
+                    tag_query = {'$regex': f'^{validated_tag}{tag_separator}.*$'}
+                c = self._collection.find({qi_tag: tag_query}, {'value': 0},  limit=limit,  sort=[(qi_tag, -1)])
+                tags = list(map(itemgetter(qi_tag), c)) 
+                
+                def sub_part(t):
+                    
+                    r= t[len(validated_tag)+1:]
+                    n=t[:len(validated_tag)+1] + r.split(tag_separator)[0]
+                    return n
+                tags = [sub_part(t) for t in tags]                                    
+                tags = list(set(tags))
         except NoDataAtKeyError:
             tags = []
 
@@ -460,7 +477,11 @@ class StorageMongoDb(StorageInterface):
 if __name__ == '__main__':
     import uuid
     s = self= StorageMongoDb('test'+str(uuid.uuid4()))
-    s = self= StorageMongoDb('p')
+    s.save_data({'one': 1}, 'a.b.c.d.e')
+    s.save_data(2, 'a.b.c.d.f')
+    tag='a.b'
+    assert 'c' in s.list_data_subtags(tag)
+    #s = self= StorageMongoDb('p')
     col=s._collection
     resp = col.create_index([ (qi_tag, 1) ])
     resp = col.create_index([ (qi_tag, -1) ])
@@ -479,7 +500,7 @@ if __name__ == '__main__':
     s = StorageMongoDb('p')
     for ii in range(10):
         s.save_data({'x': ii, 'y': (ii, str(ii)), 'z': np.array([np.random.rand()])}, ['mydata', str(ii)])
-    results = s.query_data(self, tag, fields=['y', 'z'])
+    results = s.query_data( tag, fields=['y', 'z'])
 
 #%%
 if __name__ == '__main__':
