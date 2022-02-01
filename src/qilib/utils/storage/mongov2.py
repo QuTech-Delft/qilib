@@ -283,8 +283,7 @@ class StorageMongoDb(StorageInterface):
         try:
             validated_tag = self._validate_tag(tag)
             if 0:
-                # efficienct, but not backwards compatible
-                
+                # efficienct, but not backwards compatible                
                 if validated_tag == '':
                     tag_query = {'$regex': f'^[^{tag_separator}]*$'}
                 else:
@@ -305,7 +304,7 @@ class StorageMongoDb(StorageInterface):
                     n=t[:len(validated_tag)+1] + r.split(tag_separator)[0]
                     return n
                 tags = [sub_part(t) for t in tags]                                    
-                tags = list(set(tags))
+                tags = sorted(list(set(tags)))[::-1]
         except NoDataAtKeyError:
             tags = []
 
