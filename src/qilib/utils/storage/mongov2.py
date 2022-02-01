@@ -30,11 +30,9 @@ from pymongo.errors import ServerSelectionTimeoutError
 from qilib.data_set.mongo_data_set_io import MongoDataSetIO, NumpyKeys
 from qilib.utils.serialization import Serializer, serializer as _serializer
 from qilib.utils.storage.interface import (NoDataAtKeyError,
-                                           NodeAlreadyExistsError,
                                            StorageInterface,
                                            ConnectionTimeoutError)
-from qilib.utils.type_aliases import TagType
-
+TagType = Union[str, List[str]]
 
 class NumpyArrayCodec(TypeCodec):  # type: ignore
 
@@ -189,12 +187,12 @@ class StorageMongoDb(StorageInterface):
 
     def load_data(self, tag: TagType) -> Any:
 
-        tag = self._validate_tag(tag)
+        validated_tag = self._validate_tag(tag)
 
-        return self._unserialize(self._decode_data(self._retrieve_value_by_tag(tag)))
+        return self._unserialize(self._decode_data(self._retrieve_value_by_tag(validated_tag)))
 
     @staticmethod
-    def _validate_tag(tag: TagType) -> None:
+    def _validate_tag(tag: TagType) -> TagType:
         """ Assert that tag is a list of strings."""
         if isinstance(tag, str):
             tag = tag_separator.join(tag.split('.'))
