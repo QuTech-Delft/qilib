@@ -19,7 +19,7 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 """
 
 from operator import itemgetter
-from typing import Any, Optional, Union
+from typing import Any, Optional, Union, List
 
 import numpy as np
 from bson import ObjectId
@@ -57,12 +57,12 @@ class NumpyArrayCodec(TypeCodec):  # type: ignore
 
 
 qi_tag = '_tag'
-
+tag_separator =chr(166) # no . because we need that for timestamp tags. no | or > since that has special meaning in regexp. maybe take symnbol from extended ascii set
 
 class StorageMongoDb(StorageInterface):
     """Reference implementation of StorageInterface with an mongodb backend
 
-    Implements a storage tree in a MongoDB collection
+    Uses the materialized path design in a MongoDB collection see https://docs.mongodb.com/manual/tutorial/model-tree-structures-with-materialized-paths/
     Performance Note: Creating index(es) in mongodb will help improve query performance
     eg: An index on (parent, tag) will improve the performance of queries in _retrieve_nodes_by_tag
     """
@@ -147,9 +147,9 @@ class StorageMongoDb(StorageInterface):
             doc = self._collection.find_one({qi_tag: tag}, {f'value.{field}': 1})
 
         if doc is None:
-            raise NoDataAtKeyError(f'Tag "{tag[0]}" cannot be found')
+            raise NoDataAtKeyError(f'Tag "{tag}" cannot be found')
         elif 'value' not in doc:
-            raise NoDataAtKeyError(f'Tag "{tag[0]}" is not a leaf')
+            raise NoDataAtKeyError(f'Tag "{tag}" is not a leaf')
         else:
             if field is None:
                 return doc['value']
@@ -182,7 +182,10 @@ class StorageMongoDb(StorageInterface):
                 self._collection.update_one({qi_tag: tag}, {'$set': {'value.'+str(field): data}})
 
         else:
-            self._collection.insert_one({qi_tag: tag, 'value': data})
+            if field is None:
+                self._collection.insert_one({qi_tag: tag, 'value': data})
+            else:
+                raise NoDataAtKeyError(f'Tag "{tag}" does not exist')
 
     def load_data(self, tag: TagType) -> Any:
 
@@ -194,17 +197,21 @@ class StorageMongoDb(StorageInterface):
     def _validate_tag(tag: TagType) -> None:
         """ Assert that tag is a list of strings."""
         if isinstance(tag, str):
+            tag = tag_separator.join(tag.split('.'))
             return tag
 
         if not isinstance(tag, list) or not all(isinstance(item, str) for item in tag):
             raise TypeError(f'Tag {tag} should be a list of strings')
-        if np.any(['.' in t for t in tag]):
-            raise Exception('. not allowed in tag components')
-        return '.'.join(tag)
+        if np.any([tag_separator in t for t in tag]):
+            raise Exception(f'{tag_separator} not allowed in tag components')
+        return tag_separator.join(tag)
 
     @staticmethod
-    def _unpack_tag(tag: str) -> TagType:
-        return tag.split('.')
+    def _unpack_tag(tag: TagType) -> TagType:
+        if isinstance(tag, str):
+            return tag.split(tag_separator)
+        else:
+            return tag
 
     def save_data(self, data: Any, tag: TagType) -> None:
         tag = self._validate_tag(tag)
@@ -224,14 +231,14 @@ class StorageMongoDb(StorageInterface):
                 Value of the field
         """
 
-        self._validate_tag(tag)
+        tag = self._validate_tag(tag)
         self._validate_field(field)
 
         if len(tag) == 0:
             raise NoDataAtKeyError('Tag cannot be empty')
 
         return self._unserialize(self._decode_data(
-            self._retrieve_value_by_tag(tag,  self._encode_field(self._serialize(field)))))
+            self._retrieve_value_by_tag(tag, field= self._encode_field(self._serialize(field)))))
 
     def update_individual_data(self, data: Any, tag: TagType, field: Union[str, int]) -> None:
         """ Update an individual field at a given tag with the given data.
@@ -244,7 +251,7 @@ class StorageMongoDb(StorageInterface):
 
         """
 
-        self._validate_tag(tag)
+        tag = self._validate_tag(tag)
         self._validate_field(field)
         self._store_value_by_tag(tag, self._encode_data(self._serialize(data)),
                                  self._encode_field(self._serialize(field)))
@@ -263,7 +270,7 @@ class StorageMongoDb(StorageInterface):
 
         return self._unpack_tag(tag) + [child_tags[0]]
 
-    def list_data_subtags(self, tag: TagType, limit: int = 0) -> TagType:
+    def list_data_subtags(self, tag: TagType, limit: int = 0, return_full_tag = False) -> TagType:
         """ List subtags for the given tag. The number of subtags listed is based on the limit parameter (0 for
         listing all subtags)
 
@@ -276,22 +283,25 @@ class StorageMongoDb(StorageInterface):
         try:
             validated_tag = self._validate_tag(tag)
             if validated_tag == '':
-                tag_query = {'$regex': f'^[^.]*$'}
+                tag_query = {'$regex': f'^[^{tag_separator}]*$'}
             else:
-                tag_query = {'$regex': f'^{validated_tag}\.[^.]*$'}
+                tag_query = {'$regex': f'^{validated_tag}{tag_separator}[^{tag_separator}]*$'}
             c = self._collection.find({qi_tag: tag_query}, {'value': 0},  limit=limit,  sort=[(qi_tag, -1)])
-            tags = list(map(itemgetter(qi_tag), c))
+            tags = list(map(itemgetter(qi_tag), c))            
 
         except NoDataAtKeyError:
             tags = []
 
+        if not return_full_tag:
+            tags = [t.split(tag_separator)[-1] for t in tags]
         return tags
 
     def search(self, query: str) -> Any:
         raise NotImplementedError()
 
     def tag_in_storage(self, tag: TagType) -> bool:
-        doc = self._collection.find_one({qi_tag: tag}, {'value': 0})
+        validated_tag = self._validate_tag(tag)
+        doc = self._collection.find_one({qi_tag: validated_tag}, {'value': 0})
         if doc is None:
             return False
         else:
@@ -311,7 +321,7 @@ class StorageMongoDb(StorageInterface):
         """
 
         return StorageMongoDb._encode_int(field) if isinstance(field, int) \
-            else field
+            else StorageMongoDb._encode_str(field)
 
     @staticmethod
     def _encode_int(value: int) -> str:
@@ -360,6 +370,31 @@ class StorageMongoDb(StorageInterface):
         return int(value[len('_integer['):-1])
 
     @staticmethod
+    def _encode_str(value: str) -> str:
+        """Encodes a (dotted) string
+        Args:
+            value: The value
+
+        Returns:
+            The encoded value
+        """
+
+        return value.replace('.', '\\u002e')
+
+    @staticmethod
+    def _decode_str(value: str) -> str:
+        """Decodes a (dotted) string
+
+        Args:
+            value: The value
+
+        Returns:
+            The decoded value
+        """
+
+        return value.replace('\\u002e', '.')
+    
+    @staticmethod
     def _encode_data(data: Any) -> Any:
         """Recursively encode the data and apply dot replacement and integer encoding on the keys
 
@@ -371,7 +406,8 @@ class StorageMongoDb(StorageInterface):
 
         if isinstance(data, dict):
             return {
-                (StorageMongoDb._encode_int(key) if isinstance(key, int) else key): StorageMongoDb._encode_data(value)
+                StorageMongoDb._encode_str(StorageMongoDb._encode_int(key) if isinstance(key, int) else key)
+                : StorageMongoDb._encode_data(value)
                 for key, value in data.items()
             }
 
@@ -392,8 +428,9 @@ class StorageMongoDb(StorageInterface):
 
         if isinstance(data, dict):
             return {
-                StorageMongoDb._decode_int(key)
-                if StorageMongoDb._is_encoded_int(key) else key: StorageMongoDb._decode_data(value)
+                StorageMongoDb._decode_int(StorageMongoDb._decode_str(key))
+                if StorageMongoDb._is_encoded_int(key) else StorageMongoDb._decode_str(key)
+                : StorageMongoDb._decode_data(value)
                 for key, value in data.items()
             }
 
@@ -402,101 +439,86 @@ class StorageMongoDb(StorageInterface):
 
         return data
 
+    def query_data(self, tag: TagType, limit: int = 0, fields = None) -> List[Any]:
+        """ Query data by tag and return part of the results """
+        validated_tag = self._validate_tag(tag)
+        if validated_tag == '':
+                    tag_query = {'$regex': f'^[^{tag_separator}]*$'}
+        else:
+                    tag_query = {'$regex': f'^{validated_tag}{tag_separator}[^{tag_separator}]*$'}
+        if fields is None:
+            selection={'value': 1}
+        else:
+            selection = {f'value.{f}':1 for f in fields}
+        c = self._collection.find({qi_tag: tag_query}, selection,  limit=limit,  sort=[(qi_tag, -1)])
+        raw_data = list(map(itemgetter('value'), c))        
+        data = self._unserialize(self._decode_data(raw_data))
+        return data
 
-""" StorageMongoDB v2: implementation based on materialized path design
-Improvements:
-    
-    - Much less code
-    - No . encoding any more
-    - More efficient retrieval of subtags (no tree traversal)
-    - Tags can be entered in compact notation 'x.y.z'
-    - Multiple subfield retrieval implemented?
-    
-
-Open items:
-    - fields are both encoded and serialized. do we really need the serialization?
-    - Bulk test, database conversion
-    
-"""
 
 # %%
 if __name__ == '__main__':
-    s = StorageMongoDb('test6')
+    import uuid
+    s = self= StorageMongoDb('test'+str(uuid.uuid4()))
+    s = self= StorageMongoDb('p')
     col=s._collection
     resp = col.create_index([ (qi_tag, 1) ])
     resp = col.create_index([ (qi_tag, -1) ])
     list(col.list_indexes())
 
-    self = s
-
-    tag = 'multi'
-    for ii in range(4):
-        s.save_data(ii, tag)
-    assert s.load_data(tag) == 3
-
-    assert s.tag_in_storage(tag)
-
-    #parent = self._collection.insert_one({'test': '.', 'tag': 'tag'}).inserted_id
-    #parent = self._collection.insert_one({'test': '.', '\\u002e': 'tag'}).inserted_id
-    #parent = self._collection.insert_one({'test': '.', '.': 'dot tag'}).inserted_id
-
-    assert len(s.list_data_subtags([]))>0
 
     s.save_data({'one': np.array([1, 2, 4.])}, ['numpy'])
     s.save_data({0: 'integer'}, ['0'])
-
-    s.list_data_subtags([])
-    s.save_data({'dot.field.dot': '.'}, ['dot_in_field'])
-    s.save_data({'one': 1, 'list': [1, 'a', 'c'], 'dict': {'a+b': 'c'}}, ['a', 'b', 'c'])
+    s.save_data({'list':'abc'}, ['a','b', 'c'])
 
     tag = 'a.b.c'
     only_field = s.load_individual_data(tag, field='list')
 
-    s.update_individual_data([], tag, field='list')
-    only_field = s.load_individual_data(tag, field='list')
 
-    s.save_data({'one': 1}, 'st.x')
-    s.save_data({'no please': 2}, 'no.st.y')
-    for t in ['st.x', 'st.y.sub', 'st.z', 'stnot']:
-        s.save_data({'t': t}, t)
-    s.save_data({'one': np.array([1, 2, 4.])}, 'st.z')
-    tag = ['st', 'x']
-    doc = s.load_data(tag)
-    print(f'got data for {tag}: {doc}')
-
-    print(s.list_data_subtags('st'))
-    print(s.list_data_subtags('st.y'))
-
-    s.get_latest_subtag('st')
-
-    tag = 'numpy'
-    tag = self._validate_tag(tag)
-# %%
-if __name__ == '__main__':
-    tag = 'st.y'
-    document_limit = 100
-    xtag = '/^ma/'
-    vtag = self._validate_tag(tag)
-    xtag = {'$regex': f'^{vtag}\..*'}
-    c = self._collection.find({qi_tag: xtag}, {'value': 0},     limit=document_limit,       sort=[('tag', -1)])
-    l = list(map(itemgetter(qi_tag), c))
-    print(l)
-
+    import numpy as np
+    s = StorageMongoDb('p')
+    for ii in range(10):
+        s.save_data({'x': ii, 'y': (ii, str(ii)), 'z': np.array([np.random.rand()])}, ['mydata', str(ii)])
+    results = s.query_data(self, tag, fields=['y', 'z'])
 
 #%%
-if 1:
-    validated_tag='st'
-    tag_query = {'$regex': f'^{validated_tag}\.[^.]*$'}
-    print(tag_query)
-    c = self._collection.find({qi_tag: tag_query}, {'value': 0},  limit=100,  sort=[(qi_tag, -1)])
-    l = list(map(itemgetter(qi_tag), c))
-    print(l)
+if __name__ == '__main__':
+    
+    tag='mydata'
+    def query_data(self, tag: TagType, limit: int = 0, fields = None) -> List[Any]:
+
+        validated_tag = self._validate_tag(tag)
+        if validated_tag == '':
+                    tag_query = {'$regex': f'^[^{tag_separator}]*$'}
+        else:
+                    tag_query = {'$regex': f'^{validated_tag}{tag_separator}[^{tag_separator}]*$'}
+        if fields is None:
+            selection={'value': 1}
+        else:
+            selection = {f'value.{f}':1 for f in fields}
+        c = self._collection.find({qi_tag: tag_query}, selection,  limit=limit,  sort=[(qi_tag, -1)])
+        raw_data = list(map(itemgetter('value'), c))        
+        data = self._unserialize(self._decode_data(raw_data))
+        return data
+    
+    results = query_data(self, tag)
+    fields=['z']
+    results = query_data(self, tag, fields=fields)
+    print(results)
+    fields=['y']
+    results = query_data(self, tag, fields=fields)
+    print(results)
 
     
-# %%%
-    # if len(tag) == 0:
-    #             return list(map(itemgetter('tag'),
-    #                             self._collection.find({'parent': parent, 'tag': {'$exists': True}},
-    #                                                   {'value': 0},
-    #                                                   limit=document_limit,
-    #                                                   sort=[('tag', -1)])))
+    r=self._collection.insert_one({qi_tag: 'testxx', 'value': np.array([1,2,3.])})
+    r=self._collection.insert_one({qi_tag: 'testxx', 'value': (1,3)})
+    r=self._collection.insert_one({qi_tag: 'testd', 'value': {'tuple':(1,3), 'array':np.array([1,2])} })
+    r
+    self.load_data('testd')
+    
+    self.load_data('testxx').dtype
+    self.load_data('testxx').dtype
+    
+    self._serialize({'a': (1,2), 'b':np.array([1,2.]) })
+    
+    
