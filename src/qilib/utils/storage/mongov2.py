@@ -274,9 +274,12 @@ class StorageMongoDb(StorageInterface):
             List of subtags found, sorted in descending order
         """
         try:
-            vtag = self._validate_tag(tag)
-            xtag = {'$regex': f'^{vtag}\..*'}
-            c = self._collection.find({qi_tag: xtag}, {'value': 0},     limit=document_limit,  sort=[('tag', -1)])
+            validated_tag = self._validate_tag(tag)
+            if validated_tag == '':
+                tag_query = {'$regex': f'^[^.]*$'}
+            else:
+                tag_query = {'$regex': f'^{validated_tag}\.[^.]*$'}
+            c = self._collection.find({qi_tag: tag_query}, {'value': 0},  limit=limit,  sort=[(qi_tag, -1)])
             tags = list(map(itemgetter(qi_tag), c))
 
         except NoDataAtKeyError:
@@ -400,19 +403,29 @@ class StorageMongoDb(StorageInterface):
         return data
 
 
-"""
+""" StorageMongoDB v2: implementation based on materialized path design
 Improvements:
     
     - Much less code
     - No . encoding any more
     - More efficient retrieval of subtags (no tree traversal)
     - Tags can be entered in compact notation 'x.y.z'
-    - Multiple subfield retrieval?
+    - Multiple subfield retrieval implemented?
+    
+
+Open items:
+    - fields are both encoded and serialized. do we really need the serialization?
+    - Bulk test, database conversion
+    
 """
 
 # %%
 if __name__ == '__main__':
     s = StorageMongoDb('test6')
+    col=s._collection
+    resp = col.create_index([ (qi_tag, 1) ])
+    resp = col.create_index([ (qi_tag, -1) ])
+    list(col.list_indexes())
 
     self = s
 
@@ -426,6 +439,8 @@ if __name__ == '__main__':
     #parent = self._collection.insert_one({'test': '.', 'tag': 'tag'}).inserted_id
     #parent = self._collection.insert_one({'test': '.', '\\u002e': 'tag'}).inserted_id
     #parent = self._collection.insert_one({'test': '.', '.': 'dot tag'}).inserted_id
+
+    assert len(s.list_data_subtags([]))>0
 
     s.save_data({'one': np.array([1, 2, 4.])}, ['numpy'])
     s.save_data({0: 'integer'}, ['0'])
@@ -442,7 +457,7 @@ if __name__ == '__main__':
 
     s.save_data({'one': 1}, 'st.x')
     s.save_data({'no please': 2}, 'no.st.y')
-    for t in ['st.x', 'st.y.sub', 'st.z']:
+    for t in ['st.x', 'st.y.sub', 'st.z', 'stnot']:
         s.save_data({'t': t}, t)
     s.save_data({'one': np.array([1, 2, 4.])}, 'st.z')
     tag = ['st', 'x']
@@ -467,11 +482,16 @@ if __name__ == '__main__':
     l = list(map(itemgetter(qi_tag), c))
     print(l)
 
-    # TODO: index based on qi_tag
-    # TODO: s.list_data_subtags([]) (for empty entries...)
-    # TODO: s.list_data_subtags([]) -> returns everyting, but we only want to have the things with no dots...!?
-    # TODO: fields are both encoded and serialized. do we really need the serialization?
-    # TODO: bulk test, database conversion
+
+#%%
+if 1:
+    validated_tag='st'
+    tag_query = {'$regex': f'^{validated_tag}\.[^.]*$'}
+    print(tag_query)
+    c = self._collection.find({qi_tag: tag_query}, {'value': 0},  limit=100,  sort=[(qi_tag, -1)])
+    l = list(map(itemgetter(qi_tag), c))
+    print(l)
+
     
 # %%%
     # if len(tag) == 0:
