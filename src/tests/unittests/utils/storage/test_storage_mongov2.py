@@ -464,6 +464,14 @@ class TestStorageMongo(unittest.TestCase):
         self.assertIn('.', data[0])
         self.assertListEqual(data, list_of_strings_with_dots)
 
+    def test_list_subtags_order(self):
+        self.storage.save_data('test', ['hello', 'world'])      
+        self.storage.save_data('test', ['hello', 'planet'])
+        self.storage.save_data('test', ['hello', 'universe'])
+        self.storage.save_data('test', ['hello', 'galaxy'])
+        results = self.storage.list_data_subtags(['hello'], 2)
+        self.assertEqual(results, ['world', 'universe'])
+        
 if __name__ == '__main__':
     unittest.main()
 
@@ -489,6 +497,29 @@ if __name__ == '__main__':
         }
         
         results = self.storage.list_data_subtags(['nodata'])
+
+        # results = self.storage.list_data_subtags(['1'])
+        # self.assertEqual(results, [])
+
+        # results = self.storage.list_data_subtags(['1a', '2', '3'])
+        # self.assertEqual(results, [])
+
+        self.storage.save_data('test', ['hello', 'world'])
+        results = self.storage.list_data_subtags(['hello'])
+        #self.assertEqual(results, ['world'])
+
+        self.storage.save_data('test', ['hello', 'planet'])
+        self.storage.save_data('test', ['hello', 'universe'])
+        self.storage.save_data('test', ['hello', 'galaxy'])
+        results = self.storage.list_data_subtags(['hello'])
+        self.assertEqual(len(results), 4)
+        results = self.storage.list_data_subtags(['hello'], 2)
+        self.assertEqual(len(results), 2)
+        self.assertEqual(results[0], 'world')
+        self.assertEqual(results[1], 'universe')
+        
+        
+        results = self.storage.list_data_subtags(['nodata'])
         self.assertEqual(results, [])
         self.storage.save_data('1', ['1'])
         results = self.storage.list_data_subtags(['1', 'nodata'])
@@ -500,16 +531,10 @@ if __name__ == '__main__':
         results = self.storage.list_data_subtags(['1a', '2', '3'])
         self.assertEqual(results, [])
        
-        self.storage.save_data('test', ['hello', 'world'])
-        results = self.storage.list_data_subtags(['hello'])
-        self.assertEqual(results, ['world'])
-       
+        self.storage.save_data('test', ['hello', 'world'])      
         self.storage.save_data('test', ['hello', 'planet'])
         self.storage.save_data('test', ['hello', 'universe'])
         self.storage.save_data('test', ['hello', 'galaxy'])
-        tag=['hello']
-        results = self.storage.list_data_subtags(tag)
-        self.assertEqual(len(results), 4)
         results = self.storage.list_data_subtags(['hello'], 2)
         self.assertEqual(len(results), 2)
         self.assertEqual(results[0], 'world')
