@@ -94,6 +94,12 @@ class StorageMongoDb(StorageInterface):
         self._unserialize = serializer.decode_data
         self._root = None
 
+    def __repr__(self) -> str:
+        return f'<{self.__class__.__name__} at 0x{id(self):x}: name {self._db.name}>'
+
+    def __str__(self) -> str:
+        return f'<{type(self).__name__}: name {self._db.name}>'
+
     def _check_server_connection(self, timeout: float) -> None:
         """ Check if connection has been established to database server."""
         try:
