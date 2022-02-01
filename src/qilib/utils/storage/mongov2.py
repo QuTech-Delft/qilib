@@ -192,7 +192,7 @@ class StorageMongoDb(StorageInterface):
         return self._unserialize(self._decode_data(self._retrieve_value_by_tag(validated_tag)))
 
     @staticmethod
-    def _validate_tag(tag: TagType) -> TagType:
+    def _validate_tag(tag: TagType) -> TagType: #type: ignore
         """ Assert that tag is a list of strings."""
         if isinstance(tag, str):
             tag = tag_separator.join(tag.split('.'))
@@ -202,7 +202,7 @@ class StorageMongoDb(StorageInterface):
             raise TypeError(f'Tag {tag} should be a list of strings')
         if np.any([tag_separator in t for t in tag]):
             raise Exception(f'{tag_separator} not allowed in tag components')
-        return tag_separator.join(tag)
+        return tag_separator.join(tag) 
 
     @staticmethod
     def _unpack_tag(tag: TagType) -> TagType:
@@ -254,7 +254,7 @@ class StorageMongoDb(StorageInterface):
         self._store_value_by_tag(tag, self._encode_data(self._serialize(data)),
                                  self._encode_field(self._serialize(field)))
 
-    def get_latest_subtag(self, tag: TagType) -> Optional[TagType]:
+    def get_latest_subtag(self, tag: TagType) -> Optional[TagType]:  #type: ignore
         """ Get the latest subtag
 
         Args:
@@ -266,9 +266,9 @@ class StorageMongoDb(StorageInterface):
         if len(child_tags) == 0:
             return None
 
-        return self._unpack_tag(tag) + [child_tags[0]]
+        return self._unpack_tag(tag) + [child_tags[0]] #type: ignore
 
-    def list_data_subtags(self, tag: TagType, limit: int = 0, return_full_tag = False) -> TagType:
+    def list_data_subtags(self, tag: TagType, limit: int = 0, return_full_tag = False) -> TagType: #type: ignore
         """ List subtags for the given tag. The number of subtags listed is based on the limit parameter (0 for
         listing all subtags)
 
@@ -296,7 +296,7 @@ class StorageMongoDb(StorageInterface):
                 c = self._collection.find({qi_tag: tag_query}, {'value': 0},  limit=limit,  sort=[(qi_tag, -1)])
                 tags = list(map(itemgetter(qi_tag), c)) 
                 
-                def sub_part(t):
+                def sub_part(t : str) -> str:
                     
                     r= t[len(validated_tag)+1:]
                     n=t[:len(validated_tag)+1] + r.split(tag_separator)[0]
@@ -453,7 +453,7 @@ class StorageMongoDb(StorageInterface):
 
         return data
 
-    def query_data(self, tag: TagType, limit: int = 0, fields = None) -> List[Any]:
+    def query_data(self, tag: TagType, limit: int = 0, fields : Optional[List[str]] = None) -> List[Any]:
         """ Query data by tag and return part of the results """
         validated_tag = self._validate_tag(tag)
         if validated_tag == '':
@@ -466,8 +466,8 @@ class StorageMongoDb(StorageInterface):
             selection = {f'value.{f}':1 for f in fields}
         c = self._collection.find({qi_tag: tag_query}, selection,  limit=limit,  sort=[(qi_tag, -1)])
         raw_data = list(map(itemgetter('value'), c))        
-        data = self._unserialize(self._decode_data(raw_data))
-        return data
+        data  = self._unserialize(self._decode_data(raw_data))
+        return data # type: ignore
 
 
 # %%
@@ -503,28 +503,10 @@ if __name__ == '__main__':
 if __name__ == '__main__':
     
     tag='mydata'
-    def query_data(self, tag: TagType, limit: int = 0, fields = None) -> List[Any]:
-
-        validated_tag = self._validate_tag(tag)
-        if validated_tag == '':
-                    tag_query = {'$regex': f'^[^{tag_separator}]*$'}
-        else:
-                    tag_query = {'$regex': f'^{validated_tag}{tag_separator}[^{tag_separator}]*$'}
-        if fields is None:
-            selection={'value': 1}
-        else:
-            selection = {f'value.{f}':1 for f in fields}
-        c = self._collection.find({qi_tag: tag_query}, selection,  limit=limit,  sort=[(qi_tag, -1)])
-        raw_data = list(map(itemgetter('value'), c))        
-        data = self._unserialize(self._decode_data(raw_data))
-        return data
     
-    results = query_data(self, tag)
+    results = s.query_data( tag)
     fields=['z']
-    results = query_data(self, tag, fields=fields)
-    print(results)
-    fields=['y']
-    results = query_data(self, tag, fields=fields)
+    results = s.query_data( tag, fields=fields)
     print(results)
 
     
