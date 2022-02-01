@@ -199,7 +199,7 @@ class StorageMongoDb(StorageInterface):
         if not isinstance(tag, list) or not all(isinstance(item, str) for item in tag):
             raise TypeError(f'Tag {tag} should be a list of strings')
         if np.any(['.' in t for t in tag]):
-            raise Exception('. not allowed in tags')
+            raise Exception('. not allowed in tag components')
         return '.'.join(tag)
 
     @staticmethod
@@ -468,9 +468,11 @@ if __name__ == '__main__':
     print(l)
 
     # TODO: index based on qi_tag
-    # TODO: update and overwrite of documents
     # TODO: s.list_data_subtags([]) (for empty entries...)
     # TODO: s.list_data_subtags([]) -> returns everyting, but we only want to have the things with no dots...!?
+    # TODO: fields are both encoded and serialized. do we really need the serialization?
+    # TODO: bulk test, database conversion
+    
 # %%%
     # if len(tag) == 0:
     #             return list(map(itemgetter('tag'),
