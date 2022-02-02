@@ -476,6 +476,23 @@ class TestStorageMongo(unittest.TestCase):
         self.storage.save_data({10: 'nofloat', 0: 'int'}, ['test'])
         value=self.storage.load_data(['test'])
         self.assertEqual(list(value.keys()), [10, 0])
+
+    def test_delete_data(self):
+    
+            self.storage.save_data(100, 'del')
+            self.storage.save_data(101, 'del')
+            self.assertTrue(self.storage.tag_in_storage('del'))
+            self.storage.delete_data('del')
+            self.assertFalse(self.storage.tag_in_storage('del'))
+
+    def test_query_data(self):
+        for ii in range(4):
+            self.storage.save_data({'x': ii, 'y': (ii, str(ii)), 'z': np.array([np.random.rand()])}, ['mydata', str(ii)])
+    
+        tag ='mydata'
+        fields=['y']
+        results = self.storage.query_data(tag, fields=fields)
+        self.assertEqual(len(results), 4)
         
 if __name__ == '__main__':
     unittest.main()
@@ -596,7 +613,7 @@ if __name__ == '__main__':
         results = storage.list_data_subtags(['1', '2'])
         self.assertEqual(results, ['3'])
 
-    def query_data(self):
+    def test_query_data(self):
         for ii in range(4):
             self.storage.save_data({'x': ii, 'y': (ii, str(ii)), 'z': np.array([np.random.rand()])}, ['mydata', str(ii)])
     
@@ -604,3 +621,13 @@ if __name__ == '__main__':
         fields=['y']
         results = self.query_data(tag, fields=fields)
         self.assertEqual(len(results), 4)
+
+    def test_delete_data(self):
+    
+            self.storage.save_data(100, 'del')
+            self.storage.save_data(101, 'del')
+            self.assertTrue(self.storage.tag_in_storage('del'))
+            self.storage.delete_data('del')
+            self.assertFalse(self.storage.tag_in_storage('del'))
+            
+
