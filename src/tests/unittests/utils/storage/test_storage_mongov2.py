@@ -110,11 +110,6 @@ class TestStorageMongo(unittest.TestCase):
         t = self.storage.datetag_part(dt)
         self.assertEqual(t, '2019-02-18T13:37:00.000023')
 
-    # def test_node_overwrite(self):
-    #     storage = self.storage
-    #     storage.save_data((1, 2), ['aap', 'noot'])
-    #     self.assertRaises(NodeAlreadyExistsError, storage.save_data, 'mies', ['aap'])
-
     def test_leaf_overwrite(self):
         storage = self.storage
         storage.save_data('over', ['aap', 'noot'])
@@ -129,7 +124,7 @@ class TestStorageMongo(unittest.TestCase):
     def test_load(self):
         self.assertRaises(NoDataAtKeyError, self.storage.load_data, [])
 
-    def test_list_subtags(self):
+    def test_list_subtags_str(self):
         self.storage.save_data(1, 'a.b.c.d')
         results = self.storage.list_data_subtags('a.b')
         self.assertEqual(results, ['c'])
@@ -165,6 +160,7 @@ class TestStorageMongo(unittest.TestCase):
         storage = self.storage
         storage.save_data('x', 'aapjes.noot')
         result = storage.load_data(['aapjes', 'noot'])
+        self.assertEqual(result, 'x')
 
     def test_save_load(self):
         storage = self.storage
@@ -334,9 +330,6 @@ class TestStorageMongo(unittest.TestCase):
                 'new.with.dot': 'new.key.with.dot'
             }
         }
-        # self.assertRaises(NodeAlreadyExistsError,
-        #                  self.storage.update_individual_data,
-        #                  test_dict, ['system'], 1)
 
         self.assertRaises(NoDataAtKeyError,
                           self.storage.update_individual_data,
@@ -345,10 +338,6 @@ class TestStorageMongo(unittest.TestCase):
         self.assertRaises(NoDataAtKeyError,
                           self.storage.update_individual_data,
                           test_dict, ['something', 'another'], 1)
-
-        # self.assertRaises(NodeAlreadyExistsError,
-        #                   self.storage.update_individual_data,
-        #                   test_dict, tag + ['extra'], 'a key')
 
         self.assertRaises(TypeError,
                           self.storage.update_individual_data,
