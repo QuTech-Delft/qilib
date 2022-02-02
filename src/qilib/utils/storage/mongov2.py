@@ -550,7 +550,6 @@ class StorageMongoDb(StorageInterface):
 if __name__ == '__main__':
     import uuid
     s = self= StorageMongoDb('test'+str(uuid.uuid4()))
-    self.storage=s
     s.save_data({'one': 1}, 'a.b.c.d.e')
     s.save_data(2, 'a.b.c.d.f')
     tag='a.b'
