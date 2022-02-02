@@ -493,6 +493,13 @@ class TestStorageMongo(unittest.TestCase):
         fields=['y']
         results = self.storage.query_data(tag, fields=fields)
         self.assertEqual(len(results), 4)
+
+    def test_str_tag(self):
+            self.storage.save_data(100, 'a.b.c')
+            value = self.storage.load_data(['a', 'b', 'c'])
+            self.assertEqual(value, 100)
+            value = self.storage.load_data('a.b.c')
+            self.assertEqual(value, 100)
         
 if __name__ == '__main__':
     unittest.main()
