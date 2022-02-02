@@ -471,6 +471,11 @@ class TestStorageMongo(unittest.TestCase):
         self.storage.save_data('test', ['hello', 'galaxy'])
         results = self.storage.list_data_subtags(['hello'], 2)
         self.assertEqual(results, ['world', 'universe'])
+
+    def test_int_keys_in_dict(self):        
+        self.storage.save_data({10: 'nofloat', 0: 'int'}, ['test'])
+        value=self.storage.load_data(['test'])
+        self.assertEqual(list(value.keys()), [10, 0])
         
 if __name__ == '__main__':
     unittest.main()
