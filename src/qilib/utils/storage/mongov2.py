@@ -41,7 +41,7 @@ TagType = Union[str, List[str]]
 numpy_ndarray_type = npt.NDArray[Any]
 
 def encode_numpy_array(
-            array: numpy_ndarray_type) -> dict:
+            array: numpy_ndarray_type) -> Union[float, Dict[str, Any]]:
         """ Encode numpy array to store in database.
         
         Numpy scalars of floating point type are cast to Python float values.
@@ -53,7 +53,7 @@ def encode_numpy_array(
             The encoded array.
 
         """
-        if isinstance(array, np.float32, np.float64) and 1:
+        if isinstance(array, (np.float32, np.float64) ):
             return float(array)
         return {
             NumpyKeys.OBJECT: np.array.__name__,
@@ -539,7 +539,7 @@ class StorageMongoDb(StorageInterface):
         return data # type: ignore
 
 
-    def delete_tag(self, tag: TagType):
+    def delete_tag(self, tag: TagType) -> None:
         result = self._collection.delete_one({qi_tag: tag})
         if result.deleted_count==0:
             raise NoDataAtKeyError('could not delete {tag}')
