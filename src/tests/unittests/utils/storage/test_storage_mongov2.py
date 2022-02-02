@@ -8,10 +8,11 @@ from bson.codec_options import TypeRegistry, CodecOptions
 from mongomock import MongoClient
 
 from qilib.utils.storage.mongov2 import StorageMongoDb
-from qilib.utils.storage.interface import NoDataAtKeyError, NodeAlreadyExistsError, ConnectionTimeoutError
+from qilib.utils.storage.interface import NoDataAtKeyError, ConnectionTimeoutError
 from qilib.utils.storage.mongov2 import NumpyArrayCodec
 from abc import ABC
 from typing import Any
+
 
 class DummyStorage(StorageMongoDb, ABC):
 
@@ -21,6 +22,7 @@ class DummyStorage(StorageMongoDb, ABC):
 
     def encode_serialize_data(self, data: Any) -> Any:
         return self._encode_data(self._serialize(data))
+
 
 class TestStorageMongo(unittest.TestCase):
     def setUp(self) -> None:
@@ -60,10 +62,10 @@ class TestStorageMongo(unittest.TestCase):
         self.dummy_storage._collection.drop()
 
     def test_repr(self):
-        s=str(self.storage)
+        s = str(self.storage)
         self.assertTrue(s.startswith('<StorageMongoDb'))
         self.assertIn(self.storage.name, s)
-        s=repr(self.storage)
+        s = repr(self.storage)
         self.assertIn(f'{id(self.storage):x}', s)
         self.assertIn(self.storage.name, s)
 
@@ -161,7 +163,7 @@ class TestStorageMongo(unittest.TestCase):
 
     def test_save_load_string_tags(self):
         storage = self.storage
-        storage.save_data('x','aapjes.noot')        
+        storage.save_data('x', 'aapjes.noot')
         result = storage.load_data(['aapjes', 'noot'])
 
     def test_save_load(self):
@@ -332,7 +334,7 @@ class TestStorageMongo(unittest.TestCase):
                 'new.with.dot': 'new.key.with.dot'
             }
         }
-        #self.assertRaises(NodeAlreadyExistsError,
+        # self.assertRaises(NodeAlreadyExistsError,
         #                  self.storage.update_individual_data,
         #                  test_dict, ['system'], 1)
 
@@ -465,176 +467,42 @@ class TestStorageMongo(unittest.TestCase):
         self.assertListEqual(data, list_of_strings_with_dots)
 
     def test_list_subtags_order(self):
-        self.storage.save_data('test', ['hello', 'world'])      
+        self.storage.save_data('test', ['hello', 'world'])
         self.storage.save_data('test', ['hello', 'planet'])
         self.storage.save_data('test', ['hello', 'universe'])
         self.storage.save_data('test', ['hello', 'galaxy'])
         results = self.storage.list_data_subtags(['hello'], 2)
         self.assertEqual(results, ['world', 'universe'])
 
-    def test_int_keys_in_dict(self):        
+    def test_int_keys_in_dict(self):
         self.storage.save_data({10: 'nofloat', 0: 'int'}, ['test'])
-        value=self.storage.load_data(['test'])
+        value = self.storage.load_data(['test'])
         self.assertEqual(list(value.keys()), [10, 0])
 
     def test_delete_data(self):
-    
-            self.storage.save_data(100, 'del')
-            self.storage.save_data(101, 'del')
-            self.assertTrue(self.storage.tag_in_storage('del'))
-            self.storage.delete_data('del')
-            self.assertFalse(self.storage.tag_in_storage('del'))
+
+        self.storage.save_data(100, 'del')
+        self.storage.save_data(101, 'del')
+        self.assertTrue(self.storage.tag_in_storage('del'))
+        self.storage.delete_data('del')
+        self.assertFalse(self.storage.tag_in_storage('del'))
 
     def test_query_data(self):
         for ii in range(4):
             self.storage.save_data({'x': ii, 'y': (ii, str(ii)), 'z': np.array([np.random.rand()])}, ['mydata', str(ii)])
-    
-        tag ='mydata'
-        fields=['y']
+
+        tag = 'mydata'
+        fields = ['y']
         results = self.storage.query_data(tag, fields=fields)
         self.assertEqual(len(results), 4)
 
     def test_str_tag(self):
-            self.storage.save_data(100, 'a.b.c')
-            value = self.storage.load_data(['a', 'b', 'c'])
-            self.assertEqual(value, 100)
-            value = self.storage.load_data('a.b.c')
-            self.assertEqual(value, 100)
-        
+        self.storage.save_data(100, 'a.b.c')
+        value = self.storage.load_data(['a', 'b', 'c'])
+        self.assertEqual(value, 100)
+        value = self.storage.load_data('a.b.c')
+        self.assertEqual(value, 100)
+
+
 if __name__ == '__main__':
     unittest.main()
-
-    def test_save_load(self):
-        import uuid
-        storage = StorageMongoDb('test'+str( uuid.uuid4()))
-        
-        
-        self = storage
-        self.storage=storage
-        self.test_individual_data = {
-            1: 'integer_value',            
-            'something.else.with.dots': {
-                'key.dot': 123
-            },
-            'something': {
-                'with.dot': 'nested values',
-                'with': {
-                    'dot': 123
-                }
-            },
-            
-        }
-        
-        results = self.storage.list_data_subtags(['nodata'])
-
-        # results = self.storage.list_data_subtags(['1'])
-        # self.assertEqual(results, [])
-
-        # results = self.storage.list_data_subtags(['1a', '2', '3'])
-        # self.assertEqual(results, [])
-
-        self.storage.save_data('test', ['hello', 'world'])
-        results = self.storage.list_data_subtags(['hello'])
-        #self.assertEqual(results, ['world'])
-
-        self.storage.save_data('test', ['hello', 'planet'])
-        self.storage.save_data('test', ['hello', 'universe'])
-        self.storage.save_data('test', ['hello', 'galaxy'])
-        results = self.storage.list_data_subtags(['hello'])
-        self.assertEqual(len(results), 4)
-        results = self.storage.list_data_subtags(['hello'], 2)
-        self.assertEqual(len(results), 2)
-        self.assertEqual(results[0], 'world')
-        self.assertEqual(results[1], 'universe')
-        
-        
-        results = self.storage.list_data_subtags(['nodata'])
-        self.assertEqual(results, [])
-        self.storage.save_data('1', ['1'])
-        results = self.storage.list_data_subtags(['1', 'nodata'])
-        self.assertEqual(results, [])
-       
-        results = self.storage.list_data_subtags(['1'])
-        self.assertEqual(results, [])
-       
-        results = self.storage.list_data_subtags(['1a', '2', '3'])
-        self.assertEqual(results, [])
-       
-        self.storage.save_data('test', ['hello', 'world'])      
-        self.storage.save_data('test', ['hello', 'planet'])
-        self.storage.save_data('test', ['hello', 'universe'])
-        self.storage.save_data('test', ['hello', 'galaxy'])
-        results = self.storage.list_data_subtags(['hello'], 2)
-        self.assertEqual(len(results), 2)
-        self.assertEqual(results[0], 'world')
-        self.assertEqual(results[1], 'universe')
-         
-        storage.save_data('foo', ['foo', 'bar'])
-        storage.list_data_subtags(['foo', 'bar'])
-        
-        tag = ['system', 'properties2']
-        self.storage.save_data(self.test_individual_data, tag)
-        data = self.storage.load_data(tag)
-
-        test_dict = {
-            2: 'another_integer_value',
-            '2': {
-                2: 'last_integer_value',
-                'new.with.dot': 'new.key.with.dot'
-            }
-        }
-
-        test_string = 'hello'
-        test_int = 236
-
-        self.storage.update_individual_data(test_dict, tag, 'new key')
-        data = self.storage.load_individual_data(tag, 'new key')
-        self.assertEqual(test_dict, data)
-
-        self.storage.update_individual_data(test_string, tag, 42)
-        data = self.storage.load_individual_data(tag, 42)
-        self.assertEqual(test_string, data)
-
-        self.storage.update_individual_data(test_int, tag, 42)
-        data = self.storage.load_individual_data(tag, 42)
-        self.assertEqual(test_int, data)
-        
-        tag='xx'
-        storage.save_data(self.test_individual_data, tag)
-        storage.update_individual_data((1,2,3), tag, 'something')
-        r=storage.load_data(tag)
-        print(r)
-        
-        storage.save_data((1, 2), ['aap'])
-        storage.save_data('x', ['aapjes', 'noot'])
-        storage.save_data('x2', ['aapjes', 'mies'])
-
-        result = storage.load_data(['aapjes', 'noot'])
-        self.assertEqual(result, 'x')
-        results = storage.list_data_subtags(['aapjes'])
-        self.assertIsInstance(results, list)
-        self.assertEqual(results, ['noot', 'mies'])
-
-        storage.save_data('x2', ['1', '2', '3'])
-        self.assertRaises(NoDataAtKeyError, storage.load_data, ['1', '2'])
-        results = storage.list_data_subtags(['1', '2'])
-        self.assertEqual(results, ['3'])
-
-    def test_query_data(self):
-        for ii in range(4):
-            self.storage.save_data({'x': ii, 'y': (ii, str(ii)), 'z': np.array([np.random.rand()])}, ['mydata', str(ii)])
-    
-        tag ='mydata'
-        fields=['y']
-        results = self.query_data(tag, fields=fields)
-        self.assertEqual(len(results), 4)
-
-    def test_delete_data(self):
-    
-            self.storage.save_data(100, 'del')
-            self.storage.save_data(101, 'del')
-            self.assertTrue(self.storage.tag_in_storage('del'))
-            self.storage.delete_data('del')
-            self.assertFalse(self.storage.tag_in_storage('del'))
-            
-
