@@ -539,7 +539,8 @@ class StorageMongoDb(StorageInterface):
         return data # type: ignore
 
 
-    def delete_tag(self, tag: TagType) -> None:
+    def delete_data(self, tag: TagType) -> None:
+        """ Remove data for the specified tag """
         result = self._collection.delete_one({qi_tag: tag})
         if result.deleted_count==0:
             raise NoDataAtKeyError('could not delete {tag}')
@@ -549,6 +550,7 @@ class StorageMongoDb(StorageInterface):
 if __name__ == '__main__':
     import uuid
     s = self= StorageMongoDb('test'+str(uuid.uuid4()))
+    self.storage=s
     s.save_data({'one': 1}, 'a.b.c.d.e')
     s.save_data(2, 'a.b.c.d.f')
     tag='a.b'
