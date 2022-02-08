@@ -485,6 +485,11 @@ class TestStorageMongo(unittest.TestCase):
         results = self.storage.query_data(tag, fields=fields)
         self.assertEqual(len(results), 4)
 
+    def test_regression_query_data_empty_database(self):
+
+        results = self.storage.query_data('')
+        self.assertEqual(len(results), 0)
+
     def test_str_tag(self):
         self.storage.save_data(100, 'a.b.c')
         value = self.storage.load_data(['a', 'b', 'c'])
