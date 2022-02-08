@@ -20,7 +20,8 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 
 import re
 from operator import itemgetter
-from typing import Any, Optional, Union, List, Dict
+from typing import Any, Optional, Union, List, Dict, Tuple
+import re
 
 import numpy as np
 from bson import ObjectId
@@ -548,6 +549,27 @@ class StorageMongoDb(StorageInterface):
         raw_data = list(map(itemgetter('value'), c))
         data = self._unserialize(self._decode_data(raw_data))
         return data  # type: ignore
+    
+    def query_data_tags(self, tag: TagType, limit: int = 0, fields : Optional[List[str]] = None) -> Tuple[List[Any], List[Any]]:
+        """ Query data by tag and return both the tags and data"""
+        validated_tag = self._validate_tag(tag)
+        if validated_tag == '':
+                    tag_query = {'$regex': f'^[^{mongo_tag_separator}]*$'}
+        else:
+                    tag_query = {'$regex': f'^{validated_tag}{mongo_tag_separator}[^{mongo_tag_separator}]*$'}
+        selection={qi_tag: 1,}
+        if fields is None:
+            selection.update({'value': 1})
+        else:
+            selection.update({f'value.{f}':1 for f in fields})
+        c = self._collection.find({qi_tag: tag_query}, selection,  limit=limit,  sort=[(qi_tag, -1)])
+        raw_data = list(map(itemgetter(qi_tag, 'value'), c))      
+        tags, data = list(zip(*raw_data))
+        tags = [self._unpack_tag(t) for t in tags]
+        data  = self._unserialize(self._decode_data(list(data)))
+        return tags, data # type: ignore
+
+>>>>>>> 7455426... add method to query data and return tags
 
     def delete_data(self, tag: TagType) -> None:
         """ Remove data for the specified tag 
