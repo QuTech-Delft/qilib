@@ -253,7 +253,7 @@ class StorageMongoDb(StorageInterface):
 
         return self._collection.find_one({qi_tag: validated_tag})
 
-    def save_raw_document(self, data: Any, tag: TagType):
+    def save_raw_document(self, data: Any, tag: TagType) -> None:
         """ Save MongoDB document without encoding """
         validated_tag = self._validate_tag(tag)
 
@@ -558,7 +558,7 @@ class StorageMongoDb(StorageInterface):
             data  = self._unserialize(self._decode_data(list(data)))
         else:
             tags=[]; data=[]
-        return tags, data # type: ignore
+        return tags, data 
 
     def delete_data(self, tag: TagType) -> None:
         """ Remove data for the specified tag 
