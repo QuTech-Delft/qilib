@@ -563,8 +563,6 @@ class StorageMongoDb(StorageInterface):
         data  = self._unserialize(self._decode_data(list(data)))
         return tags, data # type: ignore
 
->>>>>>> 7455426... add method to query data and return tags
-
     def delete_data(self, tag: TagType) -> None:
         """ Remove data for the specified tag 
 
