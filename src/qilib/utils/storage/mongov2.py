@@ -116,7 +116,7 @@ _mongo_tag_separator_regex = re.escape(mongo_tag_separator)
 - Numpy floating point scalars are cast to floats
 - Numpy arrays are handled natively
 - Tags are allowed to contain a dot (to allow for ISO format timestamps)
-- The serialization of the fields happens because we serialize the full dataset
+- The serialization of the fields happens because we serialize the full data and we need to keep the keys and fields consistent. In practice we only accept str or int as fields, so not much happens
 - The encoding of the field is done to handle cases like int (which occurs in the qcodes snapshots)
 - We use the / as a tag separator inside MongoDB. No . because we need that for timestamp tags. No | or > since that has special meaning in regexp. maybe take symnbol from extended ascii set
 
@@ -173,20 +173,7 @@ class StorageMongoDb(StorageInterface):
         except ServerSelectionTimeoutError as e:
             raise ConnectionTimeoutError(f'Failed to connect to Mongo database within {timeout} milliseconds') from e
 
-    def _retrieve_nodes_by_tag(self, tag: TagType, parent: ObjectId, document_limit: int = 0) -> TagType:
-        """Traverse the tree and list the children of a given tag
-
-        Args:
-            tag: The node tag
-            parent: The ObjectID of the node's parent
-            document_limit: Maximum number of documents to return. If set to zero there is no limit
-
-        Returns:
-            A list of names of the children
-        """
-        raise
-
-    def _retrieve_value_by_tag(self, tag: TagType, field: Optional[Union[str, int]] = None) -> Any:
+    def _retrieve_value_by_tag(self, tag: TagType, field: Optional[str] = None) -> Any:
         """Traverse the tree and retrieves the value / field value of a given leaf tag
         If the field is specified, it returns the value of the field instead of tag value
         If the specified field does not exist, it will raise a NoDataAtKeyError
@@ -223,7 +210,7 @@ class StorageMongoDb(StorageInterface):
                 raise NoDataAtKeyError(f'The field "{field}" does not exists')
 
     def _store_value_by_tag(self, tag: TagType, data: Any,
-                            field: Optional[Union[str, int]] = None) -> None:
+                            field: Optional[str] = None) -> None:
         """ Store a value at a given tag. In case a field is specified, function will update the value of the
         field with data. If the field does not already exists, the field will be created
 
@@ -237,17 +224,18 @@ class StorageMongoDb(StorageInterface):
               NoDataAtKeyError:  If a tag in Tag List does not exist
         """
 
-        doc = self._collection.find_one({qi_tag: tag})
+        document_query = {qi_tag: tag}
+        doc = self._collection.find_one(document_query)
         if doc:
             # update
             if field is None:
-                self._collection.update_one({qi_tag: tag}, {'$set': {'value': data}})
+                self._collection.update_one(document_query, {'$set': {'value': data}})
             else:
-                self._collection.update_one({qi_tag: tag}, {'$set': {'value.'+str(field): data}})
+                self._collection.update_one(document_query, {'$set': {'value.'+(field): data}})
 
         else:
             if field is None:
-                self._collection.insert_one({qi_tag: tag, 'value': data})
+                self._collection.insert_one( {qi_tag: tag, 'value': data})
             else:
                 raise NoDataAtKeyError(f'Tag "{tag}" does not exist')
 
@@ -258,10 +246,16 @@ class StorageMongoDb(StorageInterface):
         return self._unserialize(self._decode_data(self._retrieve_value_by_tag(validated_tag)))
 
     def load_raw_document(self, tag: TagType) -> Any:
-        """Load MongoDB document """
+        """Load MongoDB document without decoding """
         validated_tag = self._validate_tag(tag)
 
         return self._collection.find_one({qi_tag: validated_tag})
+
+    def save_raw_document(self, data: Any, tag: TagType):
+        """ Save MongoDB document without encoding """
+        validated_tag = self._validate_tag(tag)
+
+        return self._store_value_by_tag(validated_tag, data)
 
     @staticmethod
     def _validate_tag(tag: TagType) -> TagType:  # type: ignore
