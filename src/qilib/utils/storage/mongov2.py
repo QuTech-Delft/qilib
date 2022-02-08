@@ -143,6 +143,7 @@ class StorageMongoDb(StorageInterface):
             host: MongoDB host
             port: MongoDB port
             database: The database to use, if empty the name of the storage is used
+            serializer: Serialized used for data serialization.
             connection_timeout: How long to try to connect to database before raising an error in milliseconds
         Raises:
             StorageTimeoutError: If connection to database has not been established before connection_timeout is reached
@@ -241,7 +242,7 @@ class StorageMongoDb(StorageInterface):
                 raise NoDataAtKeyError(f'Tag "{tag}" does not exist')
 
     def load_data(self, tag: TagType) -> Any:
-
+        # docstring inherited
         validated_tag = self._validate_tag(tag)
 
         return self._unserialize(self._decode_data(self._retrieve_value_by_tag(validated_tag)))
@@ -347,28 +348,20 @@ class StorageMongoDb(StorageInterface):
         """
         try:
             validated_tag = self._validate_tag(tag)
-            if 0:
-                # efficienct, but not backwards compatible
-                if validated_tag == '':
-                    tag_query = {'$regex': f'^[^{_mongo_tag_separator_regex}]*$'}
-                else:
-                    tag_query = {'$regex': f'^{validated_tag}{_mongo_tag_separator_regex}[^{_mongo_tag_separator_regex}]*$'}
-                c = self._collection.find({qi_tag: tag_query}, {'value': 0},  limit=limit,  sort=[(qi_tag, -1)])
-                tags = list(map(itemgetter(qi_tag), c))
-            else:
-                if validated_tag == '':
-                    tag_query = {'$regex': '^.*$'}
-                else:
-                    tag_query = {'$regex': f'^{validated_tag}{_mongo_tag_separator_regex}.*$'}
-                c = self._collection.find({qi_tag: tag_query}, {'value': 0},  limit=limit,  sort=[(qi_tag, -1)])
-                tags = list(map(itemgetter(qi_tag), c))
 
-                def sub_part(t: str) -> str:
-                    r = t[len(validated_tag)+1:]
-                    n = t[:len(validated_tag)+1] + r.split(mongo_tag_separator)[0]
-                    return n
-                tags = [sub_part(t) for t in tags]
-                tags = sorted(list(set(tags)))[::-1]
+            if validated_tag == '':
+                tag_query = {'$regex': '^.*$'}
+            else:
+                tag_query = {'$regex': f'^{validated_tag}{_mongo_tag_separator_regex}.*$'}
+            c = self._collection.find({qi_tag: tag_query}, {'value': 0},  limit=limit,  sort=[(qi_tag, -1)])
+            tags = list(map(itemgetter(qi_tag), c))
+
+            def last_part(t: str) -> str:
+                r = t[len(validated_tag)+1:]
+                n = t[:len(validated_tag)+1] + r.split(mongo_tag_separator)[0]
+                return n
+            tags = [last_part(t) for t in tags]
+            tags = sorted(list(set(tags)))[::-1]
         except NoDataAtKeyError:
             tags = []
 
@@ -380,6 +373,7 @@ class StorageMongoDb(StorageInterface):
         raise NotImplementedError()
 
     def tag_in_storage(self, tag: TagType) -> bool:
+        # docstring inherited
         validated_tag = self._validate_tag(tag)
         doc = self._collection.find_one({qi_tag: validated_tag}, {'value': 0})
         if doc is None:
@@ -558,9 +552,12 @@ class StorageMongoDb(StorageInterface):
             selection.update({f'value.{f}':1 for f in fields})
         c = self._collection.find({qi_tag: tag_query}, selection,  limit=limit,  sort=[(qi_tag, -1)])
         raw_data = list(map(itemgetter(qi_tag, 'value'), c))      
-        tags, data = list(zip(*raw_data))
-        tags = [self._unpack_tag(t) for t in tags]
-        data  = self._unserialize(self._decode_data(list(data)))
+        if raw_data:
+            tags, data = list(zip(*raw_data))
+            tags = [self._unpack_tag(t) for t in tags]
+            data  = self._unserialize(self._decode_data(list(data)))
+        else:
+            tags=[]; data=[]
         return tags, data # type: ignore
 
     def delete_data(self, tag: TagType) -> None:
@@ -577,9 +574,18 @@ class StorageMongoDb(StorageInterface):
 # %%
 if __name__ == '__main__':
     import uuid
-    s = self = StorageMongoDb('test'+str(uuid.uuid4()))
+    s = self = StorageMongoDb('test_database')# 'test'+str(uuid.uuid4()))
+    docs = self._collection.find()
+    for d in docs:
+        s.delete_data(d[qi_tag])
+    
+    st=s.list_data_subtags('')
+    assert st==[]
+    s.query_data_tags('b')
+    
     s.save_data({'one': 1}, 'a.b.c.d.e')
     s.save_data(2, 'a.b.c.d.f')
+    s.save_data(2, 'b.c')
     tag = 'a.b'
     assert 'c' in s.list_data_subtags(tag)
     #s = self= StorageMongoDb('p')
@@ -596,7 +602,7 @@ if __name__ == '__main__':
     only_field = s.load_individual_data(tag, field='list')
 
     import numpy as np
-    s = StorageMongoDb('p')
+    #s = StorageMongoDb('p')
     for ii in range(10):
         s.save_data({'x': ii, 'y': (ii, str(ii)), 'z': np.array([np.random.rand()])}, ['mydata', str(ii)])
     results = s.query_data(tag, fields=['y', 'z'])
