@@ -183,10 +183,9 @@ class StorageMemory(StorageInterface):
         return subtags, data 
 
 if __name__ == '__main__':
-    import uuid
-    s = self = StorageMemory('test_database')# 'test'+str(uuid.uuid4()))
+    s = StorageMemory('test_database')# 'test'+str(uuid.uuid4()))
     
-    st=s.list_data_subtags('')
+    st=s.list_data_subtags([])
     assert st==[]
     s.query_data_tags(['b'])
 
