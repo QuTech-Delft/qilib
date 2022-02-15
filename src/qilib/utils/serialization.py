@@ -23,6 +23,7 @@ from json import JSONDecoder, JSONEncoder
 from typing import Any, Callable, Dict, Tuple, Optional, Union
 from dataclasses_json.api import DataClassJsonMixin
 import numpy as np
+import numpy.typing as npt
 
 from qilib.utils.type_aliases import EncodedNumpyArray, NumpyNdarrayType, NumpyKeys
 

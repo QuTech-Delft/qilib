@@ -503,8 +503,8 @@ class StorageMongoDb(StorageInterface):
 # %%
 if __name__ == '__main__':
     import uuid
-    s = self = StorageMongoDb('test_database')# 'test'+str(uuid.uuid4()))
-    docs = self._collection.find()
+    s = StorageMongoDb('test_database')# 'test'+str(uuid.uuid4()))
+    docs = s._collection.find()
     for d in docs:
         s.delete_data(d[qi_tag])
     
@@ -517,7 +517,7 @@ if __name__ == '__main__':
     s.save_data(2, 'b.c')
     tag = 'a.b'
     assert 'c' in s.list_data_subtags(tag)
-    #s = self= StorageMongoDb('p')
+    #s = StorageMongoDb('p')
     col = s._collection
     resp = col.create_index([(qi_tag, 1)])
     resp = col.create_index([(qi_tag, -1)])
@@ -563,30 +563,3 @@ if __name__ == '__main__':
     results = s.query_data(tag, fields=fields)
     print(results)
 
-#    r = self._collection.insert_one({qi_tag: 'testxx', 'value': np.array([1, 2, 3.])})
-    #r=self._collection.insert_one({qi_tag: 'testxx', 'value': (1,3)})
- #   r = self._collection.insert_one({qi_tag: 'testd', 'value': {'tuple': (1, 3), 'array': np.array([1, 2])}})
-    #r
-  #  self.load_data('testd')
-   # self.load_data('testxx').dtype
-
-    self.save_data([100, np.inf, None], 'test.a.b')
-    value = self.load_data('test.a.b')
-    print(value)
-    raw = self.load_raw_document('test.a.b')
-    print(raw)
-
-    v = datetime.datetime.now().isoformat()
-    self.save_data([100, np.inf, None], ['test', v])
-    value = self.load_data(['test', v])
-    print(value)
-    raw = self.load_raw_document(['test', v])
-    print(raw)
-
-    self.save_data({1: 'nofloat', 0: 'int'}, ['test'])
-    value = self.load_data(['test'])
-    print(value)
-    raw = self.load_raw_document(['test'])
-    print(raw)
-
-    self._serialize({'a': (1, 2), 'b': np.array([1, 2.])})
