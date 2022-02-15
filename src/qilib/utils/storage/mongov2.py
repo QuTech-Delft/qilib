@@ -229,7 +229,7 @@ class StorageMongoDb(StorageInterface):
             raise NoDataAtKeyError('Tag cannot be empty')
 
         return self._unserialize(self._decode_data(
-            self._retrieve_value_by_tag(tag, field=self._encode_field(self._serialize(field)))))
+            self._retrieve_value_by_tag(tag, field=self._encode_field((field)))))
 
     def update_individual_data(self, data: Any, tag: TagType, field: Union[str, int]) -> None:
         """ Update an individual field at a given tag with the given data.
@@ -245,7 +245,7 @@ class StorageMongoDb(StorageInterface):
         tag = self._validate_tag(tag)
         self._validate_field(field)
         self._store_value_by_tag(tag, self._encode_data(self._serialize(data)),
-                                 self._encode_field(self._serialize(field)))
+                                 self._encode_field((field)))
 
     def get_latest_subtag(self, tag: TagType) -> Optional[TagType]:  # type: ignore
         """ Get the latest subtag
