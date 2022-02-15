@@ -3,13 +3,10 @@ import unittest
 from unittest.mock import patch
 
 import numpy as np
-from bson import BSON
-from bson.codec_options import TypeRegistry, CodecOptions
 from mongomock import MongoClient
 
 from qilib.utils.storage.mongov2 import StorageMongoDb
 from qilib.utils.storage.interface import NoDataAtKeyError, ConnectionTimeoutError
-from qilib.utils.storage.mongov2 import NumpyArrayCodec
 from abc import ABC
 from typing import Any
 
@@ -80,18 +77,6 @@ class TestStorageMongo(unittest.TestCase):
         for index, value in enumerate(self.test_data):
             value_loaded = self.storage.load_data(['data', str(index)])
             self.assertEqual(value, value_loaded)
-
-    def test_encode_decode_numpy_data(self):
-        data = {'array': np.array([1, 2, 3])}
-
-        type_registry = TypeRegistry([NumpyArrayCodec()])
-        codec_options = CodecOptions(type_registry=type_registry)
-        encoded = BSON.encode(data, codec_options=codec_options)
-        decoded = BSON.decode(encoded, codec_options=codec_options)
-
-        self.assertIsInstance(decoded, type(data))
-        self.assertIn('array', decoded)
-        np.testing.assert_array_equal(data['array'], decoded['array'])
 
     def test_tag_type(self):
         self.assertRaises(TypeError, self.storage.load_data, 3)
@@ -489,6 +474,13 @@ class TestStorageMongo(unittest.TestCase):
 
         results = self.storage.query_data('')
         self.assertEqual(len(results), 0)
+
+    def test_regression_bytes(self):
+        input_bytes = b'\x00\x00\x00\x00\x00\x00\xf0?\x00\x00'
+        self.storage.save_data(input_bytes, 'bytes')
+        b = self.storage.load_data('bytes')
+        self.assertIsInstance(b, bytes)
+        self.assertEqual(b, input_bytes)
 
     def test_str_tag(self):
         self.storage.save_data(100, 'a.b.c')

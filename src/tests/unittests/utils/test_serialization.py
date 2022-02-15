@@ -137,6 +137,9 @@ class TestSerialization(TestCase):
         unserialized = unserialize(data)
         self.assertDictEqual(unserialized, {'hello': 'world'})
 
+    def test_regression_serialize_bytes(self):
+        serializer.serialize(b'\x00\x00\x00\x00\x00\x00\xf0?\x00\x00')
+        
     def test_regression_dataclass_in_tuple(self):
         @dataclass_json
         @dataclass    
@@ -148,3 +151,7 @@ class TestSerialization(TestCase):
         s.register_dataclass(Test)
         t=Test('a', 1)
         s.serialize( (1,2,t))
+
+if __name__=='__main__':
+    unittest.main()
+    
