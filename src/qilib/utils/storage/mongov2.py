@@ -70,10 +70,14 @@ class StorageMongoDb(StorageInterface):
             host: MongoDB host
             port: MongoDB port
             database: The database to use, if empty the name of the storage is used
-            serializer: Serialized used for data serialization.
+            serializer: Object used for data encoding.
             connection_timeout: How long to try to connect to database before raising an error in milliseconds
         Raises:
             StorageTimeoutError: If connection to database has not been established before connection_timeout is reached
+            
+            
+        The data encoding is performed with the serializer. An additional encoding is performed by the StorageMongoDb
+        to map to MongoDB. The serialization is performed by pymongo (using BSON).
         """
         super().__init__(name)
 
