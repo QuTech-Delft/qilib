@@ -230,6 +230,15 @@ class Serializer:
         """
         return class_type.from_dict(data[JsonSerializeKey.CONTENT])
 
+    def _encode_tuple(self, item: Tuple[Any, Any]) -> Dict[str, Any]:
+        return {
+            JsonSerializeKey.OBJECT: tuple.__name__,
+            JsonSerializeKey.CONTENT: [self.encode_data(value) for value in item]
+        }
+
+    def _decode_tuple(self, data: Dict[str, Any]) -> Tuple[Any, ...]:
+        return tuple(data[JsonSerializeKey.CONTENT])
+
     def register(self, type_: type, encode_func: TransformFunction, type_name: str,
                  decode_func: TransformFunction) -> None:
         """ Registers an encoder and decoder for a given type
@@ -379,3 +388,36 @@ def unserialize(data: bytes) -> Any:
 
 # The default Serializer to use
 serializer = Serializer()
+
+if __name__=='__main__':
+    self=serializer
+    data={'a': np.array([1., 2., 3.]), 'str': 's', 'bytes':  b'\x00\x00\x00\x00\x00\x00\xf0?\x00\x00'}
+    encoded_data = serializer.encode_data(data)
+    data2 = serializer.decode_data(encoded_data)
+    b=encoded_data['a']['__content__']['__ndarray__']
+    j=serializer.serialize(data)
+    print(j)
+
+    #from qilib.utils.serialization import serializer
+    #serializer.serialize({'bytes': b'\x00\x00\x00\x00\x00\x00\xf0?\x00\x00'})
+
+    from qilib.utils.serialization import Serializer
+    from dataclasses import dataclass
+    from dataclasses_json import dataclass_json
+
+    @dataclass_json
+    @dataclass
+    class Test:
+        a : str
+        b: int
+
+    s =  self= Serializer()
+    s.register_dataclass(Test)
+    t=Test('a', 1)
+    e= s.encode_data( (1, 2, t))
+    s.serialize( (1,2,t))
+
+    print(e)
+    s.decode_data(e)
+
+    s.encode_data( [1, 2, t])

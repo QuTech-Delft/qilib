@@ -158,5 +158,3 @@ class TestSerialization(TestCase):
             encoded = NumpyArrayEncDec.encode_to_bytes(x)
             array = NumpyArrayEncDec.decode(encoded)
             self.assertListEqual(x.tolist(), array.tolist())
-
-
