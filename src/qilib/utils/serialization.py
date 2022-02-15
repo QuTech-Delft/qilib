@@ -20,10 +20,11 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 import base64
 from functools import partial
 from json import JSONDecoder, JSONEncoder
-from typing import Any, Callable, Dict, Tuple, Optional
+from typing import Any, Callable, Dict, Tuple, Optional, Union
 from dataclasses_json.api import DataClassJsonMixin
 
 import numpy as np
+import numpy.typing as npt
 
 
 # A callable type for transforming a given argument with a type to another type
@@ -96,7 +97,6 @@ def _decode_numpy_number(item: Dict[str, Any]) -> Any:
     return np.frombuffer(base64.b64decode(obj['__npnumber__']), dtype=np.dtype(obj['__data_type__']))[0]
 
 
-import numpy.typing as npt
 numpy_ndarray_type = npt.NDArray[Any]
 
 class NumpyKeys:
@@ -107,7 +107,7 @@ class NumpyKeys:
     SHAPE: str = '__shape__'
     ARRAY: str = '__ndarray__'
     
-def encode_numpy_array(array: numpy_ndarray_type, encode_to_bytes = True) -> Dict[str, Any]:
+def encode_numpy_array(array: numpy_ndarray_type, encode_to_bytes : bool = True) -> Dict[str, Any]:
         """ Encode numpy array to store in database.
         Args:
             array: Numpy array to encode.
@@ -118,7 +118,7 @@ def encode_numpy_array(array: numpy_ndarray_type, encode_to_bytes = True) -> Dic
 
         """
         if encode_to_bytes:
-            data=array.tobytes()
+            data : Union[str, bytes] =array.tobytes()
         else:
             data=base64.b64encode(array.tobytes()).decode('ascii')
         return {
