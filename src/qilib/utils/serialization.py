@@ -25,7 +25,6 @@ from dataclasses_json.api import DataClassJsonMixin
 
 import numpy as np
 
-from qilib.data_set.mongo_data_set_io import MongoDataSetIO
 
 # A callable type for transforming a given argument with a type to another type
 TransformFunctionResult = Any
@@ -74,23 +73,12 @@ class Decoder(JSONDecoder):
         return obj
 
 
-def _encode_bytes(data: Any) -> Dict[str, Any]:
-    return {JsonSerializeKey.OBJECT: bytes.__name__, JsonSerializeKey.CONTENT: data.decode('utf-8')}
+def _encode_bytes_base64(data: bytes) -> Dict[str, Any]:
+    return {JsonSerializeKey.OBJECT: 'bytes_base64', JsonSerializeKey.CONTENT: base64.b64encode(data).decode('utf-8')}
 
 
-def _decode_bytes(data: Dict[str, Any]) -> bytes:
-    return bytes(data[JsonSerializeKey.CONTENT].encode('utf-8'))
-
-
-def _encode_tuple(item: Tuple[Any, Any]) -> Dict[str, Any]:
-    return {
-        JsonSerializeKey.OBJECT: tuple.__name__,
-        JsonSerializeKey.CONTENT: [serializer.encode_data(value) for value in item]
-    }
-
-
-def _decode_tuple(data: Dict[str, Any]) -> Tuple[Any, ...]:
-    return tuple(data[JsonSerializeKey.CONTENT])
+def _decode_bytes_base64(data: Dict[str, Any]) -> bytes:
+    return base64.b64decode(data[JsonSerializeKey.CONTENT].encode('utf-8'))
 
 
 def _encode_numpy_number(item: Any) -> Dict[str, Any]:
@@ -108,6 +96,62 @@ def _decode_numpy_number(item: Dict[str, Any]) -> Any:
     return np.frombuffer(base64.b64decode(obj['__npnumber__']), dtype=np.dtype(obj['__data_type__']))[0]
 
 
+import numpy.typing as npt
+numpy_ndarray_type = npt.NDArray[Any]
+
+class NumpyKeys:
+    """The custom values types for encoding and decoding numpy arrays."""
+    OBJECT: str = '__object__'
+    CONTENT: str = '__content__'
+    DATA_TYPE: str = '__data_type__'
+    SHAPE: str = '__shape__'
+    ARRAY: str = '__ndarray__'
+    
+def encode_numpy_array(array: numpy_ndarray_type, encode_to_bytes = True) -> Dict[str, Any]:
+        """ Encode numpy array to store in database.
+        Args:
+            array: Numpy array to encode.
+            encode_to_bytes: If True, encode to bytes to, otherwise to str type
+
+        Returns:
+            The encoded array.
+
+        """
+        if encode_to_bytes:
+            data=array.tobytes()
+        else:
+            data=base64.b64encode(array.tobytes()).decode('ascii')
+        return {
+            NumpyKeys.OBJECT: np.array.__name__,
+            NumpyKeys.CONTENT: {
+                NumpyKeys.ARRAY: data,
+                NumpyKeys.DATA_TYPE: array.dtype.str,
+                NumpyKeys.SHAPE: list(array.shape),
+            }
+        }
+
+def decode_numpy_array(encoded_array: Dict[str, Any]) -> numpy_ndarray_type:
+        """ Decode a numpy array from database.
+
+        Args:
+            encoded_array: The encoded array to decode.
+
+        Returns:
+            The decoded array.
+        """
+        array: numpy_ndarray_type
+        content = encoded_array[NumpyKeys.CONTENT]
+        data = content[NumpyKeys.ARRAY]
+        if isinstance(data, str):
+            # decode
+            data=base64.b64decode(data)
+        array = np.frombuffer(data,
+                              dtype=np.dtype(content[NumpyKeys.DATA_TYPE])).reshape(content[NumpyKeys.SHAPE])
+        # recreate the array to make it writable
+        array = np.array(array)
+
+        return array
+    
 def _encode_dataclass(object_: DataClassJsonMixin, class_name: str) -> Dict[str, Any]:
     """ Encodes a JSON dataclass object
 
@@ -158,12 +202,21 @@ class Serializer:
             decoders = {}
         self.decoder.decoders = decoders
 
-        self.register(bytes, _encode_bytes, bytes.__name__, _decode_bytes)
-        self.register(np.ndarray, MongoDataSetIO.encode_numpy_array, np.array.__name__,
-                      MongoDataSetIO.decode_numpy_array)
-        self.register(tuple, _encode_tuple, tuple.__name__, _decode_tuple)
+        self.register(bytes, _encode_bytes_base64, 'bytes_base64', _decode_bytes_base64)
+        self.register(np.ndarray, encode_numpy_array, np.array.__name__,
+                      decode_numpy_array)
+        self.register(tuple, self._encode_tuple, tuple.__name__, self._decode_tuple)
         for numpy_integer_type in [np.int16, np.int32, np.int64, np.float16, np.float32, np.float64, np.bool_]:
             self.register(numpy_integer_type, _encode_numpy_number, '__npnumber__', _decode_numpy_number)
+
+    def _encode_tuple(self, item: Tuple[Any, Any]) -> Dict[str, Any]:
+        return {
+            JsonSerializeKey.OBJECT: tuple.__name__,
+            JsonSerializeKey.CONTENT: [self.encode_data(value) for value in item]
+        }
+    
+    def _decode_tuple(self, data: Dict[str, Any]) -> Tuple[Any, ...]:
+        return tuple(data[JsonSerializeKey.CONTENT])
 
     def register(self, type_: type, encode_func: TransformFunction, type_name: str,
                  decode_func: TransformFunction) -> None:
@@ -314,3 +367,37 @@ def unserialize(data: bytes) -> Any:
 
 # The default Serializer to use
 serializer = Serializer()
+
+if __name__=='__main__':
+    self=serializer
+    data={'a': np.array([1., 2., 3.]), 'str': 's', 'bytes':  b'\x00\x00\x00\x00\x00\x00\xf0?\x00\x00'}
+    encoded_data = serializer.encode_data(data)
+    data2 = serializer.decode_data(encoded_data)
+    b=encoded_data['a']['__content__']['__ndarray__']
+    j=serializer.serialize(data)
+    print(j)
+    
+    #from qilib.utils.serialization import serializer
+    #serializer.serialize({'bytes': b'\x00\x00\x00\x00\x00\x00\xf0?\x00\x00'})
+
+    from qilib.utils.serialization import Serializer
+    from dataclasses import dataclass
+    from dataclasses_json import dataclass_json
+    
+    @dataclass_json
+    @dataclass    
+    class Test:
+        a : str
+        b: int
+        
+    s =  self= Serializer()
+    s.register_dataclass(Test)
+    t=Test('a', 1)
+    e= s.encode_data( (1, 2, t))
+    s.serialize( (1,2,t))
+    
+    print(e)
+    s.decode_data(e)
+    
+    s.encode_data( [1, 2, t])
+    

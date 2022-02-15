@@ -18,20 +18,14 @@ COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER I
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 
-import re
 from operator import itemgetter
 from typing import Any, Optional, Union, List, Dict, Tuple
 import re
 
 import numpy as np
-from bson import ObjectId
-from bson.codec_options import TypeCodec, CodecOptions, TypeRegistry
 from pymongo import MongoClient
 from pymongo.errors import ServerSelectionTimeoutError
-import numpy.typing as npt
-import base64
 
-from qilib.data_set.mongo_data_set_io import MongoDataSetIO, NumpyKeys
 from qilib.utils.serialization import Serializer, serializer as _serializer
 from qilib.utils.storage.interface import (NoDataAtKeyError,
                                            StorageInterface,

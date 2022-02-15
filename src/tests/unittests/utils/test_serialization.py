@@ -21,14 +21,13 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 import unittest
 from dataclasses import dataclass
 from unittest import TestCase
-from unittest.mock import MagicMock
 
 import numpy as np
 from dataclasses_json import dataclass_json
 
 from qilib.utils import PythonJsonStructure
 from qilib.utils.serialization import (Decoder, Encoder, JsonSerializeKey,
-                                       serialize, serializer, unserialize)
+                                       serialize, serializer, unserialize, Serializer)
 
 
 @dataclass_json
@@ -137,3 +136,15 @@ class TestSerialization(TestCase):
         data = b'{"hello":"world"}'
         unserialized = unserialize(data)
         self.assertDictEqual(unserialized, {'hello': 'world'})
+
+    def test_regression_dataclass_in_tuple(self):
+        @dataclass_json
+        @dataclass    
+        class Test:
+            a : str
+            b: int
+            
+        s = Serializer()        
+        s.register_dataclass(Test)
+        t=Test('a', 1)
+        s.serialize( (1,2,t))
