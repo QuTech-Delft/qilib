@@ -5,7 +5,7 @@ from unittest.mock import patch
 import numpy as np
 from mongomock import MongoClient
 
-from qilib.utils.storage.mongov2 import StorageMongoDb
+from qilib.utils.storage.mongov2 import StorageMongoDb, ReadOnlyStorageError
 from qilib.utils.storage.interface import NoDataAtKeyError, ConnectionTimeoutError
 from abc import ABC
 from typing import Any
@@ -263,12 +263,6 @@ class TestStorageMongo(unittest.TestCase):
     def test_decode_int_incorrect(self):
         self.assertRaises(ValueError, StorageMongoDb._decode_int, '_int[7]')
 
-    # def test_encode_str(self):
-    #     self.assertEqual(StorageMongoDb._encode_str('hello.world'), 'hello\\u002eworld')
-
-    # def test_decode_str(self):
-    #     self.assertEqual(StorageMongoDb._decode_str('hello.world'), 'hello.world')
-
     def test_update_individual_data(self):
         tag = ['system', 'properties']
         self.storage.save_data(self.test_individual_data, tag)
@@ -489,6 +483,12 @@ class TestStorageMongo(unittest.TestCase):
         value = self.storage.load_data('a.b.c')
         self.assertEqual(value, 100)
 
-
+    
+    def test_read_only_connection(self):
+            with patch('qilib.utils.storage.mongo.MongoClient', return_value=MongoClient()):
+                storage = StorageMongoDb('readonly', read_only=True)
+                with self.assertRaises(ReadOnlyStorageError):
+                    storage.save_data({'a': 1}, ['test'])
+                    
 if __name__ == '__main__':
     unittest.main()
