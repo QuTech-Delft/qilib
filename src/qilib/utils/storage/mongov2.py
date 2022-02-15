@@ -39,73 +39,6 @@ from qilib.utils.storage.interface import (NoDataAtKeyError,
 TagType = Union[str, List[str]]
 
 
-numpy_ndarray_type = npt.NDArray[Any]
-
-
-def encode_numpy_array(
-        array: numpy_ndarray_type) -> Union[float, Dict[str, Any]]:
-    """ Encode numpy array to store in database.
-
-    Numpy scalars of floating point type are cast to Python float values.
-
-    Args:
-        array: Numpy array to encode.
-
-    Returns:
-        The encoded array.
-
-    """
-    if isinstance(array, (np.float32, np.float64)):
-        return float(array)
-    return {
-        NumpyKeys.OBJECT: np.array.__name__,
-        NumpyKeys.CONTENT: {
-            NumpyKeys.ARRAY: base64.b64encode(array.tobytes()).decode('ascii'),
-            NumpyKeys.DATA_TYPE: array.dtype.str,
-            NumpyKeys.SHAPE: list(array.shape),
-        }
-    }
-
-
-def decode_numpy_array(encoded_array: Dict[str, Any]) -> numpy_ndarray_type:
-    """ Decode a numpy array from database.
-
-    Args:
-        encoded_array: The encoded array to decode.
-
-    Returns:
-        The decoded array.
-    """
-    array: numpy_ndarray_type
-    content = encoded_array[NumpyKeys.CONTENT]
-    array = np.frombuffer(base64.b64decode(content[NumpyKeys.ARRAY]),
-                          dtype=np.dtype(content[NumpyKeys.DATA_TYPE])).reshape(content[NumpyKeys.SHAPE])
-    # recreate the array to make it writable
-    array = np.array(array)
-
-    return array
-
-
-class NumpyArrayCodec(TypeCodec):  # type: ignore
-
-    @property
-    def python_type(self) -> Any:
-        return np.ndarray
-
-    def transform_python(self, value: Any) -> Any:
-        return MongoDataSetIO.encode_numpy_array(value)
-
-    @property
-    def bson_type(self) -> Any:
-        return dict
-
-    def transform_bson(self, value: Any) -> Any:
-        if NumpyKeys.OBJECT in value and value[NumpyKeys.OBJECT] == np.array.__name__:
-            return MongoDataSetIO.decode_numpy_array(value)
-
-        return value
-
-
 qi_tag = '_tag'
 tag_separator = '.'
 mongo_tag_separator = '/'
@@ -150,11 +83,9 @@ class StorageMongoDb(StorageInterface):
         """
         super().__init__(name)
 
-        type_registry = TypeRegistry([NumpyArrayCodec()])
-        codec_options = CodecOptions(type_registry=type_registry)
         self._client = MongoClient(host, port, serverSelectionTimeoutMS=connection_timeout)
         self._check_server_connection(connection_timeout)
-        self._db = self._client.get_database(database or name, codec_options=codec_options)
+        self._db = self._client.get_database(database or name)
         self._collection = self._db.get_collection('storage')
 
         if serializer is None:
@@ -607,6 +538,21 @@ if __name__ == '__main__':
         s.save_data({'x': ii, 'y': (ii, str(ii)), 'z': np.array([np.random.rand()])}, ['mydata', str(ii)])
     results = s.query_data(tag, fields=['y', 'z'])
 
+
+    s.save_data({'array': np.array([1, 2, 4.]) , 'scalar': np.float32(1.1), 'int': np.int32(3)} , ['numpy'])
+
+    s.load_raw_document('numpy')
+    
+    s._serialize(np.array([1,2]))
+    
+    import qilib.utils.serialization
+    ser= qilib.utils.serialization.serializer
+
+
+        # self.register(tuple, _encode_tuple, tuple.__name__, _decode_tuple)
+        # for numpy_integer_type in [np.int16, np.int32, np.int64, np.float16, np.float32, np.float64, np.bool_]:
+        #     self.register(numpy_integer_type, _encode_numpy_number, '__npnumber__', _decode_numpy_number)
+
 # %%
 if __name__ == '__main__':
 
@@ -619,12 +565,12 @@ if __name__ == '__main__':
     results = s.query_data(tag, fields=fields)
     print(results)
 
-    r = self._collection.insert_one({qi_tag: 'testxx', 'value': np.array([1, 2, 3.])})
+#    r = self._collection.insert_one({qi_tag: 'testxx', 'value': np.array([1, 2, 3.])})
     #r=self._collection.insert_one({qi_tag: 'testxx', 'value': (1,3)})
-    r = self._collection.insert_one({qi_tag: 'testd', 'value': {'tuple': (1, 3), 'array': np.array([1, 2])}})
-    r
-    self.load_data('testd')
-    self.load_data('testxx').dtype
+ #   r = self._collection.insert_one({qi_tag: 'testd', 'value': {'tuple': (1, 3), 'array': np.array([1, 2])}})
+    #r
+  #  self.load_data('testd')
+   # self.load_data('testxx').dtype
 
     self.save_data([100, np.inf, None], 'test.a.b')
     value = self.load_data('test.a.b')
