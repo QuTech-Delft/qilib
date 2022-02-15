@@ -50,6 +50,8 @@ _mongo_tag_separator_regex = re.escape(mongo_tag_separator)
 
 """
 
+class ReadOnlyStorageError(Exception):
+    """ Raised when trying to modify a read-only storage interface."""
 
 class StorageMongoDb(StorageInterface):
     """Reference implementation of StorageInterface with an mongodb backend
@@ -60,7 +62,8 @@ class StorageMongoDb(StorageInterface):
     """
 
     def __init__(self, name: str, host: str = 'localhost', port: int = 27017, database: str = '',
-                 serializer: Union[Serializer, None] = None, connection_timeout: float = 30000) -> None:
+                 serializer: Union[Serializer, None] = None, connection_timeout: float = 30000,
+                 read_only : bool = False) -> None:
         """MongoDB implementation of storage class
 
         See also: `StorageInterface`
@@ -72,6 +75,7 @@ class StorageMongoDb(StorageInterface):
             database: The database to use, if empty the name of the storage is used
             serializer: Object used for data encoding.
             connection_timeout: How long to try to connect to database before raising an error in milliseconds
+            read_only: If True then only reading from the database is allowed
         Raises:
             StorageTimeoutError: If connection to database has not been established before connection_timeout is reached
             
@@ -90,6 +94,7 @@ class StorageMongoDb(StorageInterface):
             serializer = _serializer
         self._serialize = serializer.encode_data
         self._unserialize = serializer.decode_data
+        self._read_only = read_only
 
     def __repr__(self) -> str:
         return f'<{self.__class__.__name__} at 0x{id(self):x}: name {self._db.name}>'
@@ -154,6 +159,7 @@ class StorageMongoDb(StorageInterface):
               NodeAlreadyExistsError: If a tag in Tag List is an unexpected node/leaf
               NoDataAtKeyError:  If a tag in Tag List does not exist
         """
+        self._assert_database_is_writable()
 
         document_query = {qi_tag: tag}
         doc = self._collection.find_one(document_query)
@@ -184,6 +190,8 @@ class StorageMongoDb(StorageInterface):
 
     def save_raw_document(self, data: Any, tag: TagType) -> None:
         """ Save MongoDB document without encoding """
+        self._assert_database_is_writable()
+
         validated_tag = self._validate_tag(tag)
 
         return self._store_value_by_tag(validated_tag, data)
@@ -245,6 +253,7 @@ class StorageMongoDb(StorageInterface):
                 field: Name of the individual field to updated
 
         """
+        self._assert_database_is_writable()
 
         tag = self._validate_tag(tag)
         self._validate_field(field)
@@ -495,11 +504,17 @@ class StorageMongoDb(StorageInterface):
         Args:
             tag: Tag to be removed
         """
+        self._assert_database_is_writable()
+           
         result = self._collection.delete_one({qi_tag: tag})
         if result.deleted_count == 0:
             raise NoDataAtKeyError('could not delete {tag}')
 
 
+    def _assert_database_is_writable(self):
+        if self._read_only:
+           raise ReadOnlyStorageError(f'database {self._db.name} is read-only')
+           
 # %%
 if __name__ == '__main__':
     import uuid
