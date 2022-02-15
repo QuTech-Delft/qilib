@@ -398,9 +398,6 @@ if __name__=='__main__':
     j=serializer.serialize(data)
     print(j)
 
-    #from qilib.utils.serialization import serializer
-    #serializer.serialize({'bytes': b'\x00\x00\x00\x00\x00\x00\xf0?\x00\x00'})
-
     from qilib.utils.serialization import Serializer
     from dataclasses import dataclass
     from dataclasses_json import dataclass_json
