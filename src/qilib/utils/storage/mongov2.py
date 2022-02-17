@@ -511,7 +511,7 @@ class StorageMongoDb(StorageInterface):
             raise NoDataAtKeyError('could not delete {tag}')
 
 
-    def _assert_database_is_writable(self):
+    def _assert_database_is_writable(self) -> None:
         if self._read_only:
            raise ReadOnlyStorageError(f'database {self._db.name} is read-only')
            
