@@ -1,6 +1,6 @@
 import unittest
 from unittest.mock import MagicMock, patch
-
+import sys
 import numpy as np
 if sys.version_info < (3, 10):    
     import zhinst
