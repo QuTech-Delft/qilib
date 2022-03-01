@@ -2,13 +2,15 @@ import unittest
 from unittest.mock import MagicMock, patch
 
 import numpy as np
-import zhinst
+if sys.version_info < (3, 10):    
+    import zhinst
 
 from qilib.configuration_helper import InstrumentAdapterFactory
 
 
 class TestZIUHFLIInstrumentAdapter(unittest.TestCase):
 
+    @unittest.skipIf(sys.version_info >= (3, 10), "zhinst not supported on python 3.10")
     def test_read_apply(self):
         with patch.object(zhinst.utils, 'create_api_session', return_value=3 * (MagicMock(),)):
             adapter = InstrumentAdapterFactory.get_instrument_adapter('ZIUHFLIInstrumentAdapter', 'dev4242')
@@ -38,6 +40,7 @@ class TestZIUHFLIInstrumentAdapter(unittest.TestCase):
 
         adapter.instrument.close()
 
+    @unittest.skipIf(sys.version_info >= (3, 10), "zhinst not supported on python 3.10")
     def test_int64_convert_to_int(self):
         with patch.object(zhinst.utils, 'create_api_session', return_value=3 * (MagicMock(),)):
             adapter = InstrumentAdapterFactory.get_instrument_adapter('ZIUHFLIInstrumentAdapter', 'dev4142')
@@ -60,6 +63,7 @@ class TestZIUHFLIInstrumentAdapter(unittest.TestCase):
 
         adapter.instrument.close()
 
+    @unittest.skipIf(sys.version_info >= (3, 10), "zhinst not supported on python 3.10")
     def test_filtered_parameters(self):
         with patch.object(zhinst.utils, 'create_api_session', return_value=3 * (MagicMock(),)):
             adapter = InstrumentAdapterFactory.get_instrument_adapter('ZIUHFLIInstrumentAdapter', 'dev4242')
