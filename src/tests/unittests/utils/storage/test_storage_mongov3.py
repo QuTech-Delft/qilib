@@ -5,7 +5,7 @@ from unittest.mock import patch
 import numpy as np
 from mongomock import MongoClient
 
-from qilib.utils.storage.mongov2 import StorageMongoDb, ReadOnlyStorageError
+from qilib.utils.storage.mongov3 import StorageMongoDb, ReadOnlyStorageError
 from qilib.utils.storage.interface import NoDataAtKeyError, ConnectionTimeoutError
 from abc import ABC
 from typing import Any
