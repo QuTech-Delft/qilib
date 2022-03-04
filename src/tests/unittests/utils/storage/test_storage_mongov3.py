@@ -23,7 +23,7 @@ class DummyStorage(StorageMongoDb, ABC):
 
 class TestStorageMongo(unittest.TestCase):
     def setUp(self) -> None:
-        with patch('qilib.utils.storage.mongov2.MongoClient', return_value=MongoClient()):
+        with patch('qilib.utils.storage.mongov3.MongoClient', return_value=MongoClient()):
             self.storage = StorageMongoDb('test')
             self.test_data = [10, 3.14, 'string', {'a': 1, 'b': 2}, [1, 2], [1, [2, 3]], {'test': {'test': 2}},
                               {'tuple': (1, 2, 3, 4, 5)}, (1, 2, 3, 4, 5), (1, 2, {'he.llo': 'world'}),
