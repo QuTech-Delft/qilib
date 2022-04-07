@@ -19,7 +19,7 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 """
 
 from operator import itemgetter
-from typing import Any, Optional, Union, List, Dict, Tuple
+from typing import Any, Optional, Union, List, Tuple
 import re
 
 import numpy as np
@@ -33,7 +33,7 @@ from qilib.utils.storage.interface import (NoDataAtKeyError,
 TagType = Union[str, List[str]]
 
 
-qi_tag = '_tag'
+qi_tag = '_qi_storage_tag'
 tag_separator = '.'
 mongo_tag_separator = '/'
 _mongo_tag_separator_regex = re.escape(mongo_tag_separator)
@@ -515,66 +515,10 @@ class StorageMongoDb(StorageInterface):
         if self._read_only:
            raise ReadOnlyStorageError(f'database {self._db.name} is read-only')
            
-# %%
-if __name__ == '__main__':
-    import uuid
-    s = StorageMongoDb('test_database')# 'test'+str(uuid.uuid4()))
-    docs = s._collection.find()
-    for d in docs:
-        s.delete_data(d[qi_tag])
-    
-    st=s.list_data_subtags('')
-    assert st==[]
-    s.query_data_tags('b')
-    
-    s.save_data({'one': 1}, 'a.b.c.d.e')
-    s.save_data(2, 'a.b.c.d.f')
-    s.save_data(2, 'b.c')
-    tag = 'a.b'
-    assert 'c' in s.list_data_subtags(tag)
-    #s = StorageMongoDb('p')
-    col = s._collection
-    resp = col.create_index([(qi_tag, 1)])
-    resp = col.create_index([(qi_tag, -1)])
-    list(col.list_indexes())
-
-    s.save_data({'one': np.array([1, 2, 4.])}, ['numpy'])
-    s.save_data({0: 'integer'}, ['0'])
-    s.save_data({'list': 'abc'}, ['a', 'b', 'c'])
-
-    tag = 'a.b.c'
-    only_field = s.load_individual_data(tag, field='list')
-
-    import numpy as np
-    #s = StorageMongoDb('p')
-    for ii in range(10):
-        s.save_data({'x': ii, 'y': (ii, str(ii)), 'z': np.array([np.random.rand()])}, ['mydata', str(ii)])
-    results = s.query_data(tag, fields=['y', 'z'])
-
-
-    s.save_data({'array': np.array([1, 2, 4.]) , 'scalar': np.float32(1.1), 'int': np.int32(3)} , ['numpy'])
-
-    s.load_raw_document('numpy')
-    
-    s._serialize(np.array([1,2]))
-    
-    import qilib.utils.serialization
-    ser= qilib.utils.serialization.serializer
-
-
-        # self.register(tuple, _encode_tuple, tuple.__name__, _decode_tuple)
-        # for numpy_integer_type in [np.int16, np.int32, np.int64, np.float16, np.float32, np.float64, np.bool_]:
-        #     self.register(numpy_integer_type, _encode_numpy_number, '__npnumber__', _decode_numpy_number)
-
-# %%
-if __name__ == '__main__':
-
-    import datetime
-
-    tag = 'mydata'
-
-    results = s.query_data(tag)
-    fields = ['z']
-    results = s.query_data(tag, fields=fields)
-    print(results)
-
+           
+def clear_database(storage):
+    cursor = (storage._collection.find({}, {qi_tag: 1}))           
+    for c in cursor:
+        tag = c[qi_tag]
+        storage.delete_data(tag)
+        
