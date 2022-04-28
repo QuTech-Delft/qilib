@@ -11,6 +11,6 @@ from qilib.configuration_helper.adapters.hdawg8_instrument_adapter import ZIHDAW
 from qilib.configuration_helper.adapters.m2j_instrument_adapter import M2jInstrumentAdapter
 from qilib.configuration_helper.adapters.m4i_instrument_adapter import M4iInstrumentAdapter
 from qilib.configuration_helper.adapters.s5i_instrument_adapter import S5iInstrumentAdapter
-if sys.version_info<(3, 10):
+if sys.version_info < (3, 10):
     from qilib.configuration_helper.adapters.uhfli_instrument_adapter import ZIUHFLIInstrumentAdapter
 from qilib.configuration_helper.adapters.keysight_e8267d_instrument_adapter import KeysightE8267DInstrumentAdapter
