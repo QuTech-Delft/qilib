@@ -19,12 +19,12 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 """
 
 from operator import itemgetter
-from typing import Any, Optional, Union
+from typing import Any, Optional, Union, cast
 
 import numpy as np
-from bson import ObjectId
 from bson.codec_options import TypeCodec, CodecOptions, TypeRegistry
-from pymongo import MongoClient
+from bson.objectid import ObjectId
+from pymongo.mongo_client import MongoClient
 from pymongo.errors import ServerSelectionTimeoutError
 
 from qilib.data_set.mongo_data_set_io import MongoDataSetIO, NumpyKeys
@@ -36,7 +36,7 @@ from qilib.utils.storage.interface import (NoDataAtKeyError,
 from qilib.utils.type_aliases import TagType
 
 
-class NumpyArrayCodec(TypeCodec):  # type: ignore
+class NumpyArrayCodec(TypeCodec):
 
     @property
     def python_type(self) -> Any:
@@ -82,8 +82,8 @@ class StorageMongoDb(StorageInterface):
         super().__init__(name)
 
         type_registry = TypeRegistry([NumpyArrayCodec()])
-        codec_options = CodecOptions(type_registry=type_registry)
-        self._client = MongoClient(host, port, serverSelectionTimeoutMS=connection_timeout)
+        codec_options = CodecOptions(type_registry=type_registry)  # type: CodecOptions[Any]
+        self._client = MongoClient(host, port, serverSelectionTimeoutMS=connection_timeout)  # type: MongoClient[Any]
         self._check_server_connection(connection_timeout)
         self._db = self._client.get_database(database or name, codec_options=codec_options)
         self._collection = self._db.get_collection('storage')
@@ -116,9 +116,9 @@ class StorageMongoDb(StorageInterface):
         node = self._collection.find_one({'tag': '', 'parent': {'$exists': False}})
 
         if node is not None:
-            return node['_id']
-        else:
-            return self._collection.insert_one({'tag': ''}).inserted_id
+            return cast(ObjectId, node['_id'])
+
+        return cast(ObjectId, self._collection.insert_one({'tag': ''}).inserted_id)
 
     def _retrieve_nodes_by_tag(self, tag: TagType, parent: ObjectId, document_limit: int = 0) -> TagType:
         """Traverse the tree and list the children of a given tag
