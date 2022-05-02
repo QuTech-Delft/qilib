@@ -206,7 +206,7 @@ class MongoDataSetIOReader(DataSetIOReader):
             self._data_set.data_arrays[array['name']][i] = np_array[i]
 
     @staticmethod
-    def _update_worker(queue: Any, watcher: CollectionChangeStream) -> None:
+    def _update_worker(queue: Any, watcher: CollectionChangeStream[Any]) -> None:
         try:
             while True:
                 document = watcher.next()

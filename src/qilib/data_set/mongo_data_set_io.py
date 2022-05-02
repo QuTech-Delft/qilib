@@ -18,13 +18,13 @@ COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER I
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 import base64
-from typing import Optional, Dict, Any, Union
+from typing import Optional, Dict, Any, Union, MutableMapping
 
 import numpy as np
-from bson import ObjectId
-from pymongo import MongoClient
+from bson.objectid import ObjectId
 from pymongo.change_stream import CollectionChangeStream
 from pymongo.errors import DuplicateKeyError
+from pymongo.mongo_client import MongoClient
 from qilib.data_set.type_aliases import EncodedNumpyArray
 from qilib.data_set.data_array import DataArray, numpy_ndarray_type
 
@@ -71,11 +71,11 @@ class MongoDataSetIO:
         if name is None and document_id is None:
             raise DocumentNotFoundError("Neither 'name' nor 'document_id' were provided.")
 
-        self._client = MongoClient()
+        self._client = MongoClient()  # type: MongoClient[Any]
         self._db = self._client[database][collection]
         self._assert_name_field_is_unique()
 
-        query_dict = {}
+        query_dict: MutableMapping[str, Any] = {}
         if name is not None:
             query_dict['name'] = name
         if document_id is not None:
@@ -99,7 +99,7 @@ class MongoDataSetIO:
     def id(self) -> str:
         return self._id
 
-    def watch(self) -> CollectionChangeStream:
+    def watch(self) -> CollectionChangeStream[Any]:
         """ Start watching the underlying document for updates.
 
         Returns:
