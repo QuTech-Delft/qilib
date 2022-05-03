@@ -62,10 +62,11 @@ setup(name='qilib',
           'Programming Language :: Python :: 3',
           'Programming Language :: Python :: 3.7',
           'Programming Language :: Python :: 3.8',
-          'Programming Language :: Python :: 3.9'],
+          'Programming Language :: Python :: 3.9',
+          'Programming Language :: Python :: 3.10'],
       license='Other/Proprietary License',
 
-      install_requires=['spirack>=0.1.8', 'numpy>=1.20', 'serialize', 'zhinst', 'pymongo',
+      install_requires=['spirack>=0.1.8', 'numpy>=1.20', 'serialize', 'pymongo', 'zhinst;python_version<"3.10"', 
                         'requests', 'qcodes', 'qcodes_contrib_drivers', 'dataclasses-json'],
       extras_require={
           'dev': ['pytest>=3.3.1', 'coverage>=4.5.1', 'mongomock==3.20.0', 'mypy', 'pylint', 'types-requests'],

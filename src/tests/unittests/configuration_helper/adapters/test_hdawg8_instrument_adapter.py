@@ -1,9 +1,11 @@
 import json
 import os
+import sys
 import unittest
 from unittest.mock import patch, MagicMock, call
 
-import zhinst
+if sys.version_info < (3, 10):    
+    import zhinst
 
 import qilib
 from qilib.configuration_helper import InstrumentAdapterFactory
@@ -69,6 +71,7 @@ class TestZIHDAWG8InstrumentAdapter(unittest.TestCase):
             "Unit": "None"
         }}
 
+    @unittest.skipIf(sys.version_info >= (3, 10), "zhinst not supported on python 3.10")
     def test_apply(self):
         with patch.object(zhinst.utils, 'create_api_session', return_value=3 * (MagicMock(),)) as daq, \
                 patch.object(qilib.configuration_helper.adapters.hdawg8_instrument_adapter.ZIHDAWG8,
@@ -125,6 +128,7 @@ class TestZIHDAWG8InstrumentAdapter(unittest.TestCase):
 
             hdawg_adapter.instrument.close()
 
+    @unittest.skipIf(sys.version_info >= (3, 10), "zhinst not supported on python 3.10")
     def test_full_node_tree(self):
         with patch.object(zhinst.utils, 'create_api_session', return_value=3 * (MagicMock(),)) as daq, \
                 open(self._node_tree_path) as node_tree, \
@@ -210,6 +214,7 @@ class TestZIHDAWG8InstrumentAdapter(unittest.TestCase):
             dawg.assert_has_calls([call().upload_sequence_program(1, 'program')])
             hdawg_adapter.instrument.close()
 
+    @unittest.skipIf(sys.version_info >= (3, 10), "zhinst not supported on python 3.10")
     def test_read_should_filter_nics(self):
         with patch.object(zhinst.utils, 'create_api_session', return_value=3 * (MagicMock(),)) as daq, \
                 open(self._node_tree_path) as node_tree, \
