@@ -17,16 +17,15 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
-import base64
 from typing import Optional, Dict, Any, Union, MutableMapping
 
-import numpy as np
 from bson.objectid import ObjectId
 from pymongo.change_stream import CollectionChangeStream
 from pymongo.errors import DuplicateKeyError
 from pymongo.mongo_client import MongoClient
-from qilib.data_set.type_aliases import EncodedNumpyArray
-from qilib.data_set.data_array import DataArray, numpy_ndarray_type
+from qilib.data_set.data_array import DataArray
+from qilib.utils.serialization import NumpyArrayEncDec
+from qilib.utils.type_aliases import EncodedNumpyArray, numpy_ndarray_type
 
 
 class DocumentNotFoundError(Exception):
@@ -35,15 +34,6 @@ class DocumentNotFoundError(Exception):
 
 class FieldNotUniqueError(Exception):
     """ Error raised if field is not unique"""
-
-
-class NumpyKeys:
-    """The custom values types for encoding and decoding numpy arrays."""
-    OBJECT: str = '__object__'
-    CONTENT: str = '__content__'
-    DATA_TYPE: str = '__data_type__'
-    SHAPE: str = '__shape__'
-    ARRAY: str = '__ndarray__'
 
 
 class MongoDataSetIO:
@@ -149,8 +139,7 @@ class MongoDataSetIO:
              "$currentDate": {"lastModified": True}})
 
     @staticmethod
-    def encode_numpy_array(
-            array: Union[numpy_ndarray_type, DataArray]) -> EncodedNumpyArray:
+    def encode_numpy_array(array: Union[numpy_ndarray_type, DataArray]) -> EncodedNumpyArray:
         """ Encode numpy array to store in database.
         Args:
             array: Numpy array to encode.
@@ -159,14 +148,9 @@ class MongoDataSetIO:
             The encoded array.
 
         """
-        return {
-            NumpyKeys.OBJECT: np.array.__name__,
-            NumpyKeys.CONTENT: {
-                NumpyKeys.ARRAY: base64.b64encode(array.tobytes()).decode('ascii'),
-                NumpyKeys.DATA_TYPE: array.dtype.str,
-                NumpyKeys.SHAPE: list(array.shape),
-            }
-        }
+        if isinstance(array, DataArray):
+            array = array.data
+        return NumpyArrayEncDec.encode_numpy_array(array)
 
     @staticmethod
     def decode_numpy_array(encoded_array: Dict[str, Any]) -> numpy_ndarray_type:
@@ -178,14 +162,7 @@ class MongoDataSetIO:
         Returns:
             The decoded array.
         """
-        array: numpy_ndarray_type
-        content = encoded_array[NumpyKeys.CONTENT]
-        array = np.frombuffer(base64.b64decode(content[NumpyKeys.ARRAY]),
-                              dtype=np.dtype(content[NumpyKeys.DATA_TYPE])).reshape(content[NumpyKeys.SHAPE])
-        # recreate the array to make it writable
-        array = np.array(array)
-
-        return array
+        return NumpyArrayEncDec.decode_numpy_array(encoded_array)
 
     def _assert_name_field_is_unique(self) -> None:
         """ The field 'name' should be unique in the database.

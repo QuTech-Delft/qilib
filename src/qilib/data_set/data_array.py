@@ -17,16 +17,13 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
-import collections
 from copy import deepcopy
 from typing import cast, Optional, Tuple, List, Union, Any, Set, Dict
 
 import numpy
 import numpy as np
-import numpy.typing as npt
 
-# type alias for numpy.ndarray
-numpy_ndarray_type = npt.NDArray[Any]
+from qilib.utils.type_aliases import numpy_ndarray_type
 
 
 class DataArray:
@@ -167,6 +164,10 @@ class DataArray:
             dim = shapes.pop(0)
             if not all(shape[i] == dim[i] for shape in shapes):
                 raise ValueError("Dimensions of 'set_arrays' do not match.")
+
+    @property
+    def data(self) -> numpy_ndarray_type:
+        return self._data
 
     @property
     def name(self) -> str:

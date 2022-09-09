@@ -18,17 +18,14 @@ COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER I
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 
-import unittest
 from dataclasses import dataclass
 from unittest import TestCase
-from unittest.mock import MagicMock
 
 import numpy as np
 from dataclasses_json import dataclass_json
 
 from qilib.utils import PythonJsonStructure
-from qilib.utils.serialization import (Decoder, Encoder, JsonSerializeKey,
-                                       serialize, serializer, unserialize)
+from qilib.utils.serialization import (Decoder, Encoder, serialize, serializer, unserialize, NumpyArrayEncDec)
 
 
 @dataclass_json
@@ -137,3 +134,29 @@ class TestSerialization(TestCase):
         data = b'{"hello":"world"}'
         unserialized = unserialize(data)
         self.assertDictEqual(unserialized, {'hello': 'world'})
+
+    def test_regression_serialize_bytes(self):
+        serialized = serializer.serialize(b'\x00\x00\x00\x00\x00\x00\xf0?\x00\x00')
+        unserialized = serializer.unserialize(serialized)
+        self.assertEqual(unserialized, b'\x00\x00\x00\x00\x00\x00\xf0?\x00\x00')
+
+    def test_regression_dataclass_in_tuple(self):
+        @dataclass_json
+        @dataclass
+        class Test:
+            a: str
+            b: int
+
+        serializer.register_dataclass(Test)
+        t = Test('a', 1)
+        serialized = serializer.serialize((1, 2, t))
+        unserialized = serializer.unserialize(serialized)
+        self.assertEqual(unserialized, (1, 2, t))
+
+    def test_np_encoding_decoding_as_bytes(self):
+        for x in self.testdata_arrays:
+            encoded = NumpyArrayEncDec.encode_numpy_array(x, True)
+            array = NumpyArrayEncDec.decode_numpy_array(encoded)
+            self.assertListEqual(x.tolist(), array.tolist())
+
+
