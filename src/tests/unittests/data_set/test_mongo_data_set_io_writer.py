@@ -50,7 +50,8 @@ class TestMongoDataSetIOWriter(unittest.TestCase):
                                           'set_arrays': ['set_array'],
                                           'preset_data': MongoDataSetIO.encode_numpy_array(data_array)}}
             mongo_data_set_io.assert_has_calls(
-                [call('test', '0x2A', collection='data_sets', database='qilib'), call().update_document(expected)])
+                [call('test', '0x2A', collection='data_sets', database='qilib'), call().update_document(expected)],
+                any_order=True)
 
     def test_finalize(self):
         with patch('qilib.data_set.mongo_data_set_io_writer.MongoDataSetIO') as mongo_data_set_io:

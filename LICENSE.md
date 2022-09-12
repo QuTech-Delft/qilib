@@ -1,4 +1,4 @@
-Copyright 2019 QuTech Delft
+Copyright 2022 QuTech Delft
 
 qilib is available under the [MIT open-source license](https://opensource.org/licenses/MIT):
 

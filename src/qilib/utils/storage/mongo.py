@@ -27,13 +27,13 @@ from bson.objectid import ObjectId
 from pymongo.mongo_client import MongoClient
 from pymongo.errors import ServerSelectionTimeoutError
 
-from qilib.data_set.mongo_data_set_io import MongoDataSetIO, NumpyKeys
+from qilib.data_set.mongo_data_set_io import MongoDataSetIO
 from qilib.utils.serialization import Serializer, serializer as _serializer
 from qilib.utils.storage.interface import (NoDataAtKeyError,
                                            NodeAlreadyExistsError,
                                            StorageInterface,
                                            ConnectionTimeoutError)
-from qilib.utils.type_aliases import TagType
+from qilib.utils.type_aliases import TagType, NumpyKeys
 
 
 class NumpyArrayCodec(TypeCodec):

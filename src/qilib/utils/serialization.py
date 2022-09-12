@@ -20,16 +20,80 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 import base64
 from functools import partial
 from json import JSONDecoder, JSONEncoder
-from typing import Any, Callable, Dict, Tuple, Optional
+from typing import Any, Callable, Dict, Tuple, Optional, Union
 from dataclasses_json.api import DataClassJsonMixin
-
 import numpy as np
 
-from qilib.data_set.mongo_data_set_io import MongoDataSetIO
+from qilib.utils.type_aliases import EncodedNumpyArray, NumpyNdarrayType, NumpyKeys
+
 
 # A callable type for transforming a given argument with a type to another type
 TransformFunctionResult = Any
 TransformFunction = Callable[[Any], TransformFunctionResult]
+
+
+class NumpyArrayEncDec:
+    """ Class to decode and encode numpy arrays """
+    @staticmethod
+    def _return_data_as_numpy_keys(data: Union[str, bytes], array: NumpyNdarrayType) -> EncodedNumpyArray:
+        """ Return the encoded numpy array. """
+        return {
+            NumpyKeys.OBJECT: np.array.__name__,
+            NumpyKeys.CONTENT: {
+                NumpyKeys.ARRAY: data,
+                NumpyKeys.DATA_TYPE: array.dtype.str,
+                NumpyKeys.SHAPE: list(array.shape),
+            }
+        }
+
+    @staticmethod
+    def encode_to_bytes(array: NumpyNdarrayType) -> EncodedNumpyArray:
+        """ Encode numpy array to bytes.
+        Args:
+            array: Numpy array to encode.
+
+        Returns:
+            The encoded array.
+
+        """
+        data: Union[str, bytes] = array.tobytes()
+        return NumpyArrayEncDec._return_data_as_numpy_keys(data, array)
+
+    @staticmethod
+    def encode(array: NumpyNdarrayType) -> EncodedNumpyArray:
+        """ Encode numpy array to str.
+        Args:
+            array: Numpy array to encode.
+
+        Returns:
+            The encoded array.
+
+        """
+        data = base64.b64encode(array.tobytes()).decode('ascii')
+        return NumpyArrayEncDec._return_data_as_numpy_keys(data, array)
+
+    @staticmethod
+    def decode(encoded_array: Dict[str, Any]) -> NumpyNdarrayType:
+        """ Decode a numpy array from database.
+
+        Args:
+            encoded_array: The encoded array to decode.
+
+        Returns:
+            The decoded array.
+        """
+        array: NumpyNdarrayType
+        content = encoded_array[NumpyKeys.CONTENT]
+        data = content[NumpyKeys.ARRAY]
+        if isinstance(data, str):
+            # decode the b64encoded data
+            data = base64.b64decode(data)
+        array = np.frombuffer(data,
+                              dtype=np.dtype(content[NumpyKeys.DATA_TYPE])).reshape(content[NumpyKeys.SHAPE])
+        # recreate the array to make it writable
+        array = np.array(array)
+
+        return array
 
 
 class JsonSerializeKey:
@@ -74,67 +138,6 @@ class Decoder(JSONDecoder):
         return obj
 
 
-def _encode_bytes(data: Any) -> Dict[str, Any]:
-    return {JsonSerializeKey.OBJECT: bytes.__name__, JsonSerializeKey.CONTENT: data.decode('utf-8')}
-
-
-def _decode_bytes(data: Dict[str, Any]) -> bytes:
-    return bytes(data[JsonSerializeKey.CONTENT].encode('utf-8'))
-
-
-def _encode_tuple(item: Tuple[Any, Any]) -> Dict[str, Any]:
-    return {
-        JsonSerializeKey.OBJECT: tuple.__name__,
-        JsonSerializeKey.CONTENT: [serializer.encode_data(value) for value in item]
-    }
-
-
-def _decode_tuple(data: Dict[str, Any]) -> Tuple[Any, ...]:
-    return tuple(data[JsonSerializeKey.CONTENT])
-
-
-def _encode_numpy_number(item: Any) -> Dict[str, Any]:
-    return {
-        JsonSerializeKey.OBJECT: '__npnumber__',
-        JsonSerializeKey.CONTENT: {
-            '__npnumber__': base64.b64encode(item.tobytes()).decode('ascii'),
-            '__data_type__': item.dtype.str,
-        }
-    }
-
-
-def _decode_numpy_number(item: Dict[str, Any]) -> Any:
-    obj = item[JsonSerializeKey.CONTENT]
-    return np.frombuffer(base64.b64decode(obj['__npnumber__']), dtype=np.dtype(obj['__data_type__']))[0]
-
-
-def _encode_dataclass(object_: DataClassJsonMixin, class_name: str) -> Dict[str, Any]:
-    """ Encodes a JSON dataclass object
-
-    Args:
-        object_: Object to be encoded
-        class_name: Object dataclass name
-
-    Returns:
-        Dictionary that can be serialized
-    """
-    return {JsonSerializeKey.OBJECT: class_name,
-            JsonSerializeKey.CONTENT: object_.to_dict()}
-
-
-def _decode_dataclass(data: Dict[str, Any], class_type: DataClassJsonMixin) -> TransformFunctionResult:
-    """ Decodes a JSON dataclass object
-
-    Args:
-        data: Data to be decoded
-        class_type: The dataclass type to decode
-
-    Returns
-        Object of specified class_type type with decoded data
-    """
-    return class_type.from_dict(data[JsonSerializeKey.CONTENT])
-
-
 class Serializer:
     """ A general serializer to serialize data to JSON and vice versa. It allows
      extending the types with a custom encoder and decoder."""
@@ -158,12 +161,74 @@ class Serializer:
             decoders = {}
         self.decoder.decoders = decoders
 
-        self.register(bytes, _encode_bytes, bytes.__name__, _decode_bytes)
-        self.register(np.ndarray, MongoDataSetIO.encode_numpy_array, np.array.__name__,
-                      MongoDataSetIO.decode_numpy_array)
-        self.register(tuple, _encode_tuple, tuple.__name__, _decode_tuple)
+        self.register(bytes, self._encode_bytes_base64, 'bytes_base64', self._decode_bytes_base64)
+        self.register(np.ndarray, NumpyArrayEncDec.encode, np.array.__name__,
+                      NumpyArrayEncDec.decode)
+        self.register(tuple, self._encode_tuple, tuple.__name__, self._decode_tuple)
         for numpy_integer_type in [np.int16, np.int32, np.int64, np.float16, np.float32, np.float64, np.bool_]:
-            self.register(numpy_integer_type, _encode_numpy_number, '__npnumber__', _decode_numpy_number)
+            self.register(numpy_integer_type, self._encode_numpy_number, '__npnumber__', self._decode_numpy_number)
+
+    @staticmethod
+    def _encode_tuple(item: Tuple[Any, Any]) -> Dict[str, Any]:
+        return {
+            JsonSerializeKey.OBJECT: tuple.__name__,
+            JsonSerializeKey.CONTENT: [serializer.encode_data(value) for value in item]
+        }
+
+    @staticmethod
+    def _decode_tuple(data: Dict[str, Any]) -> Tuple[Any, ...]:
+        return tuple(data[JsonSerializeKey.CONTENT])
+
+    @staticmethod
+    def _encode_bytes_base64(data: bytes) -> Dict[str, Any]:
+        return {JsonSerializeKey.OBJECT: 'bytes_base64',
+                JsonSerializeKey.CONTENT: base64.b64encode(data).decode('utf-8')}
+
+    @staticmethod
+    def _decode_bytes_base64(data: Dict[str, Any]) -> bytes:
+        return base64.b64decode(data[JsonSerializeKey.CONTENT].encode('utf-8'))
+
+    @staticmethod
+    def _encode_numpy_number(item: Any) -> Dict[str, Any]:
+        return {
+            JsonSerializeKey.OBJECT: '__npnumber__',
+            JsonSerializeKey.CONTENT: {
+                '__npnumber__': base64.b64encode(item.tobytes()).decode('ascii'),
+                '__data_type__': item.dtype.str,
+            }
+        }
+
+    @staticmethod
+    def _decode_numpy_number(item: Dict[str, Any]) -> Any:
+        obj = item[JsonSerializeKey.CONTENT]
+        return np.frombuffer(base64.b64decode(obj['__npnumber__']), dtype=np.dtype(obj['__data_type__']))[0]
+
+    @staticmethod
+    def _encode_dataclass(object_: DataClassJsonMixin, class_name: str) -> Dict[str, Any]:
+        """ Encodes a JSON dataclass object
+
+        Args:
+            object_: Object to be encoded
+            class_name: Object dataclass name
+
+        Returns:
+            Dictionary that can be serialized
+        """
+        return {JsonSerializeKey.OBJECT: class_name,
+                JsonSerializeKey.CONTENT: object_.to_dict()}
+
+    @staticmethod
+    def _decode_dataclass(data: Dict[str, Any], class_type: DataClassJsonMixin) -> TransformFunctionResult:
+        """ Decodes a JSON dataclass object
+
+        Args:
+            data: Data to be decoded
+            class_type: The dataclass type to decode
+
+        Returns
+            Object of specified class_type type with decoded data
+        """
+        return class_type.from_dict(data[JsonSerializeKey.CONTENT])
 
     def register(self, type_: type, encode_func: TransformFunction, type_name: str,
                  decode_func: TransformFunction) -> None:
@@ -190,8 +255,8 @@ class Serializer:
         """
 
         type_name = f'_dataclass_{type_.__name__}'
-        encode_function = partial(_encode_dataclass, class_name=type_name)
-        decode_function = partial(_decode_dataclass, class_type=type_)
+        encode_function = partial(self._encode_dataclass, class_name=type_name)
+        decode_function = partial(self._decode_dataclass, class_type=type_)
         self.register(type_, encode_function, type_name, decode_function)
 
     def serialize(self, data: Any) -> str:
