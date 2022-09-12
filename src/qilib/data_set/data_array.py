@@ -23,7 +23,7 @@ from typing import cast, Optional, Tuple, List, Union, Any, Set, Dict
 import numpy
 import numpy as np
 
-from qilib.utils.type_aliases import numpy_ndarray_type
+from qilib.utils.type_aliases import NumpyNdarrayType
 
 
 class DataArray:
@@ -37,7 +37,7 @@ class DataArray:
     """
 
     def __init__(self, name: str, label: str, unit: str = '', is_setpoint: bool = False,
-                 preset_data: Optional[numpy_ndarray_type] = None,
+                 preset_data: Optional[NumpyNdarrayType] = None,
                  set_arrays: Optional[Union[List['DataArray'], Tuple['DataArray', ...]]] = None,
                  shape: Optional[Tuple[int, ...]] = None) -> None:
         """
@@ -56,7 +56,7 @@ class DataArray:
         self._label: str = label
         self._unit: str = unit
         self._is_setpoint: bool = is_setpoint
-        self._data: numpy_ndarray_type
+        self._data: NumpyNdarrayType
         if preset_data is not None:
             self._data = np.array(preset_data).copy()
         elif shape is not None:
@@ -67,43 +67,43 @@ class DataArray:
         if len(self._set_arrays) > 0:
             self._verify_array_dimensions()
 
-    def __add__(self, other: Union[float, int, 'DataArray', numpy_ndarray_type]) -> numpy_ndarray_type:
+    def __add__(self, other: Union[float, int, 'DataArray', NumpyNdarrayType]) -> NumpyNdarrayType:
         return self._data.__add__(other)
 
-    def __mul__(self, other: Union[float, int, 'DataArray', numpy_ndarray_type]) -> numpy_ndarray_type:
+    def __mul__(self, other: Union[float, int, 'DataArray', NumpyNdarrayType]) -> NumpyNdarrayType:
         return self._data.__mul__(other)
 
-    def __matmul__(self, other: Union[List[Union[float, int]], 'DataArray', numpy_ndarray_type]) -> numpy.int64:
+    def __matmul__(self, other: Union[List[Union[float, int]], 'DataArray', NumpyNdarrayType]) -> numpy.int64:
         return cast(numpy.int64, self._data.__matmul__(other))
 
-    def __pow__(self, other: Union[float, int]) -> numpy_ndarray_type:
+    def __pow__(self, other: Union[float, int]) -> NumpyNdarrayType:
         return self._data.__pow__(other)
 
-    def __sub__(self, other: Union[float, int, 'DataArray', numpy_ndarray_type]) -> numpy_ndarray_type:
+    def __sub__(self, other: Union[float, int, 'DataArray', NumpyNdarrayType]) -> NumpyNdarrayType:
         return self._data.__sub__(other)
 
-    def __mod__(self, other: Union[float, int, 'DataArray', numpy_ndarray_type]) -> numpy_ndarray_type:
+    def __mod__(self, other: Union[float, int, 'DataArray', NumpyNdarrayType]) -> NumpyNdarrayType:
         return self._data.__mod__(other)
 
-    def __floordiv__(self, other: Union[float, int, 'DataArray', numpy_ndarray_type]) -> numpy_ndarray_type:
+    def __floordiv__(self, other: Union[float, int, 'DataArray', NumpyNdarrayType]) -> NumpyNdarrayType:
         return self._data.__floordiv__(other)
 
-    def __lshift__(self, other: Union[int, 'DataArray', numpy_ndarray_type]) -> numpy_ndarray_type:
+    def __lshift__(self, other: Union[int, 'DataArray', NumpyNdarrayType]) -> NumpyNdarrayType:
         return self._data.__lshift__(other)
 
-    def __rshift__(self, other: Union[int, 'DataArray', numpy_ndarray_type]) -> numpy_ndarray_type:
+    def __rshift__(self, other: Union[int, 'DataArray', NumpyNdarrayType]) -> NumpyNdarrayType:
         return self._data.__rshift__(other)
 
-    def __and__(self, other: Union[bool, int, 'DataArray', numpy_ndarray_type]) -> numpy_ndarray_type:
+    def __and__(self, other: Union[bool, int, 'DataArray', NumpyNdarrayType]) -> NumpyNdarrayType:
         return self._data.__and__(other)
 
-    def __or__(self, other: Union[bool, int, 'DataArray', numpy_ndarray_type]) -> numpy_ndarray_type:
+    def __or__(self, other: Union[bool, int, 'DataArray', NumpyNdarrayType]) -> NumpyNdarrayType:
         return self._data.__or__(other)
 
-    def __xor__(self, other: Union[bool, int, 'DataArray', numpy_ndarray_type]) -> numpy_ndarray_type:
+    def __xor__(self, other: Union[bool, int, 'DataArray', NumpyNdarrayType]) -> NumpyNdarrayType:
         return self._data.__xor__(other)
 
-    def __truediv__(self, other: Union[float, int, 'DataArray', numpy_ndarray_type]) -> numpy_ndarray_type:
+    def __truediv__(self, other: Union[float, int, 'DataArray', NumpyNdarrayType]) -> NumpyNdarrayType:
         return self._data.__truediv__(other)
 
     def __getattr__(self, name: str) -> Any:
@@ -166,7 +166,7 @@ class DataArray:
                 raise ValueError("Dimensions of 'set_arrays' do not match.")
 
     @property
-    def data(self) -> numpy_ndarray_type:
+    def data(self) -> NumpyNdarrayType:
         return self._data
 
     @property

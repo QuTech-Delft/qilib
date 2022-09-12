@@ -24,7 +24,7 @@ from typing import Any, Callable, Dict, Tuple, Optional, Union
 from dataclasses_json.api import DataClassJsonMixin
 import numpy as np
 
-from qilib.utils.type_aliases import EncodedNumpyArray, numpy_ndarray_type, NumpyKeys
+from qilib.utils.type_aliases import EncodedNumpyArray, NumpyNdarrayType, NumpyKeys
 
 
 # A callable type for transforming a given argument with a type to another type
@@ -33,22 +33,10 @@ TransformFunction = Callable[[Any], TransformFunctionResult]
 
 
 class NumpyArrayEncDec:
-    """ Helper class for the numpy array decoder and encoder """
+    """ Class to decode and encode numpy arrays """
     @staticmethod
-    def encode_numpy_array(array: numpy_ndarray_type, encode_to_bytes: bool = False) -> EncodedNumpyArray:
-        """ Encode numpy array to store in database.
-        Args:
-            array: Numpy array to encode.
-            encode_to_bytes: If True, encode to bytes, otherwise to str type
-
-        Returns:
-            The encoded array.
-
-        """
-        if encode_to_bytes:
-            data: Union[str, bytes] = array.tobytes()
-        else:
-            data = base64.b64encode(array.tobytes()).decode('ascii')
+    def _return_data_as_numpy_keys(data: Union[str, bytes], array: NumpyNdarrayType) -> EncodedNumpyArray:
+        """ Return the encoded numpy array. """
         return {
             NumpyKeys.OBJECT: np.array.__name__,
             NumpyKeys.CONTENT: {
@@ -59,7 +47,33 @@ class NumpyArrayEncDec:
         }
 
     @staticmethod
-    def decode_numpy_array(encoded_array: Dict[str, Any]) -> numpy_ndarray_type:
+    def encode_to_bytes(array: NumpyNdarrayType) -> EncodedNumpyArray:
+        """ Encode numpy array to bytes.
+        Args:
+            array: Numpy array to encode.
+
+        Returns:
+            The encoded array.
+
+        """
+        data: Union[str, bytes] = array.tobytes()
+        return NumpyArrayEncDec._return_data_as_numpy_keys(data, array)
+
+    @staticmethod
+    def encode(array: NumpyNdarrayType) -> EncodedNumpyArray:
+        """ Encode numpy array to str.
+        Args:
+            array: Numpy array to encode.
+
+        Returns:
+            The encoded array.
+
+        """
+        data = base64.b64encode(array.tobytes()).decode('ascii')
+        return NumpyArrayEncDec._return_data_as_numpy_keys(data, array)
+
+    @staticmethod
+    def decode(encoded_array: Dict[str, Any]) -> NumpyNdarrayType:
         """ Decode a numpy array from database.
 
         Args:
@@ -68,7 +82,7 @@ class NumpyArrayEncDec:
         Returns:
             The decoded array.
         """
-        array: numpy_ndarray_type
+        array: NumpyNdarrayType
         content = encoded_array[NumpyKeys.CONTENT]
         data = content[NumpyKeys.ARRAY]
         if isinstance(data, str):
@@ -148,8 +162,8 @@ class Serializer:
         self.decoder.decoders = decoders
 
         self.register(bytes, self._encode_bytes_base64, 'bytes_base64', self._decode_bytes_base64)
-        self.register(np.ndarray, NumpyArrayEncDec.encode_numpy_array, np.array.__name__,
-                      NumpyArrayEncDec.decode_numpy_array)
+        self.register(np.ndarray, NumpyArrayEncDec.encode, np.array.__name__,
+                      NumpyArrayEncDec.decode)
         self.register(tuple, self._encode_tuple, tuple.__name__, self._decode_tuple)
         for numpy_integer_type in [np.int16, np.int32, np.int64, np.float16, np.float32, np.float64, np.bool_]:
             self.register(numpy_integer_type, self._encode_numpy_number, '__npnumber__', self._decode_numpy_number)

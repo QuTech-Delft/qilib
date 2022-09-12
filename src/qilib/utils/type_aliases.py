@@ -7,7 +7,7 @@ PJSValues = Union[PJSContainers, PJSValueTypes]
 TagType = List[str]
 EncodedNumpyArray = Dict[str, Union[str, Dict[str, Union[str, List[Any], bytes]]]]
 # type alias for numpy.ndarray
-numpy_ndarray_type = npt.NDArray[Any]
+NumpyNdarrayType = npt.NDArray[Any]
 
 
 class NumpyKeys:

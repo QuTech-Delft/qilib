@@ -25,7 +25,7 @@ from pymongo.errors import DuplicateKeyError
 from pymongo.mongo_client import MongoClient
 from qilib.data_set.data_array import DataArray
 from qilib.utils.serialization import NumpyArrayEncDec
-from qilib.utils.type_aliases import EncodedNumpyArray, numpy_ndarray_type
+from qilib.utils.type_aliases import EncodedNumpyArray, NumpyNdarrayType
 
 
 class DocumentNotFoundError(Exception):
@@ -139,7 +139,7 @@ class MongoDataSetIO:
              "$currentDate": {"lastModified": True}})
 
     @staticmethod
-    def encode_numpy_array(array: Union[numpy_ndarray_type, DataArray]) -> EncodedNumpyArray:
+    def encode_numpy_array(array: Union[NumpyNdarrayType, DataArray]) -> EncodedNumpyArray:
         """ Encode numpy array to store in database.
         Args:
             array: Numpy array to encode.
@@ -150,10 +150,10 @@ class MongoDataSetIO:
         """
         if isinstance(array, DataArray):
             array = array.data
-        return NumpyArrayEncDec.encode_numpy_array(array)
+        return NumpyArrayEncDec.encode(array)
 
     @staticmethod
-    def decode_numpy_array(encoded_array: Dict[str, Any]) -> numpy_ndarray_type:
+    def decode_numpy_array(encoded_array: Dict[str, Any]) -> NumpyNdarrayType:
         """ Decode a numpy array from database.
 
         Args:
@@ -162,7 +162,7 @@ class MongoDataSetIO:
         Returns:
             The decoded array.
         """
-        return NumpyArrayEncDec.decode_numpy_array(encoded_array)
+        return NumpyArrayEncDec.decode(encoded_array)
 
     def _assert_name_field_is_unique(self) -> None:
         """ The field 'name' should be unique in the database.
