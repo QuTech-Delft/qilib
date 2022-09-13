@@ -23,7 +23,7 @@ from typing import Any, Optional, Union, List, Tuple
 import re
 
 import numpy as np
-from pymongo import MongoClient
+from pymongo.mongo_client import MongoClient
 from pymongo.errors import ServerSelectionTimeoutError
 
 from qilib.utils.serialization import Serializer, serializer as _serializer
@@ -44,27 +44,32 @@ _mongo_tag_separator_regex = re.escape(mongo_tag_separator)
 - Numpy floating point scalars are cast to floats
 - Numpy arrays are handled natively
 - Tags are allowed to contain a dot (to allow for ISO format timestamps)
-- The serialization of the fields happens because we serialize the full data and we need to keep the keys and fields consistent. In practice we only accept str or int as fields, so not much happens
+- The serialization of the fields happens because we serialize the full data and we need to keep the keys and fields
+  consistent. In practice we only accept str or int as fields, so not much happens
 - The encoding of the field is done to handle cases like int (which occurs in the qcodes snapshots)
-- We use the / as a tag separator inside MongoDB. No . because we need that for timestamp tags. No | or > since that has special meaning in regexp. maybe take symnbol from extended ascii set
+- We use the / as a tag separator inside MongoDB. No . because we need that for timestamp tags. No | or > since that
+  has special meaning in regexp. maybe take symnbol from extended ascii set
 
 """
+
 
 class ReadOnlyStorageError(Exception):
     """ Raised when trying to modify a read-only storage interface."""
 
-class StorageMongoDb(StorageInterface):
-    """Reference implementation of StorageInterface with an mongodb backend
 
-    Uses the materialized path design in a MongoDB collection see https://docs.mongodb.com/manual/tutorial/model-tree-structures-with-materialized-paths/
+class StorageMongoDb(StorageInterface):
+    """Reference implementation of StorageInterface with a mongodb backend
+
+    Uses the materialized path design in a MongoDB collection see:
+    https://docs.mongodb.com/manual/tutorial/model-tree-structures-with-materialized-paths/
     Performance Note: Creating index(es) in mongodb will help improve query performance
     eg: An index on (parent, tag) will improve the performance of queries in _retrieve_nodes_by_tag
     """
 
     def __init__(self, name: str, host: str = 'localhost', port: int = 27017, database: str = '',
                  serializer: Union[Serializer, None] = None, connection_timeout: float = 30000,
-                 read_only : bool = False) -> None:
-        """MongoDB implementation of storage class
+                 read_only: bool = False) -> None:
+        """MongoDB's implementation of storage class
 
         See also: `StorageInterface`
 
@@ -78,14 +83,14 @@ class StorageMongoDb(StorageInterface):
             read_only: If True then only reading from the database is allowed
         Raises:
             StorageTimeoutError: If connection to database has not been established before connection_timeout is reached
-            
-            
+
+
         The data encoding is performed with the serializer. An additional encoding is performed by the StorageMongoDb
         to map to MongoDB. The serialization is performed by pymongo (using BSON).
         """
         super().__init__(name)
 
-        self._client = MongoClient(host, port, serverSelectionTimeoutMS=connection_timeout)
+        self._client: MongoClient[Any] = MongoClient(host, port, serverSelectionTimeoutMS=connection_timeout)
         self._check_server_connection(connection_timeout)
         self._db = self._client.get_database(database or name)
         self._collection = self._db.get_collection('storage')
@@ -116,7 +121,6 @@ class StorageMongoDb(StorageInterface):
 
         Args:
             tag: The leaf tag
-            parent: The ObjectID of the leaf's parent
             field: The field to be retrieved. Default value is none.
 
         Returns:
@@ -148,7 +152,7 @@ class StorageMongoDb(StorageInterface):
     def _store_value_by_tag(self, tag: TagType, data: Any,
                             field: Optional[str] = None) -> None:
         """ Store a value at a given tag. In case a field is specified, function will update the value of the
-        field with data. If the field does not already exists, the field will be created
+        field with data. If the field does not already exist, the field will be created
 
         Args:
             tag: The tag
@@ -168,11 +172,11 @@ class StorageMongoDb(StorageInterface):
             if field is None:
                 self._collection.update_one(document_query, {'$set': {'value': data}})
             else:
-                self._collection.update_one(document_query, {'$set': {'value.'+(field): data}})
+                self._collection.update_one(document_query, {'$set': {'value.'+field: data}})
 
         else:
             if field is None:
-                self._collection.insert_one( {qi_tag: tag, 'value': data})
+                self._collection.insert_one({qi_tag: tag, 'value': data})
             else:
                 raise NoDataAtKeyError(f'Tag "{tag}" does not exist')
 
@@ -241,7 +245,7 @@ class StorageMongoDb(StorageInterface):
             raise NoDataAtKeyError('Tag cannot be empty')
 
         return self._unserialize(self._decode_data(
-            self._retrieve_value_by_tag(tag, field=self._encode_field((field)))))
+            self._retrieve_value_by_tag(tag, field=self._encode_field(field))))
 
     def update_individual_data(self, data: Any, tag: TagType, field: Union[str, int]) -> None:
         """ Update an individual field at a given tag with the given data.
@@ -258,7 +262,7 @@ class StorageMongoDb(StorageInterface):
         tag = self._validate_tag(tag)
         self._validate_field(field)
         self._store_value_by_tag(tag, self._encode_data(self._serialize(data)),
-                                 self._encode_field((field)))
+                                 self._encode_field(field))
 
     def get_latest_subtag(self, tag: TagType) -> Optional[TagType]:  # type: ignore
         """ Get the latest subtag
@@ -418,8 +422,8 @@ class StorageMongoDb(StorageInterface):
 
         if isinstance(data, dict):
             return {
-                StorageMongoDb._encode_str(StorageMongoDb._encode_int(key) if isinstance(key, int) else key): StorageMongoDb._encode_data(value)
-                for key, value in data.items()
+                StorageMongoDb._encode_str(StorageMongoDb._encode_int(key) if isinstance(key, int) else key):
+                    StorageMongoDb._encode_data(value) for key, value in data.items()
             }
 
         elif isinstance(data, list):
@@ -440,8 +444,8 @@ class StorageMongoDb(StorageInterface):
         if isinstance(data, dict):
             return {
                 StorageMongoDb._decode_int(StorageMongoDb._decode_str(key))
-                if StorageMongoDb._is_encoded_int(key) else StorageMongoDb._decode_str(key): StorageMongoDb._decode_data(value)
-                for key, value in data.items()
+                if StorageMongoDb._is_encoded_int(key) else StorageMongoDb._decode_str(key):
+                    StorageMongoDb._decode_data(value) for key, value in data.items()
             }
 
         elif isinstance(data, list):
@@ -450,7 +454,7 @@ class StorageMongoDb(StorageInterface):
         return data
 
     def query_data(self, tag: TagType, limit: int = 0, fields: Optional[List[str]] = None) -> List[Any]:
-        """ Query data by tag and return part of the results 
+        """ Query data by tag and return part of the results
 
         Returns data for all subtags of the specified tag
 
@@ -475,50 +479,49 @@ class StorageMongoDb(StorageInterface):
         raw_data = list(map(itemgetter('value'), c))
         data = self._unserialize(self._decode_data(raw_data))
         return data  # type: ignore
-    
-    def query_data_tags(self, tag: TagType, limit: int = 0, fields : Optional[List[str]] = None) -> Tuple[List[Any], List[Any]]:
+
+    def query_data_tags(self, tag: TagType, limit: int = 0,
+                        fields: Optional[List[str]] = None) -> Tuple[List[Any], List[Any]]:
         """ Query data by tag and return both the tags and data"""
         validated_tag = self._validate_tag(tag)
         if validated_tag == '':
-                    tag_query = {'$regex': f'^[^{mongo_tag_separator}]*$'}
+            tag_query = {'$regex': f'^[^{mongo_tag_separator}]*$'}
         else:
-                    tag_query = {'$regex': f'^{validated_tag}{mongo_tag_separator}[^{mongo_tag_separator}]*$'}
-        selection={qi_tag: 1,}
+            tag_query = {'$regex': f'^{validated_tag}{mongo_tag_separator}[^{mongo_tag_separator}]*$'}
+        selection = {qi_tag: 1, }
         if fields is None:
             selection.update({'value': 1})
         else:
-            selection.update({f'value.{f}':1 for f in fields})
+            selection.update({f'value.{f}': 1 for f in fields})
         c = self._collection.find({qi_tag: tag_query}, selection,  limit=limit,  sort=[(qi_tag, -1)])
-        raw_data = list(map(itemgetter(qi_tag, 'value'), c))      
+        raw_data = list(map(itemgetter(qi_tag, 'value'), c))
         if raw_data:
             tags, data = list(zip(*raw_data))
             tags = [self._unpack_tag(t) for t in tags]
-            data  = self._unserialize(self._decode_data(list(data)))
+            data = self._unserialize(self._decode_data(list(data)))
         else:
-            tags=[]; data=[]
-        return tags, data 
+            tags = []
+            data = []
+        return tags, data
 
     def delete_data(self, tag: TagType) -> None:
-        """ Remove data for the specified tag 
+        """ Remove data for the specified tag
 
         Args:
             tag: Tag to be removed
         """
         self._assert_database_is_writable()
-           
+
         result = self._collection.delete_one({qi_tag: tag})
         if result.deleted_count == 0:
             raise NoDataAtKeyError('could not delete {tag}')
 
-
     def _assert_database_is_writable(self) -> None:
         if self._read_only:
-           raise ReadOnlyStorageError(f'database {self._db.name} is read-only')
-           
-           
-def clear_database(storage):
-    cursor = (storage._collection.find({}, {qi_tag: 1}))           
-    for c in cursor:
-        tag = c[qi_tag]
-        storage.delete_data(tag)
-        
+            raise ReadOnlyStorageError(f'database {self._db.name} is read-only')
+
+    def _clear_database(self) -> None:
+        cursor = (self._collection.find({}, {qi_tag: 1}))
+        for c in cursor:
+            tag = c[qi_tag]
+            self.delete_data(tag)

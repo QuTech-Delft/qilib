@@ -183,7 +183,7 @@ class TestStorageMongo(unittest.TestCase):
             storage.save_data(index, ['times', test_tags[index]])
         latest_tag = storage.get_latest_subtag(['times'])
         self.assertEqual(len(latest_tag), 2)
-        self.assertEqual(storage.load_data(latest_tag), index)
+        self.assertEqual(storage.load_data(latest_tag), len(test_tags) - 1)
         tag = storage.get_latest_subtag(['nosuchtag'])
         self.assertIsNone(tag)
 
@@ -457,7 +457,8 @@ class TestStorageMongo(unittest.TestCase):
 
     def test_query_data(self):
         for ii in range(4):
-            self.storage.save_data({'x': ii, 'y': (ii, str(ii)), 'z': np.array([np.random.rand()])}, ['mydata', str(ii)])
+            self.storage.save_data({'x': ii, 'y': (ii, str(ii)), 'z': np.array([np.random.rand()])},
+                                   ['mydata', str(ii)])
 
         tag = 'mydata'
         fields = ['y']
@@ -483,12 +484,8 @@ class TestStorageMongo(unittest.TestCase):
         value = self.storage.load_data('a.b.c')
         self.assertEqual(value, 100)
 
-    
     def test_read_only_connection(self):
-            with patch('qilib.utils.storage.mongo.MongoClient', return_value=MongoClient()):
-                storage = StorageMongoDb('readonly', read_only=True)
-                with self.assertRaises(ReadOnlyStorageError):
-                    storage.save_data({'a': 1}, ['test'])
-                    
-if __name__ == '__main__':
-    unittest.main()
+        with patch('qilib.utils.storage.mongov3.MongoClient', return_value=MongoClient()):
+            storage = StorageMongoDb('readonly', read_only=True)
+            with self.assertRaises(ReadOnlyStorageError):
+                storage.save_data({'a': 1}, ['test'])

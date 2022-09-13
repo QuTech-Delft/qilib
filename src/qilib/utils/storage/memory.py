@@ -168,33 +168,17 @@ class StorageMemory(StorageInterface):
         self._validate_field(field)
         StorageMemory._store_value_to_dict_by_tag(self._data, tag, self._serialize(data), field)
 
-    def query_data_tags(self, tag: TagType, limit: int = 0, fields : Optional[List[str]] = None) -> Tuple[List[Any], List[Any]]:
+    def query_data_tags(self, tag: TagType, limit: int = 0,
+                        fields: Optional[List[str]] = None) -> Tuple[List[Any], List[Any]]:
         """ Query data by tag and return both the tags and data"""
         self._validate_tag(tag)
-        subtags = self.list_data_subtags(tag, limit = limit)
-        
-        raw_data = [self.load_data(tag+[subtag]) for subtag in subtags]
+        sub_tags = self.list_data_subtags(tag, limit=limit)
+
+        raw_data = [self.load_data(tag+[sub_tag]) for sub_tag in sub_tags]
         if fields is None:
             pass
         else:
-            raw_data = [ {k: v for k,v in r.items() if k in fields} for r in raw_data]
-           
-        data  = self._unserialize((list(raw_data)))
-        return subtags, data 
+            raw_data = [{k: v for k, v in r.items() if k in fields} for r in raw_data]
 
-if __name__ == '__main__':
-    s = StorageMemory('test_database')# 'test'+str(uuid.uuid4()))
-    
-    st=s.list_data_subtags([])
-    assert st==[]
-    s.query_data_tags(['b'])
-
-
-    for jj in range(5):
-        s.save_data({'i': jj, 'ii':-jj}, ['a', str(jj)])
-    tags, data = s.query_data_tags(['a'])
-    assert len(tags)==5
-    
-    s.save_data({'one': 1}, ['a', 'b', 'c'])
- 
-
+        data = self._unserialize((list(raw_data)))
+        return sub_tags, data

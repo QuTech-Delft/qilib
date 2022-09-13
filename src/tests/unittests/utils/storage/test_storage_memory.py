@@ -106,7 +106,7 @@ class TestStorageMemory(unittest.TestCase):
         for index in range(len(test_tags)):
             storage.save_data(index, ['times', test_tags[index]])
         latest_tag = storage.get_latest_subtag(['times'])
-        self.assertEqual(storage.load_data(latest_tag), index)
+        self.assertEqual(storage.load_data(latest_tag), len(test_tags) - 1)
         tag = storage.get_latest_subtag(['nosuchtag'])
         self.assertIsNone(tag)
 
@@ -162,6 +162,20 @@ class TestStorageMemory(unittest.TestCase):
     def test_load_data_from_subtag(self):
         storage_interface = StorageMemory('test')
         for ii in range(4):
-            storage_interface.save_data(ii, ['s', f's{ii}'])        
-        self.assertEqual(list(storage_interface.load_data_from_subtag(['s'])), [0,1,2,3])
-        
+            storage_interface.save_data(ii, ['s', f's{ii}'])
+        self.assertEqual(list(storage_interface.load_data_from_subtag(['s'])), [0, 1, 2, 3])
+
+    def test_query_data_tags(self):
+        s = StorageMemory('test_database')  # 'test'+str(uuid.uuid4()))
+        st = s.list_data_subtags([])
+        assert st == []
+        s.query_data_tags(['b'])
+
+        for jj in range(5):
+            s.save_data({'i': jj, 'ii': -jj}, ['a', str(jj)])
+        tags, data = s.query_data_tags(['a'])
+        assert len(tags) == 5
+
+        s.save_data({'one': 1}, ['a', 'b', 'c'])
+
+
