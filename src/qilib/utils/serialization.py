@@ -1,6 +1,6 @@
 """Quantum Inspire library
 
-Copyright 2019 QuTech Delft
+Copyright 2022 QuTech Delft
 
 qilib is available under the [MIT open-source license](https://opensource.org/licenses/MIT):
 
@@ -24,12 +24,21 @@ from typing import Any, Callable, Dict, Tuple, Optional, Union
 from dataclasses_json.api import DataClassJsonMixin
 import numpy as np
 
-from qilib.utils.type_aliases import EncodedNumpyArray, NumpyNdarrayType, NumpyKeys
+from qilib.utils.type_aliases import EncodedNumpyArray, NumpyNdarrayType
 
 
 # A callable type for transforming a given argument with a type to another type
 TransformFunctionResult = Any
 TransformFunction = Callable[[Any], TransformFunctionResult]
+
+
+class NumpyKeys:
+    """The custom values types for encoding and decoding numpy arrays."""
+    OBJECT: str = '__object__'
+    CONTENT: str = '__content__'
+    DATA_TYPE: str = '__data_type__'
+    SHAPE: str = '__shape__'
+    ARRAY: str = '__ndarray__'
 
 
 class NumpyArrayEncDec:
@@ -321,7 +330,7 @@ class Serializer:
         """ Recursively transform an object and apply transform functions to it
 
         Args:
-            data: Any Python object that can be handled by an decode/transform function for that type
+            data: Any Python object that can be handled by a decode/transform function for that type
 
         Returns:
             The transformed data

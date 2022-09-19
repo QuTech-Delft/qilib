@@ -1,6 +1,6 @@
 """Quantum Inspire library
 
-Copyright 2019 QuTech Delft
+Copyright 2022 QuTech Delft
 
 qilib is available under the [MIT open-source license](https://opensource.org/licenses/MIT):
 
@@ -17,7 +17,6 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
-
 from operator import itemgetter
 from typing import Any, Optional, Union, cast
 
@@ -28,12 +27,12 @@ from pymongo.mongo_client import MongoClient
 from pymongo.errors import ServerSelectionTimeoutError
 
 from qilib.data_set.mongo_data_set_io import MongoDataSetIO
-from qilib.utils.serialization import Serializer, serializer as _serializer
+from qilib.utils.serialization import NumpyKeys, Serializer, serializer as _serializer
 from qilib.utils.storage.interface import (NoDataAtKeyError,
                                            NodeAlreadyExistsError,
                                            StorageInterface,
                                            ConnectionTimeoutError)
-from qilib.utils.type_aliases import TagType, NumpyKeys
+from qilib.utils.type_aliases import TagType
 
 
 class NumpyArrayCodec(TypeCodec):
