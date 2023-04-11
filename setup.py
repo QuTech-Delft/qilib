@@ -69,7 +69,7 @@ setup(name='qilib',
           'Programming Language :: Python :: 3.11'],
       license='MIT',
       install_requires=['spirack>=0.1.8', 'numpy>=1.20', 'serialize', 'pymongo',
-                        'requests', 'qcodes==0.33.0', 'qcodes_contrib_drivers==0.13.1', 'dataclasses-json'],
+                        'requests', 'qcodes>=0.33.0', 'qcodes_contrib_drivers>=0.13.1', 'dataclasses-json'],
       extras_require={
           'dev': ['pytest>=3.3.1', 'coverage>=4.5.1', 'mongomock==3.20.0', 'mypy', 'pylint', 'types-requests'],
       })
